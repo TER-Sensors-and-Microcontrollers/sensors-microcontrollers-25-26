@@ -11,10 +11,10 @@
 Always make sure to open Docker Desktop before trying to use Docker. This is because opening Docker Desktop starts the Docker Engine which powers all of Docker's features
 
 #### Steps to Clone Repo and start the containers
-git clone <repo>
-cd <repo>
-docker compose build
-docker compose up -d
+1. git clone <repo>
+2. cd <repo>
+3. docker compose build
+4. docker compose up -d
 
 #### Connecting to the containers
 We have 2 containers that we will use for development houston-dev and onboard-rpi-dev and we have a few ways of accessing them once they are running
@@ -23,6 +23,7 @@ We have 2 containers that we will use for development houston-dev and onboard-rp
 Select which container to connect to and run the corresponding command:
 
 docker exec -it houston-dev bash
+
 docker exec -it onboard-rpi-dev bash
 
 ##### Using VSCode (preferred):
