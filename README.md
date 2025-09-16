@@ -11,8 +11,8 @@
 Always make sure to open Docker Desktop before trying to use Docker. This is because opening Docker Desktop starts the Docker Engine which powers all of Docker's features
 
 #### Steps to Clone Repo and start the containers
-1. git clone <repo>
-2. cd <repo>
+1. git clone (Using HTTPS or SSH)
+2. cd sensors-microcontrollers-25-26
 3. docker compose build
 4. docker compose up -d
 
