@@ -21,6 +21,7 @@ We have 2 containers that we will use for development houston-dev and onboard-rp
 
 ##### Using terminal:
 Select which container to connect to and run the corresponding command:
+
 docker exec -it houston-dev bash
 docker exec -it onboard-rpi-dev bash
 
