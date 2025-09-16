@@ -1,0 +1,68 @@
+services:
+  houston:
+    # --------------------------------------------------------
+    # Build settings
+    build:
+      context: ./houston           # Use current directory (repo root) as build context
+      dockerfile: Dockerfile  # Dockerfile to use for building the image
+
+    # --------------------------------------------------------
+    # Container name
+    # Fixed name makes it easy to reference later (logs, exec, etc.)
+    container_name: houston-dev
+
+    # --------------------------------------------------------
+    # Host name
+    # The container's internal name e.g. user@devcontainer
+    hostname: houston
+
+    # --------------------------------------------------------
+    # Bind mount project folder from host to container
+    # Format: <host path>:<container path>
+    # This keeps files in sync between host and container
+    volumes:
+      - ./houston:/workspace      # Mount repo root into /workspace inside container
+
+    # --------------------------------------------------------
+    # Set working directory inside container
+    # All commands, bash prompt, builds, etc. will start here
+    working_dir: /workspace
+
+    # --------------------------------------------------------
+    # Enable interactive shell
+    stdin_open: true       # Keep STDIN open for interactive terminal commands
+    tty: true              # Allocate a pseudo-TTY so bash, vim, etc., work properly
+
+  onboard-rpi:
+    # --------------------------------------------------------
+    # Build settings
+    build:
+      context: ./onboard-rpi           # Use current directory (repo root) as build context
+      dockerfile: Dockerfile  # Dockerfile to use for building the image
+
+    # --------------------------------------------------------
+    # Container name
+    # Fixed name makes it easy to reference later (logs, exec, etc.)
+    container_name: onboard-rpi-dev
+
+    # --------------------------------------------------------
+    # Host name
+    # The container's internal name e.g. user@devcontainer
+    hostname: onboard-rpi
+
+    # --------------------------------------------------------
+    # Bind mount project folder from host to container
+    # Format: <host path>:<container path>
+    # This keeps files in sync between host and container
+    volumes:
+      - ./onboard-rpi:/workspace      # Mount repo root into /workspace inside container
+
+    # --------------------------------------------------------
+    # Set working directory inside container
+    # All commands, bash prompt, builds, etc. will start here
+    working_dir: /workspace
+
+    # --------------------------------------------------------
+    # Enable interactive shell
+    stdin_open: true       # Keep STDIN open for interactive terminal commands
+    tty: true              # Allocate a pseudo-TTY so bash, vim, etc., work properly
