@@ -17,12 +17,17 @@ docker compose build
 docker compose up -d
 
 #### Connecting to the containers
+We have 2 containers that we will use for development houston-dev and onboard-rpi-dev and we have a few ways of accessing them once they are running
+
 ##### Using terminal:
-docker exec -it sensors-microcontrollers-dev bash 
-##### Using VSCode:
+Select which container to connect to and run the corresponding command:
+docker exec -it houston-dev bash
+docker exec -it onboard-rpi-dev bash
+
+##### Using VSCode (preferred):
 1. Open VSCode
 2. Click on the little blue button in the bottom left corner
-3. In the new menu that appears click on Attach to Running Container (if the necessary extensions aren't installed VSCode will automatically install them)
+3. In the new menu that appears click on Attach to Running Container (if the necessary container extensions aren't installed VSCode will automatically install them)
 4. If you ran docker compose build and docker compose up -d earlier then you should see two options houston-dev and onboard-rpi-dev
 5. Click on whichever one you intend to work in
 
