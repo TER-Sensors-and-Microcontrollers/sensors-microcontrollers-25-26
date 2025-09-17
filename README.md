@@ -1,5 +1,46 @@
-# sensors-microcontrollers-25-26
+# Tufts Electric Racing Teams' 2025-26 Sensors & Microcontrollers GitHub Repository
+
+This repository is contains contains the code for 
+the Tufts Electric Racing's Sensors & Microcontrollers subteam
+for the 2025/2026 academic year.
+
+## The Shape of our System
+![](".assets/sensor-flowchart.png")
+
+## The Shape of this Repository
+The layout of this repository corresponds roughly to the
+physical layout of the hardware on the car. In general subdirectory
+corresponds to a physical part of our system's architecture, except those
+beginning with dots (e.g. .assets which contains the images used 
+by this README)
+
+The current directory structure of this repository is:
+
+    . <- YOU ARE HERE
+    ├── houston
+    │   └── webapp 
+    ├── onboard-rpi
+    │   ├── canbus-readers
+    │   └── 
+    ├── README.md
+    └── stm
+        └── README.md
+
+## Contribution Guidelines and Conventions
+* Each directory should include a README specifying its purpose and 
+  its own structure
+* Each source code file should contain a header comment specifying its purpose
+* Development should happen in a development branch, and make a merge request
+  only when code has been thoroughly tested and is ready to be used
+* Again: **COMMITS SHOULD NOT BE MADE DIRECTLY TO MAIN**
+* Code style should follow sane conventions:
+  * lines shouldn't be too long (loosely 80 lines)
+  * use descriptive and variables names
+  * functions should have a line or two explaining what it does
+
+
 ## Docker Setup
+
 
 ### IF YOU USE WINDOWS MAKE SURE TO INSTALL WSL BEFORE YOU CONTINUE!
 
