@@ -5,13 +5,13 @@ the Tufts Electric Racing's Sensors & Microcontrollers subteam
 for the 2025/2026 academic year.
 
 ## The Shape of our System
-![](".assets/sensor-flowchart.png")
+![](.assets/sensor-flowchart.png)
 
 ## The Shape of this Repository
 The layout of this repository corresponds roughly to the
 physical layout of the hardware on the car. In general subdirectory
 corresponds to a physical part of our system's architecture, except those
-beginning with dots (e.g. .assets which contains the images used 
+beginning with dots (e.g. .assets which contains the images used
 by this README)
 
 The current directory structure of this repository is:
