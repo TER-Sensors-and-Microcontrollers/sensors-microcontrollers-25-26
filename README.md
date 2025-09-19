@@ -45,7 +45,9 @@ There are a number of tools we use for the sake of development.
 The following section will explain the purpose of each insofar as
 this project and how to install them.
 
-### Docker
+<details>
+  <summary>### Docker</summary>
+
 We have virtual development environments for writing code for the 
 Raspberry Pis on and off the car (with corresponding directory `onboard-rpi/`
 and `houston/`, respectively).
@@ -85,3 +87,4 @@ Select which container to connect to and run the corresponding command:
 
 #### How to shut down Docker Containers
 Run this command in your terminal: docker compose down
+</details>
