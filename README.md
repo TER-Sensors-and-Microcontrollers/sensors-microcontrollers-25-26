@@ -46,7 +46,7 @@ The following section will explain the purpose of each insofar as
 this project and how to install them.
 
 <details>
-  <summary>### Docker</summary>
+  <summary><h3>Docker</h3></summary>
 
 We have virtual development environments for writing code for the 
 Raspberry Pis on and off the car (with corresponding directory `onboard-rpi/`
