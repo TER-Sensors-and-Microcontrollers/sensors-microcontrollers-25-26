@@ -11,7 +11,7 @@ for the 2025/2026 academic year.
 The layout of this repository corresponds roughly to the
 physical layout of the hardware on the (old) car. In general, each subdirectory
 corresponds to a physical part of our system's architecture, except those
-beginning with dots (e.g. .assets which contains the images used
+beginning with dots (e.g. `.assets` which contains the images used
 by this README).
 
 The current directory structure of this repository is:
@@ -29,16 +29,20 @@ The current directory structure of this repository is:
 ## Contribution Guidelines and Conventions
 * Each directory should include a README specifying its purpose and 
   its own structure
-* Each source code file should contain a header comment specifying its purpose
 * **COMMITS SHOULD NOT BE MADE DIRECTLY TO MAIN**
 
   Development should happen in a development branch, and pull requests should:
   only be made once code has been thoroughly tested
 
 * Code style should follow sane conventions:
+  * Each source code file should contain a header comment specifying its purpose
+  * Each function should have a line or two explaining its purpose
   * lines shouldn't be too long (loosely 80 lines)
-  * use descriptive and variables names
-  * functions should have a line or two explaining what it does
+
+    *If your line is over 80 lines that's often a sign that something cursed
+    is going on*
+
+  * use descriptive and variables names. Please.
 
 ## Getting Started
 There are a number of tools we use for the sake of development.
@@ -63,10 +67,11 @@ and `houston/`, respectively).
 Always make sure to open Docker Desktop before trying to use Docker. This is because opening Docker Desktop starts the Docker Engine which powers all of Docker's features
 
 #### Steps to Clone Repo and start the containers
-1. git clone (Using HTTPS or SSH)
-2. cd sensors-microcontrollers-25-26
-3. docker compose build
-4. docker compose up -d
+In a terminal, do:
+1. `git clone` (Using HTTPS or SSH)
+2. `cd sensors-microcontrollers-25-26`
+3. `docker compose build`
+4. `docker compose up -d`
 
 #### Connecting to the containers
 We have 2 containers that we will use for development houston-dev and onboard-rpi-dev and we have a few ways of accessing them once they are running
