@@ -37,9 +37,9 @@ The current directory structure of this repository is:
 * Code style should follow sane conventions:
   * Each source code file should contain a header comment specifying its purpose
   * Each function should have a line or two explaining its purpose
-  * lines shouldn't be too long (loosely 80 lines)
+  * lines shouldn't be too long (loosely 80 columns)
 
-    *If your line is over 80 lines that's often a sign that something cursed
+    *If your line is over 80 columns that's often a sign that something cursed
     is going on*
 
   * use descriptive and variables names. Please.
