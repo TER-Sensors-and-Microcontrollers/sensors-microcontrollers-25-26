@@ -4,6 +4,8 @@ This repository is contains contains the code for
 the Tufts Electric Racing's Sensors & Microcontrollers subteam
 for the 2025/2026 academic year.
 
+Non-code files can be found on our subteam's portion of the ![Tufts Electric Racing Google Drive ](https://drive.google.com/drive/folders/1Iz8F1ED3EwUM6L5yqu_2iJZBQnPPhI1S?usp=drive_link).
+
 ## The Shape of our System
 ![](.assets/sensor-flowchart.png)
 
