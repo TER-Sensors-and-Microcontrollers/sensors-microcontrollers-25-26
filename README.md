@@ -62,9 +62,9 @@ Always make sure to open Docker Desktop before trying to use Docker. This is bec
 
 #### Steps to Clone Repo and start the containers
 1. git clone (Using HTTPS or SSH)
-2. cd sensors-microcontrollers-25-26
-3. docker compose build
-4. docker compose up -d
+2. `cd sensors-microcontrollers-25-26`
+3. `docker compose build`
+4. `docker compose up -d`
 
 #### Connecting to the containers
 We have 2 containers that we will use for development houston-dev and onboard-rpi-dev and we have a few ways of accessing them once they are running
@@ -90,4 +90,4 @@ houston container:     `workspace` ---> `houston`
 onboard-rpi container: `workspace` ---> `onboard-rpi`
 
 #### How to shut down Docker Containers
-Run this command in your terminal: docker compose down
+Run this command in your terminal: `docker compose down`
