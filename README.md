@@ -86,7 +86,7 @@ Select which container to connect to and run the corresponding command:
 ##### Navigating the Docker Containers:
 When inside either of the 2 Docker Containers, you should do all of your project work in the `workspace` directory. To check which directory you are in, you can run the command `pwd`. To switch to the `workspace` directory, you can run the command `cd /workspace`. The `workspace` directory is the only one where any changes you make in the container will persist outside of the container. If you create files or write code in any of the other directories then it will be deleted when the container is shut down. This is because the workspace directory in both containers maps to the appropriate directory outside of the container.
 
-houston container:     `workspace` ---> `houston`
+houston container:     `workspace` ---> `houston`  
 onboard-rpi container: `workspace` ---> `onboard-rpi`
 
 #### How to shut down Docker Containers
