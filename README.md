@@ -53,7 +53,7 @@ and `houston/`, respectively).
 #### Installation
 **IF YOU USE WINDOWS MAKE SURE TO INSTALL WSL BEFORE YOU CONTINUE!**
 
-1. Go to ![https://docs.docker.com/desktop/](https://docs.docker.com/desktop/) and then in the navigation menu on the left look for Products->Docker Desktop->Setup->Install then click on the option for your device Windows/Mac/Linux then follow the instructions to install.
+1. Go to [https://docs.docker.com/desktop/](https://docs.docker.com/desktop/) and then in the navigation menu on the left look for Products->Docker Desktop->Setup->Install then click on the option for your device Windows/Mac/Linux then follow the instructions to install.
 
 2. Open Docker Desktop and follow the account setup details.
 
@@ -82,6 +82,12 @@ Select which container to connect to and run the corresponding command:
 3. In the new menu that appears click on Attach to Running Container (if the necessary container extensions aren't installed VSCode will automatically install them)
 4. If you ran docker compose build and docker compose up -d earlier then you should see two options houston-dev and onboard-rpi-dev
 5. Click on whichever one you intend to work in
+
+##### Navigating the Docker Containers:
+When inside either of the 2 Docker Containers, you should do all of your project work in the `workspace` directory. To check which directory you are in, you can run the command `pwd`. To switch to the `workspace` directory, you can run the command `cd /workspace`. The `workspace` directory is the only one where any changes you make in the container will persist outside of the container. If you create files or write code in any of the other directories then it will be deleted when the container is shut down. This is because the workspace directory in both containers maps to the appropriate directory outside of the container.
+
+houston container:     `workspace` ---> `houston`
+onboard-rpi container: `workspace` ---> `onboard-rpi`
 
 #### How to shut down Docker Containers
 Run this command in your terminal: docker compose down
