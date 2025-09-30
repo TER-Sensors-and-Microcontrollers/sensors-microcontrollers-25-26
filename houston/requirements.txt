@@ -1,0 +1,10 @@
+# Python dependency file to be used in Dockerfile compilation
+# ADD NECESSARY PYTHON LIBRARIES HERE:
+
+flask==3.1.0
+flask_socketio==5.5.1
+mysql-connector-python==9.4.0
+
+pyserial==3.5
+
+numpy>=1.26.0

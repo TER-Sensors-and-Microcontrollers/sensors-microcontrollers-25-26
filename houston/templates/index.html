@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title> Flask App </title>
+        <link rel = "stylesheet" type= "text/css" href = " {{ url_for('static', filename = 'style.css') }}">
+    </head>
+    <body>
+    <!-- This code connects WebsocketsIO to the index.html file, so it can update the
+     display in real-time. -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+        <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Waits to receive 'update_data' from socket's emit function in app.py
+        // Once it receives it, it runs the function.
+        // The parseFloat and toFixed(2) ensure that the data read is a float up to 2 decimal places.
+        socket.on('update_data', function(data) {
+            
+            // Does nothing as of now
+
+            console.log("Received data", data);
+        });
+        </script>
+
+        <div class = "title">
+            <img src="https://sites.tufts.edu/racing/files/2020/04/cropped-newlogo-2.png"
+            width="337.5" length="750"/>
+        </div>
+        
+        <h1>Hello World</h1>
+        <h1>{{ data }}</h1>
+    </body>
+</html>

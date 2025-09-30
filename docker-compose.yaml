@@ -32,6 +32,9 @@ services:
     # Enable interactive shell
     stdin_open: true       # Keep STDIN open for interactive terminal commands
     tty: true              # Allocate a pseudo-TTY so bash, vim, etc., work properly
+    ports:
+    - "8080:80"
+    - "5000:5000"
 
   onboard-rpi:
     # --------------------------------------------------------

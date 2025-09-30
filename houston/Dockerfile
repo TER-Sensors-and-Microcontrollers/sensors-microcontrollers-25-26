@@ -33,11 +33,23 @@ RUN groupadd -g $USER_GID $USERNAME \
 # Create project folder for bind mount and ensure correct ownership
 RUN mkdir -p /workspace && chown -R $USERNAME:$USERNAME /workspace
 
-# Switch to the non-root user
-USER $USERNAME
-
 # Set working directory
 WORKDIR /workspace
+
+# Copy the requirements.txt file into the container  
+COPY requirements.txt .
+
+
+# Create and activate a venv
+RUN python3 -m venv /opt/venv \
+ && . /opt/venv/bin/activate \
+ && pip install --no-cache-dir -r requirements.txt
+
+# Make sure venv is used for future commands
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Switch to the non-root user
+USER $USERNAME
 
 # Expose port 5000 (default Flask port)
 EXPOSE 5000
