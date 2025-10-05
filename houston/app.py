@@ -29,9 +29,17 @@ DATABASE = 'database.db'
 # ‘/’ URL is bound with run() function. 
 def display_index():
     
-    send_to_html = 67
+    db = get_db()
+    db.row_factory = sqlite3.Row
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM sensor_readings WHERE timestamp = (SELECT MAX(timestamp) FROM sensor_readings)")
+    row = cursor.fetchone() 
+    data_to_send = dict(row) if row else None
+    cursor.close
+
+
     # return render_template("index.html", array_data = shm_data)
-    return render_template("index.html", data = send_to_html)
+    return render_template("index.html", data = row)
 
 """
 DATABASE INITIALIZATION & ROUTES
