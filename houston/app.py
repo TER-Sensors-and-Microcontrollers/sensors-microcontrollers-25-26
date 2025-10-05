@@ -1,6 +1,12 @@
+# app.py
+# 
+#  hosts the webapp, initializes the SQLite
+#  database, and (tentatively) defines several relevant routes
+
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
-from flask import Flask, render_template
+from flask import Flask, render_template, g
+import sqlite3
 from flask_socketio import SocketIO
 import threading
 from multiprocessing import shared_memory
@@ -14,6 +20,7 @@ import numpy as np
 # current module (__name__) as argument.
 app = Flask(__name__)
 socketio = SocketIO(app)
+DATABASE = 'database.db'
 
 # The route() function of the Flask class is a decorator, 
 # which tells the application which URL should call 
@@ -26,9 +33,57 @@ def display_index():
     # return render_template("index.html", array_data = shm_data)
     return render_template("index.html", data = send_to_html)
 
-# main driver function
-if __name__ == '__main__':
+"""
+DATABASE INITIALIZATION & ROUTES
+"""
 
+# Grab entire db of sensor readings
+@app.route('/readings')
+def list_users():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM sensor_readings")
+    readings = cursor.fetchall()
+    return str([dict(r) for r in readings]) # Example output
+
+# Get database object. If it does not exists, create it
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+        db.row_factory = sqlite3.Row # Optional: access rows as dictionary-like objects
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+# main driver function
+
+#############################################################################
+# TODO: get latest sensor readings from db, write it into index.html        #
+#############################################################################
+
+if __name__ == '__main__':
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+
+        # drop table containing old data on restart
+        cursor.execute("DROP TABLE IF EXISTS sensor_readings")
+        
+        # initialize database with columns | ID, NAME, DATA, TIMESTAMP |
+
+        cursor.execute("CREATE TABLE IF NOT EXISTS sensor_readings (" \
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "sensor_id INTEGER, " \
+        "name TEXT NOT NULL," \
+        "data REAL," \
+        "timestamp DATETIME" \
+        ")")
+        db.commit()
     # Runs the app using socketio for real-time data updates from the
     # shared memory.
     socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
