@@ -10,6 +10,8 @@ https://www.w3schools.com/sql/sql_syntax.asp
 - Communication with car: RFD900, STM32 (STM32 script not in this repo)
 
 **File & Folder Overview**
+- *database.db*: the working database of the server. Used to store aggregated
+  sensor readings. **DO NOT MANUALLY MODIFY THIS UNDER ANY CIRCUMSTANCES!!!**
 - *app.py*: flask app script that hosts the webapp, initializes the SQLite
   database, and (tentatively) defines several relevant routes.
 - templates: directory that stores the HTML files for our webpages
