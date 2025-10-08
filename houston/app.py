@@ -32,14 +32,38 @@ def display_index():
     db = get_db()
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM sensor_readings WHERE timestamp = (SELECT MAX(timestamp) FROM sensor_readings)")
-    row = cursor.fetchone() 
-    data_to_send = dict(row) if row else None
-    cursor.close
+    data_to_send = []
+   
+    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
+    rows = cursor.fetchall()
+    name = rows[0][2]
+    value = rows[0][3]
+    
+    data_to_send.append(name)
+    data_to_send.append(value)
 
+    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'battery' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'battery')")
+    rows1 = cursor.fetchall()
+    name2 = rows1[0][2]
+    value2 = rows1[0][3]
+    data_to_send.append(name2)
+    data_to_send.append(value2)
+
+    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'pressure' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'pressure')")
+    rows2 = cursor.fetchall()
+    name3 = rows2[0][2]
+    value3 = rows2[0][3]
+    data_to_send.append(name3)
+    data_to_send.append(value3)
+    
+    cursor.close()
+
+
+    return render_template("index.html", data=data_to_send)
+    #cursor.close
 
     # return render_template("index.html", array_data = shm_data)
-    return render_template("index.html", data = row)
+    #return render_template("index.html", data = data_to_send)
 
 """
 DATABASE INITIALIZATION & ROUTES
