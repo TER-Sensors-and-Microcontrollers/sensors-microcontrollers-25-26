@@ -22,6 +22,14 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 DATABASE = 'database.db'
 
+class Data_points:
+    def __init__(data, iD = 0, sensor_iD = 0, name = "", data_value = 0, time_stamp = 0.12):
+        data.id = iD
+        data.sensor_id = sensor_iD
+        data.name = name 
+        data.data_value = data_value
+        data.time_stamp = time_stamp
+
 # The route() function of the Flask class is a decorator, 
 # which tells the application which URL should call 
 # the associated function.
@@ -36,26 +44,21 @@ def display_index():
    
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
     rows = cursor.fetchall()
-    name = rows[0][2]
-    value = rows[0][3]
+    temp_point = Data_points(rows[0][0],rows[0][1],rows[0][2],rows[0][3])
+    data_to_send.append(temp_point)
     
-    data_to_send.append(name)
-    data_to_send.append(value)
 
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'battery' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'battery')")
     rows1 = cursor.fetchall()
-    name2 = rows1[0][2]
-    value2 = rows1[0][3]
-    data_to_send.append(name2)
-    data_to_send.append(value2)
+    temp_point = Data_points(rows1[0][0],rows1[0][1],rows1[0][2],rows1[0][3])
+    data_to_send.append(temp_point) 
+    
 
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'pressure' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'pressure')")
     rows2 = cursor.fetchall()
-    name3 = rows2[0][2]
-    value3 = rows2[0][3]
-    data_to_send.append(name3)
-    data_to_send.append(value3)
-    
+    temp_point = Data_points(rows2[0][0],rows2[0][1],rows2[0][2],rows2[0][3])
+    data_to_send.append(temp_point) 
+   
     cursor.close()
 
 
@@ -65,6 +68,13 @@ def display_index():
     # return render_template("index.html", array_data = shm_data)
     #return render_template("index.html", data = data_to_send)
 
+def send_times():
+
+    db = get_db()
+    db.row_factory = sqlite3.Row
+    cursor = db.cursor()
+    data_to_send = []
+    
 """
 DATABASE INITIALIZATION & ROUTES
 """

@@ -34,7 +34,7 @@ services:
     tty: true              # Allocate a pseudo-TTY so bash, vim, etc., work properly
     ports:
     - "8080:80"
-    - "5000:5000"
+    - "7682:5000"
 
   onboard-rpi:
     # --------------------------------------------------------
