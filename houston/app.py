@@ -22,6 +22,15 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 DATABASE = 'database.db'
 
+class Data_Point:
+    def __init__(self, iD = 0, Sensor_iD = 0, name = "", data = 0, timestamp = 0):
+        self.iD = iD
+        self.Sensor_iD = Sensor_iD
+        self.name = name
+        self.data = data
+        self.timestamp = timestamp
+
+
 # The route() function of the Flask class is a decorator, 
 # which tells the application which URL should call 
 # the associated function.
@@ -36,25 +45,23 @@ def display_index():
    
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
     rows = cursor.fetchall()
-    name = rows[0][2]
-    value = rows[0][3]
+    row1 = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])   
     
-    data_to_send.append(name)
-    data_to_send.append(value)
+    data_to_send.append(row1)
 
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'battery' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'battery')")
     rows1 = cursor.fetchall()
-    name2 = rows1[0][2]
-    value2 = rows1[0][3]
-    data_to_send.append(name2)
-    data_to_send.append(value2)
+    row2 = Data_Point(rows1[0][0], rows1[0][1], rows1[0][2], rows1[0][3], rows1[0][4])
+    
+    data_to_send.append(row2)
+    #value2 = rows1[0][3]
+    #data_to_send.append(value2)
 
     cursor.execute("SELECT * FROM sensor_readings WHERE name = 'pressure' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'pressure')")
     rows2 = cursor.fetchall()
-    name3 = rows2[0][2]
-    value3 = rows2[0][3]
-    data_to_send.append(name3)
-    data_to_send.append(value3)
+    row3 = Data_Point(rows2[0][0], rows2[0][1], rows2[0][2], rows2[0][3], rows2[0][4])
+    
+    data_to_send.append(row3)
     
     cursor.close()
 
@@ -77,6 +84,15 @@ def list_users():
     cursor.execute("SELECT * FROM sensor_readings")
     readings = cursor.fetchall()
     return str([dict(r) for r in readings]) # Example output
+
+@app.route('/get_data')
+def get_data():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
+    rows = cursor.fetchall()
+    row1 = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
+    return str(row1)
 
 # Get database object. If it does not exists, create it
 def get_db():

@@ -42,17 +42,49 @@
                 <td>Value</td>
             </tr>
             <tr>
-                <td>{{ data[0] }}</td>
-                <td>{{ data[1] }} </td>
+                <td>{{ data[0].name }}</td>
+                <td>{{ data[0].data }} </td>
             </tr>
             <tr>
-                <td>{{ data[2] }}</td>
-                <td>{{ data[3] }}</td>
+                <td>{{ data[1].name }}</td>
+                <td>{{ data[1].data }}</td>
             </tr>
             <tr>
-                <td>{{ data[4] }}</td>
-                <td>{{ data[5] }}</td> 
+                <td>{{ data[2].name }}</td>
+                <td>{{ data[2].data }}</td> 
             </tr>
         </table>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+        <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+        <script>   
+            function addDataPoint(chart)
+            {
+                fetch('/readings')
+                    .then(response => response.json())
+                    .then(data => console.log(data))
+                    .catch(error => console.error('Error:', error));
+                // chart.data.datasets[0].data.push(newDataPoint);
+                // chart.update();
+            }
+        
+            const xValues = [{{ data[0].timestamp }}, {{ data[1].timestamp }}, {{ data[2].timestamp }}];
+            const yValues = [{{ data[0].data}}, {{ data[1].data }}, {{ data[2].data }}];
+            const myChart = new Chart("myChart", {
+                type: "line",
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        backgroundColor:"rgba(255,255,255,1.0)",
+                        borderColor: "rgba(0,0,255,0.1)",
+                        data: yValues
+                    }]
+            }   ,
+            });
+
+            setInterval(() => {
+                addDataPoint(myChart);
+            }, 3000);
+        </script>
+        
     </body>
 </html>
