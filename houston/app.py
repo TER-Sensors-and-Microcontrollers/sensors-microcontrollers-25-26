@@ -5,7 +5,7 @@
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
-from flask import Flask, render_template, g
+from flask import Flask, render_template, g, jsonify
 import sqlite3
 from flask_socketio import SocketIO
 import threading
@@ -24,12 +24,16 @@ DATABASE = 'database.db'
 
 class Data_Point:
     def __init__(self, iD = 0, Sensor_iD = 0, name = "", data = 0, timestamp = 0):
-        self.iD = iD
+        self.reading_iD = iD
         self.Sensor_iD = Sensor_iD
         self.name = name
         self.data = data
         self.timestamp = timestamp
 
+
+"""
+HOME SCREEN ROUTE
+"""
 
 # The route() function of the Flask class is a decorator, 
 # which tells the application which URL should call 
@@ -73,9 +77,10 @@ def display_index():
     #return render_template("index.html", data = data_to_send)
 
 """
-DATABASE INITIALIZATION & ROUTES
+OTHER ROUTES / ENDPOINTS
 """
 
+# /readings
 # Grab entire db of sensor readings
 @app.route('/readings')
 def list_users():
@@ -85,14 +90,56 @@ def list_users():
     readings = cursor.fetchall()
     return str([dict(r) for r in readings]) # Example output
 
-@app.route('/get_data')
-def get_data():
+# /get_test/<sensor_id>
+# [TEST] given id of test sensor where:
+# 
+# 1 = motor_temp
+# 2 = battery
+# 3 = pressure
+# 
+# returns JSON response of most recently saved reading of this id.
+# JSON payload is as follows:
+#  {
+#     "reading_id": int,
+#     "sensor_id": int,
+#     "name": str,
+#     "data": float/real,
+#     "timestamp": datetime
+#  }
+
+@app.route('/get_test/<sensor_id>')
+def get_test_data(sensor_id:int):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
+
+    # '?' character in the cursor query uses the value passed in from get_test_data
+    # otherwise using sensor_id = sensor_id would query for itself
+    # I use sensor_id variable as an argument twice, so I need to pass it in as a parameter twice
+    # (the number of ?s) in the query
+    cursor.execute("SELECT * FROM sensor_readings " \
+    "WHERE sensor_id = ? AND " \
+    "timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE sensor_id = ?)", (sensor_id, sensor_id))
     rows = cursor.fetchall()
-    row1 = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
-    return str(row1)
+
+    # return error 404 if the query does not return any results
+    if not rows:
+        return jsonify({"error": "No sensor data found for id " + sensor_id}), 404
+    
+    # turn reading into JSON object
+    reading = {
+        "reading_id": rows[0][0],
+        "sensor_id": rows[0][1],
+        "name": rows[0][2],
+        "data": rows[0][3],
+        "timestamp": rows[0][4]
+    }
+    # reading = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
+    return jsonify(reading)
+
+
+"""
+DATABASE INITIALIZATION
+"""
 
 # Get database object. If it does not exists, create it
 def get_db():
@@ -125,7 +172,7 @@ if __name__ == '__main__':
         # initialize database with columns | ID, NAME, DATA, TIMESTAMP |
 
         cursor.execute("CREATE TABLE IF NOT EXISTS sensor_readings (" \
-        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "reading_id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "sensor_id INTEGER, " \
         "name TEXT NOT NULL," \
         "data REAL," \

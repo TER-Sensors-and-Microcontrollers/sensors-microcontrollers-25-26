@@ -55,34 +55,113 @@
             </tr>
         </table>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <canvas id="myChart" style="width:100%;max-width:700px"></canvas>
+        <canvas id="motor_temp" style="width:100%;max-width:700px"></canvas>
         <script>   
-            function addDataPoint(chart)
+            // TODO: we need to move these functions to a separate file eventually!
+
+            /*
+                addDataPoint
+            
+                [TEST] Adds the most recently grabbed datapoint from motor temp,
+                and adds it to its corresponding chart.
+
+                input(s): chart object to add data point to
+                notes: saves chart to cache based on CANVAS ID (see chartjs documentation),
+                is async
+            */
+            async function addDataPoint(chart)
             {
-                fetch('/readings')
-                    .then(response => response.json())
-                    .then(data => console.log(data))
-                    .catch(error => console.error('Error:', error));
-                // chart.data.datasets[0].data.push(newDataPoint);
-                // chart.update();
+                try{
+                    // assume that id 1 is motor_temp
+                    const response = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                    if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const reading = await response.json();
+                    // TODO: extract relevant fields from the json response and push this to the chart
+                    // do something here...
+                    chart.update();
+
+                    // save chart to client's cache so that it can be reloaded on refresh
+                    saveToSessionStorage(chart.canvas.id, {
+                        labels: chart.data.labels,
+                        datasets: chart.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                }
+                catch (error) {
+                    console.error("Error fetching or parsing data:", error);
+                }
+
             }
-        
-            const xValues = [{{ data[0].timestamp }}, {{ data[1].timestamp }}, {{ data[2].timestamp }}];
-            const yValues = [{{ data[0].data}}, {{ data[1].data }}, {{ data[2].data }}];
-            const myChart = new Chart("myChart", {
-                type: "line",
-                data: {
+
+            /*
+                saveToSessionStorage
+            
+                Given chart name and cachable chart data, saves chart data in user's browser cache
+
+                input(s): name/key to save chart data field as, chart data field to be cached
+            */
+            function saveToSessionStorage(name, data) {
+                // sessionStorage can only store strings, so we must serialize the data to JSON
+                sessionStorage.setItem(name, JSON.stringify(data));
+            }
+
+
+            /*
+                loadFromSessionStorage
+            
+                Given name of chart to load, return chart data from user's browser cache, 
+                if there exists any. Else, return a fresh instance of chart data
+
+                input(s): name under which chart data was saved as (in saveToSessionStorage)
+            */
+            function loadFromSessionStorage(name) {
+                // filler values to put into fresh chart
+                const xValues = [{{ data[0].timestamp }}];
+                const yValues = [{{ data[0].data}}];
+
+
+                const storedData = sessionStorage.getItem(name);
+                if (storedData) {
+                    // Deserialize the JSON string back into a JavaScript object
+                    return JSON.parse(storedData);
+                }
+                // Return a default data structure if nothing is saved yet
+                return {
                     labels: xValues,
                     datasets: [{
                         backgroundColor:"rgba(255,255,255,1.0)",
                         borderColor: "rgba(0,0,255,0.1)",
                         data: yValues
-                    }]
-            }   ,
-            });
+                        }]
+                };
+            }
 
+            // define chart(s) here
+            const motorTemp = new Chart("motor_temp", {
+                type: "line",
+                data: loadFromSessionStorage("motor_temp"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'MotorTemp Over Time'
+                        }
+                    }
+                }
+
+
+            });
+            // setInterval(() => {
+            //     console.log(motorTemp.canvas.id);
+            // }, 3000);
             setInterval(() => {
-                addDataPoint(myChart);
+                addDataPoint(motorTemp);
             }, 3000);
         </script>
         
