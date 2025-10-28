@@ -79,12 +79,21 @@
                     }
                     const reading = await response.json();
                     // TODO: extract relevant fields from the json response and push this to the chart
-                    // do something here...
+                    // do something here... 
+                    const iD = reading.reading_id;
+                    const sensor_iD = reading.sensor_id;
+                    const name = reading.name;
+                    const data = reading.data;
+                    const timestamp = reading.timestamp;
+
+                    motorTemp.data.labels.push(timestamp);
+                    motorTemp.data.datasets[0].data.push(data);
+
                     chart.update();
 
                     // save chart to client's cache so that it can be reloaded on refresh
                     saveToSessionStorage(chart.canvas.id, {
-                        labels: chart.data.labels,
+                        labels: charst.data.labels,
                         datasets: chart.data.datasets.map(ds => ({
                             label: ds.label,
                             backgroundColor: ds.backgroundColor,
