@@ -56,6 +56,8 @@
         </table>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
         <canvas id="motor_temp" style="width:100%;max-width:700px"></canvas>
+        <canvas id="battery" style="width:100%;max-width:700px"></canvas>
+        <canvas id="pressure" style="width:100%;max-width:700px"></canvas>
         <script>   
             // TODO: we need to move these functions to a separate file eventually!
 
@@ -69,32 +71,62 @@
                 notes: saves chart to cache based on CANVAS ID (see chartjs documentation),
                 is async
             */
-            async function addDataPoint(chart)
+            async function addDataPoint(motor_temp, battery, pressure)
             {
                 try{
                     // assume that id 1 is motor_temp
-                    const response = await fetch('/get_test/1'); // Replace with your actual API endpoint
-                    if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                    if (!response1.ok) {
+                    throw new Error(`HTTP error! status: ${response1.status}`);
                     }
-                    const reading = await response.json();
+                    const response2 = await fetch('/get_test/2');
+                    if (!response2.ok) {
+                    throw new Error(`HTTP error! status: ${response2.status}`);
+                    }
+                    const response3 = await fetch('/get_test/3');
+                    if (!response3.ok) {
+                    throw new Error(`HTTP error! status: ${response3.status}`);
+                    }
+                    const reading1 = await response1.json();
+                    const reading2 = await response2.json();
+                    const reading3 = await response3.json();
                     // TODO: extract relevant fields from the json response and push this to the chart
                     // do something here... 
-                    const iD = reading.reading_id;
-                    const sensor_iD = reading.sensor_id;
-                    const name = reading.name;
-                    const data = reading.data;
-                    const timestamp = reading.timestamp;
+                    
 
-                    motorTemp.data.labels.push(timestamp);
-                    motorTemp.data.datasets[0].data.push(data);
+                    motor_temp.data.labels.push(reading1.timestamp);
+                    motor_temp.data.datasets[0].data.push(reading1.data);
+                    battery.data.labels.push(reading2.timestamp);
+                    battery.data.datasets[0].data.push(reading2.data);
+                    pressure.data.labels.push(reading3.timestamp);
+                    pressure.data.datasets[0].data.push(reading3.data);
 
-                    chart.update();
+                    motor_temp.update();
+                    battery.update();
+                    pressure.update();
 
                     // save chart to client's cache so that it can be reloaded on refresh
-                    saveToSessionStorage(chart.canvas.id, {
-                        labels: charst.data.labels,
-                        datasets: chart.data.datasets.map(ds => ({
+                    saveToSessionStorage(motor_temp.canvas.id, {
+                        labels: motor_temp.data.labels,
+                        datasets: motor_temp.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                    saveToSessionStorage(battery.canvas.id, {
+                        labels: battery.data.labels,
+                        datasets: battery.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                    saveToSessionStorage(pressure.canvas.id, {
+                        labels: pressure.data.labels,
+                        datasets: pressure.data.datasets.map(ds => ({
                             label: ds.label,
                             backgroundColor: ds.backgroundColor,
                             borderColor: ds.borderColor,
@@ -131,8 +163,8 @@
             */
             function loadFromSessionStorage(name) {
                 // filler values to put into fresh chart
-                const xValues = [{{ data[0].timestamp }}];
-                const yValues = [{{ data[0].data}}];
+                const xValues = [];
+                const yValues = [];
 
 
                 const storedData = sessionStorage.getItem(name);
@@ -163,14 +195,40 @@
                         }
                     }
                 }
-
-
             });
+            
+            const battery = new Chart("battery", {
+                type: "line",
+                data: loadFromSessionStorage("battery"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Battery Over Time'
+                        }
+                    }
+                }
+            });
+
+            const pressure = new Chart("pressure", {                
+                type: "line",
+                data: loadFromSessionStorage("pressure"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Pressure Over Time'
+                        }
+                    }
+                }
+            });
+
+            
             // setInterval(() => {
             //     console.log(motorTemp.canvas.id);
             // }, 3000);
             setInterval(() => {
-                addDataPoint(motorTemp);
+                addDataPoint(motorTemp, battery, pressure);
             }, 3000);
         </script>
         
