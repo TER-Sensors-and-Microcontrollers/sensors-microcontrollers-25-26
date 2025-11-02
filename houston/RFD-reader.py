@@ -6,8 +6,7 @@
 import serial
 import time
 
-# TODO: replace /dev/serial0 with appropriate port
-port = serial.Serial('/dev/serial0', 115200, timeout=1) 
+port = serial.Serial('/dev/tty0', 115200, timeout=1) 
 
 try:
     while True:
