@@ -12,7 +12,7 @@ def randomize_bytes():
 
 try:
     ser = serial.Serial(
-        port='/dev/ttyUSB0' # change USB port name if necessary
+        port='/dev/ttyUSB0', # change USB port name if necessary
         baudrate=115200, # standard baud rate for raspberry pi
         timeout=1
     )
