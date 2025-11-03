@@ -42,4 +42,3 @@ https://www.w3schools.com/sql/sql_syntax.asp
 - SQLite db caching + retrieval
 - Flask App
 - sqlite file reader (Flask App)
-
