@@ -42,17 +42,279 @@
                 <td>Value</td>
             </tr>
             <tr>
-                <td>{{ data[0] }}</td>
-                <td>{{ data[1] }} </td>
+                <td>{{ data[0].name }}</td>
+                <td>{{ data[0].data }} </td>
             </tr>
             <tr>
-                <td>{{ data[2] }}</td>
-                <td>{{ data[3] }}</td>
+                <td>{{ data[1].name }}</td>
+                <td>{{ data[1].data }}</td>
             </tr>
             <tr>
-                <td>{{ data[4] }}</td>
-                <td>{{ data[5] }}</td> 
+                <td>{{ data[2].name }}</td>
+                <td>{{ data[2].data }}</td> 
             </tr>
         </table>
+        <div id = "tableContainer"></div>
+            <script>
+
+                const container = document.getElementById('tableContainer');
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const headers = ['Name', 'Value'];
+                headers.forEach(headerText => {
+                    const th = document.createElement('th');
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                const data = [
+                    { name: '', value: 0 },
+                    { name: '', value: 0 },
+                    { name: '', value: 0 }
+                ];
+            
+                data.forEach(rowData => {
+                    const row = document.createElement('tr');
+                    for (const key in rowData) {
+                        const cell = document.createElement('td');
+                        cell.textContent = rowData[key];
+                        row.appendChild(cell);
+                    }
+                    tbody.appendChild(row);
+                    });
+                table.appendChild(tbody);
+                container.appendChild(table);
+                
+                function renderTable() {
+                    // Get all rows in tbody
+                    const rows = tbody.querySelectorAll('tr');
+
+                    rows.forEach((row, rowIndex) => {
+                        const cells = row.querySelectorAll('td');
+                        cells[0].textContent = data[rowIndex].name;
+                        cells[1].textContent = data[rowIndex].value;
+                    });
+                }
+                async function updateTable(data)
+            {
+                try {
+                    const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                    if (!response1.ok) {
+                    throw new Error(`HTTP error! status: ${response1.status}`);
+                    }
+                    const response2 = await fetch('/get_test/2');
+                    if (!response2.ok) {
+                    throw new Error(`HTTP error! status: ${response2.status}`);
+                    }
+                    const response3 = await fetch('/get_test/3');
+                    if (!response3.ok) {
+                    throw new Error(`HTTP error! status: ${response3.status}`);
+                    }
+                    const reading1 = await response1.json();
+                    const reading2 = await response2.json();
+                    const reading3 = await response3.json();
+
+                    data[0].name = reading1.name;
+                    data[1].name = reading2.name;
+                    data[2].name = reading3.name;
+                    
+                    data[0].value = reading1.data;
+                    data[1].value = reading2.data;
+                    data[2].value = reading3.data;
+
+                    renderTable();
+                }
+                catch (error) {
+                    console.error("Error fetching or parsing data:", error);
+                }
+            }
+
+            setInterval(() => {
+                updateTable(data);
+            }, 3000);
+            </script> 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+        <canvas id="motor_temp" style="width:100%;max-width:700px"></canvas>
+        <canvas id="battery" style="width:100%;max-width:700px"></canvas>
+        <canvas id="pressure" style="width:100%;max-width:700px"></canvas>
+        <script>   
+            // TODO: we need to move these functions to a separate file eventually!
+
+            /*
+                addDataPoint
+            
+                [TEST] Adds the most recently grabbed datapoint from motor temp,
+                and adds it to its corresponding chart.
+
+                input(s): chart object to add data point to
+                notes: saves chart to cache based on CANVAS ID (see chartjs documentation),
+                is async
+            */
+           
+            async function addDataPoint(motor_temp, battery, pressure)
+            {
+                try{
+                    // assume that id 1 is motor_temp
+                    const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                    if (!response1.ok) {
+                    throw new Error(`HTTP error! status: ${response1.status}`);
+                    }
+                    const response2 = await fetch('/get_test/2');
+                    if (!response2.ok) {
+                    throw new Error(`HTTP error! status: ${response2.status}`);
+                    }
+                    const response3 = await fetch('/get_test/3');
+                    if (!response3.ok) {
+                    throw new Error(`HTTP error! status: ${response3.status}`);
+                    }
+                    const reading1 = await response1.json();
+                    const reading2 = await response2.json();
+                    const reading3 = await response3.json();
+                    // TODO: extract relevant fields from the json response and push this to the chart
+                    // do something here... 
+                    
+
+                    motor_temp.data.labels.push(reading1.timestamp);
+                    motor_temp.data.datasets[0].data.push(reading1.data);
+                    battery.data.labels.push(reading2.timestamp);
+                    battery.data.datasets[0].data.push(reading2.data);
+                    pressure.data.labels.push(reading3.timestamp);
+                    pressure.data.datasets[0].data.push(reading3.data);
+
+                    motor_temp.update();
+                    battery.update();
+                    pressure.update();
+
+                    // save chart to client's cache so that it can be reloaded on refresh
+                    saveToSessionStorage(motor_temp.canvas.id, {
+                        labels: motor_temp.data.labels,
+                        datasets: motor_temp.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                    saveToSessionStorage(battery.canvas.id, {
+                        labels: battery.data.labels,
+                        datasets: battery.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                    saveToSessionStorage(pressure.canvas.id, {
+                        labels: pressure.data.labels,
+                        datasets: pressure.data.datasets.map(ds => ({
+                            label: ds.label,
+                            backgroundColor: ds.backgroundColor,
+                            borderColor: ds.borderColor,
+                            data: ds.data
+                        }))
+                    })
+                }
+                catch (error) {
+                    console.error("Error fetching or parsing data:", error);
+                }
+
+            }
+
+            /*
+                saveToSessionStorage
+            
+                Given chart name and cachable chart data, saves chart data in user's browser cache
+
+                input(s): name/key to save chart data field as, chart data field to be cached
+            */
+            function saveToSessionStorage(name, data) {
+                // sessionStorage can only store strings, so we must serialize the data to JSON
+                sessionStorage.setItem(name, JSON.stringify(data));
+            }
+
+
+            /*
+                loadFromSessionStorage
+            
+                Given name of chart to load, return chart data from user's browser cache, 
+                if there exists any. Else, return a fresh instance of chart data
+
+                input(s): name under which chart data was saved as (in saveToSessionStorage)
+            */
+            function loadFromSessionStorage(name) {
+                // filler values to put into fresh chart
+                const xValues = [];
+                const yValues = [];
+
+
+                const storedData = sessionStorage.getItem(name);
+                if (storedData) {
+                    // Deserialize the JSON string back into a JavaScript object
+                    return JSON.parse(storedData);
+                }
+                // Return a default data structure if nothing is saved yet
+                return {
+                    labels: xValues,
+                    datasets: [{
+                        backgroundColor:"rgba(255,255,255,1.0)",
+                        borderColor: "rgba(0,0,255,0.1)",
+                        data: yValues
+                        }]
+                };
+            }
+
+            // define chart(s) here
+            const motorTemp = new Chart("motor_temp", {
+                type: "line",
+                data: loadFromSessionStorage("motor_temp"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'MotorTemp Over Time'
+                        }
+                    }
+                }
+            });
+            
+            const battery = new Chart("battery", {
+                type: "line",
+                data: loadFromSessionStorage("battery"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Battery Over Time'
+                        }
+                    }
+                }
+            });
+
+            const pressure = new Chart("pressure", {                
+                type: "line",
+                data: loadFromSessionStorage("pressure"),
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Pressure Over Time'
+                        }
+                    }
+                }
+            });
+
+            
+            // setInterval(() => {
+            //     console.log(motorTemp.canvas.id);
+            // }, 3000);
+            setInterval(() => {
+                addDataPoint(motorTemp, battery, pressure);
+            }, 3000);
+        </script>
+        
     </body>
 </html>
