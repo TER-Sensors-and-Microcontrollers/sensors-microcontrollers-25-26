@@ -2,7 +2,6 @@
 # Simulates what a standard incoming CAN frame may look like from radio.
 # 
 # 
-
 import time
 import os
 import random
@@ -55,12 +54,31 @@ def reader(ser:serial.Serial):
     cursor = db.cursor()
     while True:
         if ser.in_waiting > 0:
+            line = ser.readline().decode("utf8").strip()
+            index = line.index("ID")
+            iD = line[index + 4: index + 8]
+            #print(iD)
+            index2 = line.index("Data")
+            Data = line[index2 + 6: index2 + 28]
+            #print(Data)
+            if (iD == "0036"):
+                message = [iD, "motor temp", Data]
+                cursor.execute(
+                    "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                    messages
+                )
+                db.commit()
+            
+    
             # TODO: "read line" from serial object, decode it w/ "utf8", 
             # "strip" it of whitespace. check if read-in data exists.
-            pass
+            
+                
                 # do something with the data ..
                 # print it (debugging purposes)
                 # if id = x, add to database under name Y
+            
+                
         time.sleep(0.05)
     
 
