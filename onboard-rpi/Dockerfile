@@ -6,6 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Update package lists and install web development tools
 RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
     qtbase5-dev \
     qtchooser \
     qttools5-dev-tools \
@@ -20,9 +23,12 @@ RUN apt-get update && apt-get install -y \
     wget \
     vim \
     nano \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
-
+RUN python3 -m venv /opt/venv \
+    && . /opt/venv/bin/activate \
+    && pip install --no-cache-dir python-can
 # Create a non-root user "racing" with UID/GID 1000
 # 1000 is the default UID for the first user on most systems
 ARG USERNAME=racing
@@ -43,3 +49,4 @@ WORKDIR /workspace
 
 # Default command
 CMD ["/bin/bash"]
+ENV PATH="/opt/venv/bin:$PATH"
