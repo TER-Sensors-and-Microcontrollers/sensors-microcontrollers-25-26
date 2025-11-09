@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define rx_size 14
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,13 +52,14 @@ UART_HandleTypeDef huart1;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
+void uart_rx_start(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static uint8_t rx_buff[rx_size];
 /* USER CODE END 0 */
 
 /**
@@ -114,15 +115,23 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t tx_buff[] = "Hello World!\n";
-
-  // Make a struct that can tell the complier to not add struct padding / extra bytes.
-
+  uint8_t rx_buff[14];
   while (1)
   {
 
+	  if(HAL_UART_Receive(&huart1, rx_buff, sizeof(rx_buff), 1000)==HAL_OK) //if transfer is successful
+	    {
+		  printf("Received Data\n");
+	      __NOP();
+	    } else {
+	    printf("Didn't Receive Data\n");
+	      __NOP();
+	    }
+	  printf("%.*s\r\n", (int)sizeof rx_buff, (char*)rx_buff);
+	  HAL_Delay(1000);
+
     /* USER CODE END WHILE */
-	  HAL_UART_Transmit(&huart1, tx_buff, sizeof(tx_buff), 1000);
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -245,7 +254,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void uart_rx_start(void) {
+	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_buff, rx_size);
+	__HAL_DMA_DISABLE_IT(huart1.hdmarx, DMA_IT_HT);
+}
 
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
+	if(huart1 == &huart1) {
+		printf("%.*s", (int)Size, (char*)rx_buf);
+	}
+
+	HAL_UARTEx_ReceiveToIdle_DMA(&huart1, rx_buf, RX_SZ);
+}
 /* USER CODE END 4 */
 
 /**
