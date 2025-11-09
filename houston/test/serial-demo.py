@@ -35,7 +35,7 @@ def get_db():
 # (randomized CAN data frames + fixed set of CAN IDs) to serial port
 # does not return anything
 def feeder(ser:serial.Serial):
-    fids = ["0001", "0036", "00A2", "00A3", "00A4"]
+    fids = ["0001", "0036", "0037", "0038", "0039"]
     weights = [1, 5, 2, 2, 2]
     start = time.time()
     while True:
@@ -57,43 +57,48 @@ def reader(ser:serial.Serial):
             line = ser.readline().decode("utf8").strip()
             index = line.index("ID")
             iD = line[index + 4: index + 8]
-            #print(iD)
+            iD = int(iD)
+            print(iD)
             index2 = line.index("Data")
             Data = line[index2 + 6: index2 + 28]
+            Data = Data[0:10]
+            Data = Data.replace(" ","")
+            int_value = int(Data, 16)
+            print(int_value)
             #print(Data)
             match iD:
-                case "0036":
-                    message = [iD, "test_data1", Data]
+                case 1:
+                    message = [iD, "test_data1", int_value, time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
                     db.commit()
-                case "0001":
-                    message = [iD, "test_data2", Data]
+                case 36:
+                    message = [iD, "test_data2", int_value, time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
                     db.commit()
-                case "00A2":
-                    message = [iD, "test_data3", Data]
+                case 37:
+                    message = [iD, "test_data3", int_value, time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
                     db.commit()
-                case "00A3":
-                    message = [iD, "test_data4", Data]
+                case 38:
+                    message = [iD, "test_data4", int_value, time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
                     db.commit()
-                case "00A4":
-                    message = [iD, "test_data5", Data]
+                case 39:
+                    message = [iD, "test_data5", int_value, time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
                     db.commit()
