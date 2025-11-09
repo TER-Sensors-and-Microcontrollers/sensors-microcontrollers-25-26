@@ -61,15 +61,42 @@ def reader(ser:serial.Serial):
             index2 = line.index("Data")
             Data = line[index2 + 6: index2 + 28]
             #print(Data)
-            if (iD == "0036"):
-                message = [iD, "motor temp", Data]
-                cursor.execute(
-                    "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
-                    messages
-                )
-                db.commit()
-            
-    
+            match iD:
+                case "0036":
+                    message = [iD, "test_data1", Data]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case "0001":
+                    message = [iD, "test_data2", Data]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case "00A2":
+                    message = [iD, "test_data3", Data]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case "00A3":
+                    message = [iD, "test_data4", Data]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case "00A4":
+                    message = [iD, "test_data5", Data]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data) VALUES (?, ?, ?)",
+                        message
+                    )
+                    db.commit()
             # TODO: "read line" from serial object, decode it w/ "utf8", 
             # "strip" it of whitespace. check if read-in data exists.
             
