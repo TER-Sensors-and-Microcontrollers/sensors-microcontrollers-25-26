@@ -57,6 +57,15 @@ def reader(ser:serial.Serial):
             line = ser.readline().decode("utf8").strip()
             index = line.index("ID")
             iD = line[index + 4: index + 8]
+            
+            '''
+
+
+            TODO: change this to floats once we get actual values!!!
+
+
+            '''
+            
             iD = int(iD)
             print(iD)
             index2 = line.index("Data")

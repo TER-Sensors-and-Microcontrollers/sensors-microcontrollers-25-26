@@ -29,7 +29,7 @@
         </div>
         
         
-        <h1>Hello World</h1>
+        <h1>Houston - Tufts Racing Telemetry Webapp</h1>
         <!-- Write up-to-date sensor readings here!!! -->
          <style>
             table, th, td {
@@ -71,6 +71,15 @@
                 table.appendChild(tbody);
                 container.appendChild(table);
                 
+
+
+                /* 
+                    renderTable
+                    
+                    TODO func contract
+                
+                
+                */
                 function renderTable() {
                     // Get all rows in tbody
                     const rows = tbody.querySelectorAll('tr');
@@ -81,53 +90,64 @@
                         cells[1].textContent = data[rowIndex].value;
                     });
                 }
+                
+                
+                /*
+                    updateTable
+                
+                    Updates real-time table with all incoming real-time data
+
+                    input(s): data array to be updated in entirety with incoming data
+                */  
                 async function updateTable(data)
-            {
-                try {
-                    const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
-                    if (!response1.ok) {
-                    throw new Error(`HTTP error! status: ${response1.status}`);
-                    }
-                    const response2 = await fetch('/get_test/36');
-                    if (!response2.ok) {
-                    throw new Error(`HTTP error! status: ${response2.status}`);
-                    }
-                    const response3 = await fetch('/get_test/37');
-                    if (!response3.ok) {
-                    throw new Error(`HTTP error! status: ${response3.status}`);
-                    }
-                    const reading1 = await response1.json();
-                    const reading2 = await response2.json();
-                    const reading3 = await response3.json();
+                {
 
-                    data[0].name = reading1.name;
-                    data[1].name = reading2.name;
-                    data[2].name = reading3.name;
-                    
-                    data[0].value = reading1.data;
-                    data[1].value = reading2.data;
-                    data[2].value = reading3.data;
+                    // make it flexible to however many unique incoming readings need to be read
+                    try {
+                        const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                        if (!response1.ok) {
+                        throw new Error(`HTTP error! status: ${response1.status}`);
+                        }
+                        const response2 = await fetch('/get_test/36');
+                        if (!response2.ok) {
+                        throw new Error(`HTTP error! status: ${response2.status}`);
+                        }
+                        const response3 = await fetch('/get_test/37');
+                        if (!response3.ok) {
+                        throw new Error(`HTTP error! status: ${response3.status}`);
+                        }
+                        const reading1 = await response1.json();
+                        const reading2 = await response2.json();
+                        const reading3 = await response3.json();
 
-                    renderTable();
+                        data[0].name = reading1.name;
+                        data[1].name = reading2.name;
+                        data[2].name = reading3.name;
+                        
+                        data[0].value = reading1.data;
+                        data[1].value = reading2.data;
+                        data[2].value = reading3.data;
+
+                        renderTable();
+                    }
+                    catch (error) {
+                        console.error("Error fetching or parsing data:", error);
+                    }
                 }
-                catch (error) {
-                    console.error("Error fetching or parsing data:", error);
-                }
-            }
 
             setInterval(() => {
                 updateTable(data);
             }, 3000);
             </script> 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <canvas id="motor_temp" style="width:100%;max-width:700px"></canvas>
-        <canvas id="battery" style="width:100%;max-width:700px"></canvas>
-        <canvas id="pressure" style="width:100%;max-width:700px"></canvas>
+        <canvas id="graph1" style="width:100%;max-width:700px"></canvas>
+        <canvas id="graph2" style="width:100%;max-width:700px"></canvas>
+        <canvas id="graph3" style="width:100%;max-width:700px"></canvas>
         <script>   
             // TODO: we need to move these functions to a separate file eventually!
 
             /*
-                addDataPoint
+                updateGraphs
             
                 [TEST] Adds the most recently grabbed datapoint from motor temp,
                 and adds it to its corresponding chart.
@@ -137,63 +157,69 @@
                 is async
             */
            
-            async function addDataPoint(motor_temp, battery, pressure)
+            async function updateGraphs([sid1,sid2,sid3])
             {
+                // Make this function take in a size 3 array
+                // rename it as well - updateGraphs
+                // also TODO: make a function that clears the data from a graph.
+                // add button [test] to clear all graph data
+                // add button to exchange sensors in a specific graph
+                // add button to view a specific sensor in table mode (and associated page)
+                // function to set sensors of graph array (?)
+                
                 try{
-                    // assume that id 1 is motor_temp
-                    const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
+                    const response1 = await fetch('/get_test/' + sid1); // Replace with your actual API endpoint
                     if (!response1.ok) {
                     throw new Error(`HTTP error! status: ${response1.status}`);
                     }
-                    const response2 = await fetch('/get_test/36');
+                    const response2 = await fetch('/get_test/' + sid2);
                     if (!response2.ok) {
                     throw new Error(`HTTP error! status: ${response2.status}`);
                     }
-                    const response3 = await fetch('/get_test/37');
+                    const response3 = await fetch('/get_test/' + sid3);
                     if (!response3.ok) {
                     throw new Error(`HTTP error! status: ${response3.status}`);
                     }
                     const reading1 = await response1.json();
                     const reading2 = await response2.json();
-                    const reading3 = await response3.json();
-                    // TODO: extract relevant fields from the json response and push this to the chart
-                    // do something here... 
+                    const reading3 = await response3.json(); 
                     
 
-                    motor_temp.data.labels.push(reading1.timestamp);
-                    motor_temp.data.datasets[0].data.push(reading1.data);
-                    battery.data.labels.push(reading2.timestamp);
-                    battery.data.datasets[0].data.push(reading2.data);
-                    pressure.data.labels.push(reading3.timestamp);
-                    pressure.data.datasets[0].data.push(reading3.data);
+                    // update graphs
+                    g1.data.labels.push(reading1.timestamp);
+                    g1.data.datasets[0].data.push(reading1.data);
+                    g2.data.labels.push(reading2.timestamp);
+                    g2.data.datasets[0].data.push(reading2.data);
+                    g3.data.labels.push(reading3.timestamp);
+                    g3.data.datasets[0].data.push(reading3.data);
 
-                    motor_temp.update();
-                    battery.update();
-                    pressure.update();
+                    g1.update();
+                    g2.update();
+                    g3.update();
 
                     // save chart to client's cache so that it can be reloaded on refresh
-                    saveToSessionStorage(motor_temp.canvas.id, {
-                        labels: motor_temp.data.labels,
-                        datasets: motor_temp.data.datasets.map(ds => ({
-                            label: ds.label,
+                    saveToSessionStorage(g1.canvas.id, {
+                        labels: g1.data.labels,
+                        datasets: g1.data.datasets.map(ds => ({
+                            label: reading1.name + " Over Time",
                             backgroundColor: ds.backgroundColor,
                             borderColor: ds.borderColor,
                             data: ds.data
                         }))
                     })
-                    saveToSessionStorage(battery.canvas.id, {
-                        labels: battery.data.labels,
-                        datasets: battery.data.datasets.map(ds => ({
-                            label: ds.label,
+                    saveToSessionStorage(g2.canvas.id, {
+                        labels: g2.data.labels,
+                        datasets: g2.data.datasets.map(ds => ({
+                            label: reading2.name + " Over Time",
                             backgroundColor: ds.backgroundColor,
                             borderColor: ds.borderColor,
                             data: ds.data
                         }))
                     })
-                    saveToSessionStorage(pressure.canvas.id, {
-                        labels: pressure.data.labels,
-                        datasets: pressure.data.datasets.map(ds => ({
-                            label: ds.label,
+                    saveToSessionStorage(g3.canvas.id, {
+                        labels: g3.data.labels,
+                        datasets: g3.data.datasets.map(ds => ({
+                            label: reading3.name + " Over Time",
                             backgroundColor: ds.backgroundColor,
                             borderColor: ds.borderColor,
                             data: ds.data
@@ -242,6 +268,7 @@
                 return {
                     labels: xValues,
                     datasets: [{
+                        label: name,
                         backgroundColor:"rgba(255,255,255,1.0)",
                         borderColor: "rgba(0,0,255,0.1)",
                         data: yValues
@@ -250,51 +277,47 @@
             }
 
             // define chart(s) here
-            const motorTemp = new Chart("motor_temp", {
+            const g1 = new Chart("graph1", {
                 type: "line",
-                data: loadFromSessionStorage("motor_temp"),
+                data: loadFromSessionStorage("graph1"),
                 options: {
                     plugins: {
                         title: {
                             display: true,
-                            text: 'MotorTemp Over Time'
+                            text: 'Sensor 1 Over Time'
                         }
                     }
                 }
             });
             
-            const battery = new Chart("battery", {
+            const g2 = new Chart("graph2", {
                 type: "line",
-                data: loadFromSessionStorage("battery"),
+                data: loadFromSessionStorage("graph2"),
                 options: {
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Battery Over Time'
+                            text: 'Sensor 2 Over Time'
                         }
                     }
                 }
             });
 
-            const pressure = new Chart("pressure", {                
+            const g3 = new Chart("graph3", {                
                 type: "line",
-                data: loadFromSessionStorage("pressure"),
+                data: loadFromSessionStorage("graph3"),
                 options: {
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Pressure Over Time'
+                            text: 'Sensor 3 Over Time'
                         }
                     }
                 }
             });
 
-            
-            // setInterval(() => {
-            //     console.log(motorTemp.canvas.id);
-            // }, 3000);
             setInterval(() => {
-                addDataPoint(motorTemp, battery, pressure);
+                updateGraphs([1, 36, 37]);
             }, 3000);
         </script>
         

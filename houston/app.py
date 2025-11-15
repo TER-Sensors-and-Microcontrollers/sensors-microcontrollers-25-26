@@ -41,36 +41,10 @@ HOME SCREEN ROUTE
 @app.route('/')
 # ‘/’ URL is bound with run() function. 
 def display_index():
-    
-    db = get_db()
-    db.row_factory = sqlite3.Row
-    cursor = db.cursor()
-    data_to_send = []
-   
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'test_data1' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'test_data1')")
-    rows = cursor.fetchall()
-    row1 = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])   
-    
-    data_to_send.append(row1)
-
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'test_data2' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'test_data2')")
-    rows1 = cursor.fetchall()
-    row2 = Data_Point(rows1[0][0], rows1[0][1], rows1[0][2], rows1[0][3], rows1[0][4])
-    
-    data_to_send.append(row2)
-    #value2 = rows1[0][3]
-    #data_to_send.append(value2)
-
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'test_data3' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'test_data3')")
-    rows2 = cursor.fetchall()
-    row3 = Data_Point(rows2[0][0], rows2[0][1], rows2[0][2], rows2[0][3], rows2[0][4])
-    
-    data_to_send.append(row3)
-    
-    cursor.close()
 
 
-    return render_template("index.html", data=data_to_send)
+    # return render_template("index.html", data=data_to_send)
+    return render_template("index.html",)
     #cursor.close
 
     # return render_template("index.html", array_data = shm_data)
