@@ -76,7 +76,7 @@
                 /* 
                     renderTable
                     
-                    TODO func contract
+                    renders 
                 
                 
                 */
@@ -104,6 +104,8 @@
 
                     // make it flexible to however many unique incoming readings need to be read
                     try {
+
+
                         const response1 = await fetch('/get_test/1'); // Replace with your actual API endpoint
                         if (!response1.ok) {
                         throw new Error(`HTTP error! status: ${response1.status}`);
@@ -141,26 +143,29 @@
             </script> 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
         <canvas id="graph1" style="width:100%;max-width:700px"></canvas>
+        <button onclick="clearGraph(g1)">Clear Graph</button>
         <canvas id="graph2" style="width:100%;max-width:700px"></canvas>
+        <button onclick="clearGraph(g2)">Clear Graph</button>
         <canvas id="graph3" style="width:100%;max-width:700px"></canvas>
+        <button onclick="clearGraph(g3)">Clear Graph</button>
         <script>   
             // TODO: we need to move these functions to a separate file eventually!
 
             /*
                 updateGraphs
             
-                [TEST] Adds the most recently grabbed datapoint from motor temp,
+                Adds the most recently grabbed datapoints from 3 preexisting sensors,
                 and adds it to its corresponding chart.
 
-                input(s): chart object to add data point to
-                notes: saves chart to cache based on CANVAS ID (see chartjs documentation),
-                is async
+                input(s): size-3 array of sensor ids
+                notes: 
+                    - saves chart to cache based on CANVAS ID (see chartjs documentation),
+                    - is async
+                    - sensor(s) with given id must exist within database
+
             */
-           
             async function updateGraphs([sid1,sid2,sid3])
             {
-                // Make this function take in a size 3 array
-                // rename it as well - updateGraphs
                 // also TODO: make a function that clears the data from a graph.
                 // add button [test] to clear all graph data
                 // add button to exchange sensors in a specific graph
@@ -232,6 +237,23 @@
 
             }
 
+            async function clearGraph(g) {
+                g.data.labels = [];
+                g.data.datasets[0].data = [];
+                g.update();
+
+                saveToSessionStorage(g.canvas.id,
+                {
+                    labels: [],
+                    datasets: [{
+                        label: "",
+                        backgroundColor:"rgba(255,255,255,1.0)",
+                        borderColor: "rgba(0,0,255,0.1)",
+                        data: []
+                        }]
+                });
+                console.log("graph " + g + " cleared...");
+            }
             /*
                 saveToSessionStorage
             
