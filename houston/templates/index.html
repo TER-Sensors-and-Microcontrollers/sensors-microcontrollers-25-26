@@ -53,11 +53,7 @@
                 table.appendChild(thead);
 
                 const tbody = document.createElement('tbody');
-                const data = [
-                    { name: '', value: 0 },
-                    { name: '', value: 0 },
-                    { name: '', value: 0 }
-                ];
+                const data = [];
             
                 data.forEach(rowData => {
                     const row = document.createElement('tr');
@@ -76,7 +72,7 @@
                 /* 
                     renderTable
                     
-                    renders 
+                    renders real-time data table with upated data via data array
                 
                 
                 */
@@ -142,11 +138,11 @@
             }, 3000);
             </script> 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <canvas id="graph1" style="width:100%;max-width:700px"></canvas>
+        <canvas class="graph" id="graph1" style="width:100%;max-width:700px"></canvas>
         <button onclick="clearGraph(g1)">Clear Graph</button>
-        <canvas id="graph2" style="width:100%;max-width:700px"></canvas>
+        <canvas class="graph" id="graph2" style="width:100%;max-width:700px"></canvas>
         <button onclick="clearGraph(g2)">Clear Graph</button>
-        <canvas id="graph3" style="width:100%;max-width:700px"></canvas>
+        <canvas class="graph" id="graph3" style="width:100%;max-width:700px"></canvas>
         <button onclick="clearGraph(g3)">Clear Graph</button>
         <script>   
             // TODO: we need to move these functions to a separate file eventually!
@@ -166,11 +162,9 @@
             */
             async function updateGraphs([sid1,sid2,sid3])
             {
-                // also TODO: make a function that clears the data from a graph.
-                // add button [test] to clear all graph data
+                // also TODO:
                 // add button to exchange sensors in a specific graph
                 // add button to view a specific sensor in table mode (and associated page)
-                // function to set sensors of graph array (?)
                 
                 try{
                     const response1 = await fetch('/get_test/' + sid1); // Replace with your actual API endpoint
@@ -342,6 +336,40 @@
                 updateGraphs([1, 36, 37]);
             }, 3000);
         </script>
-        
+            <div id="sensorExchange" class="modal">
+            <div class="modal-content">
+                <button class="close-button">&times;</button>
+                <h2>Exchange Graphs</h2>
+                <p>select sensor data to exchange here...</p>
+            </div>
+        </div>
+        <button id="openPopup">Open Popup</button>
+
+
+
+        <script>
+
+            document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('sensorExchange');
+            const openPopupBtn = document.getElementById('openPopup');
+            const closeButton = document.querySelector('.close-button');
+
+            openPopupBtn.onclick = function() {
+                modal.style.display = 'block';
+                openPopupBtn.style.display = 'none';
+            }
+
+            closeButton.onclick = function() {
+                modal.style.display = 'none';
+                openPopupBtn.style.display = 'block';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+        </script>
     </body>
 </html>
