@@ -23,7 +23,17 @@ const tbody = document.createElement('tbody');
 table.appendChild(tbody);
 container.appendChild(table);
 
+/*
+    getIdsByMode
 
+    Calls the appropriate endpoint to grab the appropriate collection of unique sensors
+    
+    input(s): 
+        - mode (str): determines what specific sensors to include in table view
+            - f: "full mode"; all unique sensors in the database
+    returns: list of unique sensor name,id pairs
+
+*/
 async function getIdsByMode(mode) {
     if (mode == "f") {
         const response_ids = await fetch('/unique_sensors'); 
