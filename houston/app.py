@@ -113,8 +113,9 @@ def get_test_data(sensor_id:int):
 
 # /unique_sensors
 # 
-# returns JSON response of all unique sensor id,name pairs
+# returns JSON response of all unique sensor id,name pairs ordered by id, ascending
 # 404 if no sensors found in db
+
 @app.route('/unique_sensors')
 def get_unique_sensors():
     db = get_db()

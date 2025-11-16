@@ -44,7 +44,7 @@ def feeder(ser:serial.Serial):
         fid = random.choices(fids, weights=weights)[0]
         data_to_send = f"{time.time() - start:.2f} Frame ID: {fid}, Data: {b}\n"
         ser.write(data_to_send.encode())
-        time.sleep(1)
+        time.sleep(.005)
 
 # given open serial port object, indefinitely reads mock CAN data 
 # from serial port, prints it, and stores it in Flask database.
@@ -110,17 +110,8 @@ def reader(ser:serial.Serial):
                         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                         message
                     )
-                    db.commit()
-            # TODO: "read line" from serial object, decode it w/ "utf8", 
-            # "strip" it of whitespace. check if read-in data exists.
-            
-                
-                # do something with the data ..
-                # print it (debugging purposes)
-                # if id = x, add to database under name Y
-            
-                
-        time.sleep(0.05)
+                    db.commit()  
+        time.sleep(0.005)
     
 
 if __name__ == "__main__":
