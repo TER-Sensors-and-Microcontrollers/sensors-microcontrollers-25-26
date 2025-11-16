@@ -62,10 +62,11 @@ def list_users():
     cursor = db.cursor()
     cursor.execute("SELECT * FROM sensor_readings")
     readings = cursor.fetchall()
+    cursor.close()
     return str([dict(r) for r in readings]) # Example output
 
 # /get_test/<sensor_id>
-# [TEST] given id of test sensor where:
+# given id of test sensor where:
 # 
 # 1 = motor_temp
 # 2 = battery
@@ -85,7 +86,6 @@ def list_users():
 def get_test_data(sensor_id:int):
     db = get_db()
     cursor = db.cursor()
-
     # '?' character in the cursor query uses the value passed in from get_test_data
     # otherwise using sensor_id = sensor_id would query for itself
     # I use sensor_id variable as an argument twice, so I need to pass it in as a parameter twice
@@ -94,6 +94,7 @@ def get_test_data(sensor_id:int):
     "WHERE sensor_id = ? AND " \
     "timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE sensor_id = ?)", (sensor_id, sensor_id))
     rows = cursor.fetchall()
+    cursor.close()
 
     # return error 404 if the query does not return any results
     if not rows:
@@ -110,6 +111,23 @@ def get_test_data(sensor_id:int):
     # reading = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
     return jsonify(reading)
 
+# /unique_sensors
+# 
+# returns JSON response of all unique sensor id,name pairs
+# 404 if no sensors found in db
+@app.route('/unique_sensors')
+def get_unique_sensors():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT DISTINCT sensor_id,name FROM sensor_readings ORDER BY sensor_id")
+    rows = cursor.fetchall()
+
+    if not rows:
+        return jsonify({"error": "No sensor data found"}), 404
+    
+    cursor.close()
+
+    return [dict(r) for r in rows]
 
 """
 DATABASE INITIALIZATION
@@ -153,6 +171,7 @@ if __name__ == '__main__':
         "timestamp DATETIME" \
         ")")
         db.commit()
+        cursor.close()
     # Runs the app using socketio for real-time data updates from the
     # shared memory.
     socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
