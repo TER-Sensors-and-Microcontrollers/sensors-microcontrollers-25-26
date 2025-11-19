@@ -55,27 +55,15 @@
                 <label for="links">Choose an iD:</label>
 
                 <select name="links" id="data">
-                <option value="link1">Select</option>
-                <option value="li">0001</option>
-                <option value="mercedes">0036</option>
-                <option value="audi">0037</option>
-                <option value="audi">0038</option>
-                <option value="audi">0039</option>
+                <option value="">Select</option>
+                <option value="1">1</option>
+                <option value="36">36</option>
+                <option value="37">37</option>
+                <option value="38">38</option>
+                <option value="39">39</option>
                 </select>
 
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                    var dropdown = document.getElementById('data');
-                    dropdown.addEventListener('change', function() {
-                    var selectedValue = dropdown.value;
-                    // Call a function in graphs.js with the selected value
-                    // For example, updateGraphs([selectedValue, 36, 37]);
-                    // Or, if you want to update a specific graph:
-                    // updateSingleGraph(g1, selectedValue);
-                    updateGraphs(selectedValue, 36, 37);
-                    });
-                });
-                </script>
+                
             </div>
             </div>
         </div>

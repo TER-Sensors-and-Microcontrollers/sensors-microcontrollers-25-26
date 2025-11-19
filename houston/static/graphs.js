@@ -16,6 +16,7 @@
         - is async
         - sensor(s) with given id must exist within database
 */
+
 var selectedValue = 1;
 
 async function updateGraphs([sid1,sid2,sid3])
