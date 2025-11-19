@@ -52,8 +52,35 @@
                 <button class="close-button">&times;</button>
                 <h2>Exchange Graphs</h2>
                 <p>select sensor data to exchange here...</p>
+                <label for="links">Choose an iD:</label>
+
+                <select name="links" id="data">
+                <option value="link1">Select</option>
+                <option value="li">0001</option>
+                <option value="mercedes">0036</option>
+                <option value="audi">0037</option>
+                <option value="audi">0038</option>
+                <option value="audi">0039</option>
+                </select>
+
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                    var dropdown = document.getElementById('data');
+                    dropdown.addEventListener('change', function() {
+                    var selectedValue = dropdown.value;
+                    // Call a function in graphs.js with the selected value
+                    // For example, updateGraphs([selectedValue, 36, 37]);
+                    // Or, if you want to update a specific graph:
+                    // updateSingleGraph(g1, selectedValue);
+                    updateGraphs(selectedValue, 36, 37);
+                    });
+                });
+                </script>
+            </div>
             </div>
         </div>
-        <button id="openPopup">Open Popup</button>
+        <button id="openPopup">Open Popup
+        </button>
+        
     </body>
 </html>

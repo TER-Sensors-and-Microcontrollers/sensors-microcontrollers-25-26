@@ -16,6 +16,8 @@
         - is async
         - sensor(s) with given id must exist within database
 */
+var selectedValue = 1;
+
 async function updateGraphs([sid1,sid2,sid3])
 {
     // also TODO:
@@ -173,6 +175,16 @@ const g3 = new Chart("graph3", {
         }
     }
 });
+
+ document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('data');
+                dropdown.addEventListener('change', function() 
+                {
+                    clearGraph(g1);
+                    selectedValue = dropdown.value;
+                });
+ });
 setInterval(() => {
-    updateGraphs([1, 36, 37]);
+    updateGraphs([selectedValue, 36, 37]);
 }, 3000);
+
