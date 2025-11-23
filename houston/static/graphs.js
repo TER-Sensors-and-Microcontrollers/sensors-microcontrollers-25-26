@@ -183,8 +183,36 @@ const g3 = new Chart("graph3", {
                 {
                     clearGraph(g1);
                     selectedValue = dropdown.value;
+                    get_new_data(selectedValue);
                 });
  });
+
+ async function get_new_data(selectedValue)
+ {
+    const new_data = await fetch('/get_all_data/' + selectedValue); // Replace with your actual API endpoint
+        if (!new_data.ok) {
+        throw new Error(`HTTP error! status: ${new_data.status}`);
+        }
+    
+    const all_data = await new_data.json();
+
+    for (let r = 0; r < all_data.length; r++) {
+        g1.data.labels.push(all_data[r].timestamp);
+        g1.data.datasets[0].data.push(all_data[r].data);
+    }
+    g1.update();
+    
+    saveToSessionStorage(g1.canvas.id, {
+            labels: g1.data.labels,
+            datasets: g1.data.datasets.map(ds => ({
+                label: all_data[0].name + " Over Time",
+                backgroundColor: ds.backgroundColor,
+                borderColor: ds.borderColor,
+                data: ds.data
+            }))
+        })
+
+ }
 setInterval(() => {
     updateGraphs([selectedValue, 36, 37]);
 }, 3000);

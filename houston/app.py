@@ -82,6 +82,31 @@ def list_users():
 #     "timestamp": datetime
 #  }
 
+@app.route('/get_all_data/<sensor_id>')
+def get_all_data_db(sensor_id:int):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM sensor_readings " \
+    "WHERE sensor_id = ?", (sensor_id,))
+    row = cursor.fetchall()
+    cursor.close()
+
+    if not row:
+        return jsonify({"error": "No sensor data found for id " + sensor_id}), 404
+
+    readings = []
+    for r in row:
+        reading = {
+            "reading_id": r[0],
+            "sensor_id": r[1],
+            "name": r[2],
+            "data": r[3],
+            "timestamp": r[4]
+        }
+        readings.append(reading)
+
+    return jsonify(readings)
+
 @app.route('/get_test/<sensor_id>')
 def get_test_data(sensor_id:int):
     db = get_db()
