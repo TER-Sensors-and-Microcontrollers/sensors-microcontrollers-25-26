@@ -41,36 +41,10 @@ HOME SCREEN ROUTE
 @app.route('/')
 # ‘/’ URL is bound with run() function. 
 def display_index():
-    
-    db = get_db()
-    db.row_factory = sqlite3.Row
-    cursor = db.cursor()
-    data_to_send = []
-   
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'motor temp' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'motor temp')")
-    rows = cursor.fetchall()
-    row1 = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])   
-    
-    data_to_send.append(row1)
-
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'battery' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'battery')")
-    rows1 = cursor.fetchall()
-    row2 = Data_Point(rows1[0][0], rows1[0][1], rows1[0][2], rows1[0][3], rows1[0][4])
-    
-    data_to_send.append(row2)
-    #value2 = rows1[0][3]
-    #data_to_send.append(value2)
-
-    cursor.execute("SELECT * FROM sensor_readings WHERE name = 'pressure' AND timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE name = 'pressure')")
-    rows2 = cursor.fetchall()
-    row3 = Data_Point(rows2[0][0], rows2[0][1], rows2[0][2], rows2[0][3], rows2[0][4])
-    
-    data_to_send.append(row3)
-    
-    cursor.close()
 
 
-    return render_template("index.html", data=data_to_send)
+    # return render_template("index.html", data=data_to_send)
+    return render_template("index.html",)
     #cursor.close
 
     # return render_template("index.html", array_data = shm_data)
@@ -88,10 +62,11 @@ def list_users():
     cursor = db.cursor()
     cursor.execute("SELECT * FROM sensor_readings")
     readings = cursor.fetchall()
+    cursor.close()
     return str([dict(r) for r in readings]) # Example output
 
 # /get_test/<sensor_id>
-# [TEST] given id of test sensor where:
+# given id of test sensor where:
 # 
 # 1 = motor_temp
 # 2 = battery
@@ -107,11 +82,35 @@ def list_users():
 #     "timestamp": datetime
 #  }
 
+@app.route('/get_all_data/<sensor_id>')
+def get_all_data_db(sensor_id:int):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM sensor_readings " \
+    "WHERE sensor_id = ?", (sensor_id,))
+    row = cursor.fetchall()
+    cursor.close()
+
+    if not row:
+        return jsonify({"error": "No sensor data found for id " + sensor_id}), 404
+
+    readings = []
+    for r in row:
+        reading = {
+            "reading_id": r[0],
+            "sensor_id": r[1],
+            "name": r[2],
+            "data": r[3],
+            "timestamp": r[4]
+        }
+        readings.append(reading)
+
+    return jsonify(readings)
+
 @app.route('/get_test/<sensor_id>')
 def get_test_data(sensor_id:int):
     db = get_db()
     cursor = db.cursor()
-
     # '?' character in the cursor query uses the value passed in from get_test_data
     # otherwise using sensor_id = sensor_id would query for itself
     # I use sensor_id variable as an argument twice, so I need to pass it in as a parameter twice
@@ -120,6 +119,7 @@ def get_test_data(sensor_id:int):
     "WHERE sensor_id = ? AND " \
     "timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE sensor_id = ?)", (sensor_id, sensor_id))
     rows = cursor.fetchall()
+    cursor.close()
 
     # return error 404 if the query does not return any results
     if not rows:
@@ -136,6 +136,24 @@ def get_test_data(sensor_id:int):
     # reading = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
     return jsonify(reading)
 
+# /unique_sensors
+# 
+# returns JSON response of all unique sensor id,name pairs ordered by id, ascending
+# 404 if no sensors found in db
+
+@app.route('/unique_sensors')
+def get_unique_sensors():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT DISTINCT sensor_id,name FROM sensor_readings ORDER BY sensor_id")
+    rows = cursor.fetchall()
+
+    if not rows:
+        return jsonify({"error": "No sensor data found"}), 404
+    
+    cursor.close()
+
+    return [dict(r) for r in rows]
 
 """
 DATABASE INITIALIZATION
@@ -179,6 +197,7 @@ if __name__ == '__main__':
         "timestamp DATETIME" \
         ")")
         db.commit()
+        cursor.close()
     # Runs the app using socketio for real-time data updates from the
     # shared memory.
     socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)

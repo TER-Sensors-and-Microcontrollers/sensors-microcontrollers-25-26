@@ -2,7 +2,6 @@
 # Simulates what a standard incoming CAN frame may look like from radio.
 # 
 # 
-
 import time
 import os
 import random
@@ -36,7 +35,7 @@ def get_db():
 # (randomized CAN data frames + fixed set of CAN IDs) to serial port
 # does not return anything
 def feeder(ser:serial.Serial):
-    fids = ["0001", "0036", "00A2", "00A3", "00A4"]
+    fids = ["0001", "0036", "0037", "0038", "0039"]
     weights = [1, 5, 2, 2, 2]
     start = time.time()
     while True:
@@ -45,7 +44,7 @@ def feeder(ser:serial.Serial):
         fid = random.choices(fids, weights=weights)[0]
         data_to_send = f"{time.time() - start:.2f} Frame ID: {fid}, Data: {b}\n"
         ser.write(data_to_send.encode())
-        time.sleep(1)
+        time.sleep(.005)
 
 # given open serial port object, indefinitely reads mock CAN data 
 # from serial port, prints it, and stores it in Flask database.
@@ -55,13 +54,64 @@ def reader(ser:serial.Serial):
     cursor = db.cursor()
     while True:
         if ser.in_waiting > 0:
-            # TODO: "read line" from serial object, decode it w/ "utf8", 
-            # "strip" it of whitespace. check if read-in data exists.
-            pass
-                # do something with the data ..
-                # print it (debugging purposes)
-                # if id = x, add to database under name Y
-        time.sleep(0.05)
+            line = ser.readline().decode("utf8").strip()
+            index = line.index("ID")
+            iD = line[index + 4: index + 8]
+            
+            '''
+
+
+            TODO: change this to floats once we get actual values!!!
+
+
+            '''
+            
+            iD = int(iD)
+            print(iD)
+            index2 = line.index("Data")
+            Data = line[index2 + 6: index2 + 28]
+            Data = Data[0:10]
+            Data = Data.replace(" ","")
+            int_value = int(Data, 16)
+            print(int_value)
+            #print(Data)
+            match iD:
+                case 1:
+                    message = [iD, "test_data1", int_value, time.time()]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case 36:
+                    message = [iD, "test_data2", int_value, time.time()]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case 37:
+                    message = [iD, "test_data3", int_value, time.time()]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case 38:
+                    message = [iD, "test_data4", int_value, time.time()]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+                case 39:
+                    message = [iD, "test_data5", int_value, time.time()]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()  
+        time.sleep(0.005)
     
 
 if __name__ == "__main__":

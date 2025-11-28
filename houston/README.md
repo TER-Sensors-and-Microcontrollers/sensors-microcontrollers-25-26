@@ -1,6 +1,4 @@
-# Documentation for Houston
-
-https://www.w3schools.com/sql/sql_syntax.asp    
+# Documentation for Houston 
 
 **Tech Stack (Official)**
 - Frontend: raw HTML/CSS (not final)
@@ -22,6 +20,7 @@ https://www.w3schools.com/sql/sql_syntax.asp
 - test: directory that stores test files to use throughout development of
   houston
     - *database-feeder.py*: feeds sample data into the database
+    - *serial-demo.py*: feeds mock (randomized) 
 - *requirements.txt*: Python/pip dependency file that names libraries for Docker
   to install
 - *Dockerfile*: Docker compilation file for houston
@@ -30,6 +29,16 @@ https://www.w3schools.com/sql/sql_syntax.asp
 > 5000:5000) on docker as well. If your device is actively using port 5000, you
 > will need to remap the port on your computer to the port on Docker (the first
 > number in xxxx:xxxx)
+
+
+**The Database**
+ Each row in the database represents an *individual* sensor reading.
+ The columns per row are as follows:
+ - reading_id: the (autoincrementing) id of the reading
+ - sensor_id: the reading's associated CAN frame ID
+ - name: the name of the sensor
+ - data: the reading's associated data as seen in the CAN frame DATA field
+ - timestamp: the datetime of when the reading was entered to the database
 
 **Links for Knowledge**
 - Routes in Flask: https://www.geeksforgeeks.org/python/flask-app-routing/    
@@ -42,3 +51,7 @@ https://www.w3schools.com/sql/sql_syntax.asp
 - SQLite db caching + retrieval
 - Flask App
 - sqlite file reader (Flask App)
+
+**Notes for improvement for future years**
+- Houston uses HTTP protocol by default to communicate between frontend and backend.
+  This is not optimal for real-time visualization. Consider switching to UDP
