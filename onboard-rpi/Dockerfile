@@ -18,12 +18,15 @@ RUN apt-get update && apt-get install -y \
     libqt5gui5 \
     libqt5core5a \
     build-essential \
+    libsqlite3-dev \
     git \
     curl \
     wget \
     vim \
     nano \
     sudo \
+    iproute2 \
+    can-utils \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m venv /opt/venv \
@@ -40,6 +43,8 @@ RUN groupadd -g $USER_GID $USERNAME \
 
 # Create project folder for bind mount and ensure correct ownership
 RUN mkdir -p /workspace && chown -R $USERNAME:$USERNAME /workspace
+COPY setup.sh /usr/local/bin/setup.sh
+RUN chmod +x /usr/local/bin/setup.sh
 
 # Switch to the non-root user
 USER $USERNAME
@@ -48,5 +53,5 @@ USER $USERNAME
 WORKDIR /workspace
 
 # Default command
-CMD ["/bin/bash"]
+CMD ["/usr/local/bin/setup.sh"]
 ENV PATH="/opt/venv/bin:$PATH"

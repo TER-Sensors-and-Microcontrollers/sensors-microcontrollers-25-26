@@ -53,6 +53,9 @@ services:
     # The container's internal name e.g. user@devcontainer
     hostname: onboard-rpi
 
+    network_mode: "host"
+    privileged: true
+
     # --------------------------------------------------------
     # Bind mount project folder from host to container
     # Format: <host path>:<container path>
