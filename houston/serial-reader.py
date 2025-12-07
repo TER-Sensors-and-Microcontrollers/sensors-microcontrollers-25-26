@@ -124,7 +124,10 @@ def reader(ser:serial.Serial, debug=True):
                 #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
                 #         message
                 #     )
-                #     db.commit()  
+                #     db.commit() 
+        else:
+            print("Waiting for serial data...") 
+            time.sleep(1.5)
         time.sleep(0.5)
     
 
@@ -134,7 +137,7 @@ if __name__ == "__main__":
     try:
         # loop:// creates a virtual serial port entirely in memory
         ser = serial.Serial('/dev/serial0', baudrate=115200, timeout=1)
-        
+        print("Connected successfully to serial0!")
         # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
