@@ -127,7 +127,6 @@ def reader(ser:serial.Serial, debug=True):
                 #     db.commit() 
         else:
             print("Waiting for serial data...") 
-            time.sleep(1.5)
         time.sleep(0.5)
     
 
