@@ -50,6 +50,9 @@ def display_index():
     # return render_template("index.html", array_data = shm_data)
     #return render_template("index.html", data = data_to_send)
 
+@app.route('/SD')
+def display_SD():
+    return render_template("SD.html",)
 """
 OTHER ROUTES / ENDPOINTS
 """
