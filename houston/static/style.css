@@ -110,4 +110,23 @@ body {
   width: 100%;
   box-sizing: border-box;
 }
+<<<<<<< HEAD
 >>>>>>> fc6358d (basic frontend changes)
+=======
+
+.SD_page {
+    background: linear-gradient(to bottom right, #ff7e5f, #feb47b);
+    margin: 5% auto; /* 5% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; /* Could be more or less, depending on screen size */
+    max-width: 600px; /* Max width for larger screens */
+    position: relative;
+}
+/*html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom right, #ff7e5f, #feb47b);
+}*/
+>>>>>>> 3442087 (thing)
