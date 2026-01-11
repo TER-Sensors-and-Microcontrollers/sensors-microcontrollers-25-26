@@ -35,15 +35,35 @@
             border: 1px solid black; border-collapse: collapse;
             }
         </style>
-        <div id = "tableContainer"></div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <canvas class="graph" id="graph1" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g1)">Clear Graph</button>
-        <canvas class="graph" id="graph2" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g2)">Clear Graph</button>
-        <canvas class="graph" id="graph3" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g3)">Clear Graph</button>
-        
+        <div class = "container"> 
+            <div class = "readings">
+                <div class = "important">
+                    <table>
+                        <tr>
+                            <td>Speed</td>
+                            <td>TODO</td>
+                        </tr>
+                        <tr>
+                            <td>Charge</td>
+                            <td>TODO</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class = "other-wrapper"> </div>
+                <div id = "tableContainer" class = "other-readings"></div>
+            </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+            <div class = "graphs">
+                <canvas class="graph" id="graph1"></canvas>
+                <!-- <button onclick="clearGraph(g1)">Clear Graph</button> -->
+                    <div class = "other">
+                        <canvas class="graph" id="graph2"></canvas>
+                        <!-- <button onclick="clearGraph(g2)">Clear Graph</button> -->
+                        <canvas class="graph" id="graph3"></canvas>
+                        <!-- <button onclick="clearGraph(g3)">Clear Graph</button> -->
+                    </div>
+            </div>
+        </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
         <script src="{{ url_for('static', filename='graphs.js') }}"></script>
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
