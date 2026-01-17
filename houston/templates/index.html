@@ -63,10 +63,20 @@
                         <!-- <button onclick="clearGraph(g3)">Clear Graph</button> -->
                     </div>
             </div>
+            <div class = "options"> 
+                <div class = "changeGraphs"> 
+                    <b>Change Graphs</b>
+                    <select name = "links" id = "g1"><option value="" disabled selected>Select new sensor for graph 1</option></select>
+                    <select name = "links" id = "g2"><option value="" disabled selected>Select new sensor for graph 2</option></select>
+                    <select name = "links" id = "g3"><option value="" disabled selected>Select new sensor for graph 3</option></select>
+                </div>
+                <button id="openWeb">Upload From SD</button>
+            </div>
         </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
         <script src="{{ url_for('static', filename='graphs.js') }}"></script>
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script src="{{ url_for('static', filename='graph-dropdowns.js') }}"></script>
             <div id="sensorExchange" class="modal">
             <div class="modal-content">
                 <button class="close-button">&times;</button>
@@ -111,8 +121,7 @@
             </div>
             </div>
         </div>
-        <button id="openPopup">Open Popup</button>
-        <button id="openWeb">Open Web </button>
+
         
     </body>
 </html>

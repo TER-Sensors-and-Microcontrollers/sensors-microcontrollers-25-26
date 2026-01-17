@@ -25,7 +25,7 @@ body {
     color: white;
     align-items:flex-start;
     flex-direction: column;
-    width: 25%;
+    min-width: 15%;
     background-color:dodgerblue;
 }
 
@@ -61,6 +61,7 @@ body {
   flex-direction: row;
   gap: 16px;
   width: 100%;
+  padding-top:10%;
 }
 
 .modal {
@@ -85,6 +86,13 @@ body {
   box-sizing: border-box;
 }
 
+.options {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* ----------------------------------------------------------- */
 
 .SD_page {
     background: linear-gradient(to bottom right, #ff7e5f, #feb47b);
