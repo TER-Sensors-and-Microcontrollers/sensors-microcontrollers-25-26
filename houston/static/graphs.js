@@ -269,4 +269,3 @@ const g3 = new Chart("graph3", {
 setInterval(() => {
     updateGraphs([selectedValue1, selectedValue2, selectedValue3]);
 }, 3000);
-
