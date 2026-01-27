@@ -11,21 +11,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeButton = document.querySelector('.close-button');
     const openWeb = document.getElementById('openWeb');
     
-    openPopupBtn.onclick = function() {
-        modal.style.display = 'block';
-        openPopupBtn.style.display = 'none';
-    }
-    closeButton.onclick = function() {
-        modal.style.display = 'none';
-        openPopupBtn.style.display = 'block';
-    }
     openWeb.onclick = function() {
         window.location.href = "/SD";
         
     }
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
+    scatterOn.onclick = function() {
+        var element = document.getElementById("scatterOff");
+        element.classList.remove("hidden");
+        element = document.getElementById("scatterOn");
+        element.classList.add("hidden");   
+
+        var element2 = document.getElementById("sc");
+        element2.classList.remove("hidden");
+            
+
+    }
+    scatterOff.onclick = function() {
+        var element = document.getElementById("scatterOff");
+        element.classList.add("hidden");
+        element = document.getElementById("scatterOn");
+        element.classList.remove("hidden");    
+        
+        var element2 = document.getElementById("sc");
+        element2.classList.add("hidden");
     }
 });

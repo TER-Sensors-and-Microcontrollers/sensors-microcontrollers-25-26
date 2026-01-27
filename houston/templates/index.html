@@ -35,66 +35,55 @@
             border: 1px solid black; border-collapse: collapse;
             }
         </style>
-        <div id = "tableContainer"></div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <canvas class="graph" id="graph1" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g1)">Clear Graph</button>
-        <canvas class="graph" id="graph2" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g2)">Clear Graph</button>
-        <canvas class="graph" id="graph3" style="width:100%;max-width:700px"></canvas>
-        <button onclick="clearGraph(g3)">Clear Graph</button>
-        
+        <div class = "container"> 
+            <div class = "readings">
+                <div class = "important">
+                    <table>
+                        <tr>
+                            <td>Speed</td>
+                            <td>TODO</td>
+                        </tr>
+                        <tr>
+                            <td>Charge</td>
+                            <td>TODO</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class = "other-wrapper"> </div>
+                <div id = "tableContainer" class = "other-readings"></div>
+            </div>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+            <div class = "graphs">
+                <canvas class="graph" id="graph1"></canvas>
+                <!-- <button onclick="clearGraph(g1)">Clear Graph</button> -->
+                    <div class = "other">
+                        <canvas class="graph" id="graph2"></canvas>
+                        <!-- <button onclick="clearGraph(g2)">Clear Graph</button> -->
+                        <canvas class="graph" id="graph3"></canvas>
+                        <!-- <button onclick="clearGraph(g3)">Clear Graph</button> -->
+                    </div>
+                <div class = "hidden scatterArea", id="sc">
+
+                </div>
+            </div>
+            <div class = "options"> 
+                <div class = "changeGraphs"> 
+                    <b>Change Graphs</b>
+                    <select name = "links" id = "g1"><option value="" disabled selected>Select new sensor for graph 1</option></select>
+                    <select name = "links" id = "g2"><option value="" disabled selected>Select new sensor for graph 2</option></select>
+                    <select name = "links" id = "g3"><option value="" disabled selected>Select new sensor for graph 3</option></select>
+                </div>
+                <button id="openWeb">Upload From SD</button>
+                <button id="scatterOn">View Scatterplot</button>
+                <button class = "hidden" id="scatterOff">View Graphs</button>
+            </div>
+        </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
         <script src="{{ url_for('static', filename='graphs.js') }}"></script>
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
-            <div id="sensorExchange" class="modal">
-            <div class="modal-content">
-                <button class="close-button">&times;</button>
-                <button class="close-button">&times;</button>
-                <h2>Exchange Graphs</h2>
-                <p>select sensor data to exchange here...</p>
-                <label for="links">Choose an iD for graph 1:</label>
-
-                <select name="links" id="data">
-                <option value="">Select</option>
-                <option value="1">1</option>
-                <option value="36">36</option>
-                <option value="37">37</option>
-                <option value="38">38</option>
-                <option value="39">39</option>
-                </select>
-
-                <label for="links"> Choose an iD for graph 2:</label>
-
-                <select name="links" id="data2">
-                <option value="">Select</option>
-                <option value="1">1</option>
-                <option value="36">36</option>
-                <option value="37">37</option>
-                <option value="38">38</option>
-                <option value="39">39</option>
-                </select>
-
-                <label for="links"> Choose an iD for graph 3:</label>
-
-                <select name="links" id="data3">
-                <option value="">Select</option>
-                <option value="1">1</option>
-                <option value="36">36</option>
-                <option value="37">37</option>
-                <option value="38">38</option>
-                <option value="39">39</option>
-                </select>
-
-                
-
-                
-            </div>
-            </div>
+        <script src="{{ url_for('static', filename='graph-dropdowns.js') }}"></script>
         </div>
-        <button id="openPopup">Open Popup
-        </button>
-        <button id="openWeb">Open Web </button>
+
         
     </body>
 </html>
