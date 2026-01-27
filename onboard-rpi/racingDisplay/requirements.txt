@@ -1,0 +1,14 @@
+# Python dependencies for Electric Racing Display System
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+numpy>=1.21.0          # Array operations and shared memory
+python-can>=4.0.0      # CAN bus interface
+
+# Qt display dependencies
+PyQt5>=5.15.0          # Qt GUI framework
+PyQt5-sip>=12.9.0      # PyQt5 support package
+
+# Optional - for SD card logging (future)
+pandas>=1.3.0          # Data logging and CSV export
+

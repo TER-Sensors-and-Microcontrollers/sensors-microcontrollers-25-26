@@ -34,5 +34,7 @@
                 "variant": "cpp",
                 "algorithm": "cpp"
         },
-        "cmake.sourceDirectory": "/Users/abdullahiabdi/Desktop/halligan/Halligan/Intern_project/electricRacing/sensors-microcontrollers-25-26/onboard-rpi/display/Frontend"
+        "cmake.sourceDirectory": "/Users/abdullahiabdi/Desktop/halligan/Halligan/Intern_project/electricRacing/sensors-microcontrollers-25-26/onboard-rpi/display/Frontend",
+        "snyk.advanced.organization": "7a8a19d2-cd71-47cb-89c9-d4ed963a016f",
+        "snyk.advanced.autoSelectOrganization": true
 }
