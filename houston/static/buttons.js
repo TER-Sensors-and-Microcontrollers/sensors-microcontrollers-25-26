@@ -6,33 +6,39 @@
         
         
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('sensorExchange');
-    const openPopupBtn = document.getElementById('openPopup');
-    const closeButton = document.querySelector('.close-button');
-    const openWeb = document.getElementById('openWeb');
-    
-    openWeb.onclick = function() {
-        window.location.href = "/SD";
-        
-    }
-    scatterOn.onclick = function() {
-        var element = document.getElementById("scatterOff");
-        element.classList.remove("hidden");
-        element = document.getElementById("scatterOn");
-        element.classList.add("hidden");   
+  const openWeb = document.getElementById('openWeb');
+  const uploadDB = document.getElementById('upload');
+  const fileInput = document.getElementById('file-input');
+  const scatterOn = document.getElementById('scatterOn');
+  const scatterOff = document.getElementById('scatterOff');
 
-        var element2 = document.getElementById("sc");
-        element2.classList.remove("hidden");
-            
+  if (openWeb) {
+    openWeb.onclick = () => {
+      window.location.href = "/SD";
+    };
+  }
 
-    }
-    scatterOff.onclick = function() {
-        var element = document.getElementById("scatterOff");
-        element.classList.add("hidden");
-        element = document.getElementById("scatterOn");
-        element.classList.remove("hidden");    
-        
-        var element2 = document.getElementById("sc");
-        element2.classList.add("hidden");
-    }
+  if (uploadDB && fileInput) {
+    uploadDB.addEventListener("click", () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", (e) => {
+      console.log(e.target.files[0]);
+    });
+  }
+
+  if (scatterOn && scatterOff) {
+    scatterOn.onclick = () => {
+      scatterOff.classList.remove("hidden");
+      scatterOn.classList.add("hidden");
+      document.getElementById("sc")?.classList.remove("hidden");
+    };
+
+    scatterOff.onclick = () => {
+      scatterOff.classList.add("hidden");
+      scatterOn.classList.remove("hidden");
+      document.getElementById("sc")?.classList.add("hidden");
+    };
+  }
 });
