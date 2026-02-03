@@ -146,6 +146,7 @@ if __name__ == "__main__":
         print(f"Error opening serial port: {e}")
     finally:
         if ser and ser.is_open:
+            print("closing serial connection")
             ser.close()
         print("Serial connection closed")
 
