@@ -49,7 +49,7 @@ async function updateGraphs([sid1,sid2,sid3])
         }
         const reading1 = await response1.json();
         const reading2 = await response2.json();
-        const reading3 = await response3.json(); 
+        const reading3 = await response3.json();
         
         // update graphs
         // we only divide start by 1000 since timestamp is already given to us in seconds
