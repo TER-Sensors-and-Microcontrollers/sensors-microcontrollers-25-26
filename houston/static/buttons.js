@@ -24,7 +24,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     fileInput.addEventListener("change", (e) => {
-      console.log(e.target.files[0]);
+      fileName = e.target.files[0];
+      length = fileName.name.length;
+      if (fileName.name[length - 3] == '.' && fileName.name[length - 2] == 'd' && fileName.name[length - 1] == 'b') {
+        console.log("Success!");
+      } else {
+        console.log("Not a DB File");
+      }
     });
   }
 
