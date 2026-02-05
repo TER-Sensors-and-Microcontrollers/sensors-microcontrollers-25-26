@@ -22,14 +22,6 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 DATABASE = 'database.db'
 
-class Data_Point:
-    def __init__(self, iD = 0, Sensor_iD = 0, name = "", data = 0, timestamp = 0):
-        self.reading_iD = iD
-        self.Sensor_iD = Sensor_iD
-        self.name = name
-        self.data = data
-        self.timestamp = timestamp
-
 
 """
 HOME SCREEN ROUTE
@@ -104,7 +96,8 @@ def get_all_data_db(sensor_id:int):
             "sensor_id": r[1],
             "name": r[2],
             "data": r[3],
-            "timestamp": r[4]
+            "unit": r[4],
+            "timestamp": r[5]
         }
         readings.append(reading)
 
@@ -134,21 +127,22 @@ def get_test_data(sensor_id:int):
         "sensor_id": rows[0][1],
         "name": rows[0][2],
         "data": rows[0][3],
-        "timestamp": rows[0][4]
+        "unit": rows[0][4],
+        "timestamp": rows[0][5]
     }
     # reading = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
     return jsonify(reading)
 
 # /unique_sensors
 # 
-# returns JSON response of all unique sensor id,name pairs ordered by id, ascending
+# returns JSON response of all unique sensor id,name,unit tuples ordered by id, ascending
 # 404 if no sensors found in db
 
 @app.route('/unique_sensors')
 def get_unique_sensors():
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT DISTINCT sensor_id,name FROM sensor_readings ORDER BY sensor_id")
+    cursor.execute("SELECT DISTINCT sensor_id,name,unit FROM sensor_readings ORDER BY sensor_id")
     rows = cursor.fetchall()
 
     if not rows:
@@ -197,6 +191,7 @@ if __name__ == '__main__':
         "sensor_id INTEGER, " \
         "name TEXT NOT NULL," \
         "data REAL," \
+        "unit TEXT," \
         "timestamp DATETIME" \
         ")")
         db.commit()

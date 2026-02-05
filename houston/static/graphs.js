@@ -59,9 +59,9 @@ async function updateGraphs([sid1,sid2,sid3])
         g2.data.datasets[0].data.push(reading2.data);
         g3.data.labels.push(reading3.timestamp - (start / 1000));
         g3.data.datasets[0].data.push(reading3.data);
-        g1.options.title.text = reading1.name + " Over Time";
-        g2.options.title.text = reading2.name + " Over Time";
-        g3.options.title.text = reading3.name + " Over Time";
+        g1.options.title.text = reading1.name + " (" + reading1.unit + ") Over Time"
+        g2.options.title.text = reading2.name + " (" + reading2.unit + ") Over Time"
+        g3.options.title.text = reading3.name + " (" + reading3.unit + ") Over Time"
         g1.update();
         g2.update();
         g3.update();
@@ -69,7 +69,6 @@ async function updateGraphs([sid1,sid2,sid3])
         saveToSessionStorage(g1.canvas.id, {
             labels: g1.data.labels,
             datasets: g1.data.datasets.map(ds => ({
-                label: reading1.name + " Over Time",
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -77,13 +76,12 @@ async function updateGraphs([sid1,sid2,sid3])
             options: {
                 title: {
                     display: true,
-                    text: reading1.name + " Over Time"
+                    // text: reading1.name + " Over Time"
             }
     }})
         saveToSessionStorage(g2.canvas.id, {
             labels: g2.data.labels,
             datasets: g2.data.datasets.map(ds => ({
-                label: reading2.name + " Over Time",
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -91,14 +89,13 @@ async function updateGraphs([sid1,sid2,sid3])
                 options: {
         title: {
             display: true,
-            text: reading1.name + " Over Time"
+            // text: reading1.name + " (" + reading1.unit + ") Over Time"
         }
     }
         })
         saveToSessionStorage(g3.canvas.id, {
             labels: g3.data.labels,
             datasets: g3.data.datasets.map(ds => ({
-                label: reading3.name + " Over Time",
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -106,7 +103,7 @@ async function updateGraphs([sid1,sid2,sid3])
                 options: {
         title: {
             display: true,
-            text: reading1.name + " Over Time"
+            // text: reading1.name + " Over Time"
         }
     }
         })
@@ -168,6 +165,7 @@ function loadFromSessionStorage(name) {
             }]
     };
 }
+
 // define chart(s) here
 const g1 = new Chart("graph1", {
     type: "line",
@@ -206,8 +204,8 @@ const g3 = new Chart("graph3", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g1);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g1);
+                    selectedValue1 = dropdown.value;
+                    get_new_data(selectedValue1, g1);
                 });
  });
 
@@ -216,8 +214,8 @@ const g3 = new Chart("graph3", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g2);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g2);
+                    selectedValue2 = dropdown.value;
+                    get_new_data(selectedValue2, g2);
                 });
  });
 
@@ -226,8 +224,8 @@ const g3 = new Chart("graph3", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g3);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g3);
+                    selectedValue3 = dropdown.value;
+                    get_new_data(selectedValue3, g3);
                 });
  });
 
@@ -245,13 +243,12 @@ const g3 = new Chart("graph3", {
         g.data.labels.push((all_data[r].timestamp - (start / 1000)));
         g.data.datasets[0].data.push(all_data[r].data);
     }
-    g.options.title.text = all_data[0].name + " Over Time";
+    g.options.title.text = all_data[0].name + " (" + all_data[0].unit + ") Over Time";
     g.update();
     
     saveToSessionStorage(g1.canvas.id, {
             labels: g.data.labels,
             datasets: g.data.datasets.map(ds => ({
-                label: all_data[0].name + " Over Time",
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -259,7 +256,7 @@ const g3 = new Chart("graph3", {
             options: {
                 title: {
                     display: true,
-                    text: all_data[0].name + " Over Time"
+                    text: all_data[0].name + " (" + all_data[0].unit + ") Over Time",
                 }
             }
         })

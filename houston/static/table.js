@@ -7,7 +7,7 @@ const container = document.getElementById('tableContainer');
 const table = document.createElement('table');
 const thead = document.createElement('thead');
 const headerRow = document.createElement('tr');
-const headers = ['ID', 'Name', 'Value'];
+const headers = ['ID', 'Name', 'Value', "Unit"];
 
 headers.forEach(headerText => {
     const th = document.createElement('th');
@@ -75,13 +75,17 @@ async function updateTable(mode) {
                 const cellID   = document.createElement('td');
                 const cellName = document.createElement('td');
                 const cellData = document.createElement('td');
+                const cellUnit = document.createElement('td');
 
                 cellID.textContent   = id.sensor_id;
                 cellName.textContent = id.name;
+                cellUnit.textContent = id.unit;
+                console.log(id.unit);
 
                 row.appendChild(cellID);
                 row.appendChild(cellName);
                 row.appendChild(cellData);
+                row.appendChild(cellUnit);
                    
                 tbody_new.appendChild(row);
                });
