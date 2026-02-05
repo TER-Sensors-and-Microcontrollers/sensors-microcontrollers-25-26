@@ -80,7 +80,6 @@ async function updateTable(mode) {
                 cellID.textContent   = id.sensor_id;
                 cellName.textContent = id.name;
                 cellUnit.textContent = id.unit;
-                console.log(id.unit);
 
                 row.appendChild(cellID);
                 row.appendChild(cellName);
