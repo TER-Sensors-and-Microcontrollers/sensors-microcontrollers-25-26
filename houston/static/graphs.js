@@ -33,13 +33,19 @@ async function updateGraph(sid, g)
 {
     
     try{
-        const response = await fetch('/get_test/' + sid);
+        const response = await fetch('/get_dp/' + sid);
         if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const reading = await response.json();
         
+
+        if (reading.error) {
+            console.log("longer than 500ms delay");
+            return;
+        }
+
         // update graphs
         // we only divide start by 1000 since timestamp is already given to us in seconds
         g.data.labels.push(reading.timestamp - (start / 1000));

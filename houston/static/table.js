@@ -100,11 +100,15 @@ async function updateTable(mode) {
         for (const row of tbody_old.rows) {
             const cells = row.cells;
 
-            const response_data = await fetch('/get_test/' + cells[0].textContent);
+            const response_data = await fetch('/get_dp/' + cells[0].textContent);
             if (!response_data.ok) {
                 throw new Error(`HTTP error! status: ${response_data.status}`);
             }
             const reading = await response_data.json();
+
+            if (reading.error) {
+                continue;
+            }
 
             cells[2].textContent = reading.data;
         }

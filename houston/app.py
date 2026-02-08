@@ -103,23 +103,30 @@ def get_all_data_db(sensor_id:int):
 
     return jsonify(readings)
 
-@app.route('/get_test/<sensor_id>')
-def get_test_data(sensor_id:int):
+# /get_dp/<sensor_id>
+# given id of sensor, returns most recent reading of that id
+# if reading is at most 250 ms old, otherwise return error
+
+@app.route('/get_dp/<sensor_id>')
+def get_datapoint(sensor_id:int):
     db = get_db()
     cursor = db.cursor()
-    # '?' character in the cursor query uses the value passed in from get_test_data
+    # '?' character in the cursor query uses the value passed in from get_datapoint
     # otherwise using sensor_id = sensor_id would query for itself
-    # I use sensor_id variable as an argument twice, so I need to pass it in as a parameter twice
-    # (the number of ?s) in the query
-    cursor.execute("SELECT * FROM sensor_readings " \
-    "WHERE sensor_id = ? AND " \
-    "timestamp = (SELECT MAX(timestamp) FROM sensor_readings WHERE sensor_id = ?)", (sensor_id, sensor_id))
+   
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = ? AND "
+        "timestamp >= ((strftime('%s','now') * 1000) - 500) "
+        "ORDER BY timestamp DESC LIMIT 1",
+        (sensor_id,)
+    )
     rows = cursor.fetchall()
     cursor.close()
 
-    # return error 404 if the query does not return any results
+    # return error if the query does not return any results
     if not rows:
-        return jsonify({"error": "No sensor data found for id " + sensor_id}), 404
+        return jsonify({"error": "No up-to-date sensor data found for id " + sensor_id})
     
     # turn reading into JSON object
     reading = {
@@ -130,7 +137,7 @@ def get_test_data(sensor_id:int):
         "unit": rows[0][4],
         "timestamp": rows[0][5]
     }
-    # reading = Data_Point(rows[0][0], rows[0][1], rows[0][2], rows[0][3], rows[0][4])
+
     return jsonify(reading)
 
 # /unique_sensors
