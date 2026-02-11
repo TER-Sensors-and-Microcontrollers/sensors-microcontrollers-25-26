@@ -136,7 +136,7 @@ if __name__ == "__main__":
     try:
         # loop:// creates a virtual serial port entirely in memory
         ser = serial.Serial('/dev/ttyAMA2', baudrate=115200, timeout=1)
-        print("Connected successfully to serial0!")
+        print("Connected successfully to ttyAMA2!")
         # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
