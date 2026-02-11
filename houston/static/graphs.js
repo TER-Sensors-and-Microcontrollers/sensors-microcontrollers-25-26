@@ -9,6 +9,9 @@ var selectedValue1 = 1;
 var selectedValue2 = 2;
 var selectedValue3 = 3;
 
+var currentX = "motor temp"
+var currentY = "battery"
+
 // get absolute start time from browser cache if it exists
 var start = sessionStorage.getItem("startTime");
 if (!start) {
@@ -62,9 +65,15 @@ async function updateGraphs([sid1,sid2,sid3])
         g1.options.title.text = reading1.name + " Over Time";
         g2.options.title.text = reading2.name + " Over Time";
         g3.options.title.text = reading3.name + " Over Time";
+        scatter.data.datasets[0].data.push({
+            x:reading1.data,
+            y:reading2.data
+        });
+        scatter.data.datasets[0].label = reading2.name + " vs " + reading1.name;
         g1.update();
         g2.update();
         g3.update();
+        scatter.update();
         // save chart to client's cache so that it can be reloaded on refresh
         saveToSessionStorage(g1.canvas.id, {
             labels: g1.data.labels,
@@ -110,6 +119,20 @@ async function updateGraphs([sid1,sid2,sid3])
         }
     }
         })
+        saveToSessionStorage(scatter.canvas.id, {
+            labels: scatter.data.labels,
+            datasets: scatter.data.datasets.map(ds => ({
+                label: reading1.name + " vs " + reading2.name,
+                backgroundColor: ds.backgroundColor,
+                borderColor: ds.borderColor,
+                data: ds.data
+            })),
+            options: {
+                title: {
+                    display: true,
+                    text: reading1.name + " vs " + reading2.name
+            }
+    }})
     }
     catch (error) {
         console.error("Error fetching or parsing data:", error);
@@ -201,6 +224,37 @@ const g3 = new Chart("graph3", {
     }
 });
 
+const scatter = new Chart("scatter", {
+    type: "scatter",
+    data: {
+        datasets: [{
+            label: "Sensor 1 vs Sensor 2",
+            data: [],
+            backgroundColor: "rgba(255,0,0,0.7)"
+        }]
+    },
+    options: {
+        title: {
+            display: true,
+            text: 'Sensor 1 vs Sensor 2'
+        },
+        scales: {
+            xAxes: {
+                title: {
+                    display: true,
+                    text: "Sensor 1"
+                }
+            },
+            yAxes: {
+                title: {
+                    display: true,
+                    text: "Sensor 2"
+                }
+            }
+        }
+    }
+});
+
  document.addEventListener('DOMContentLoaded', function() {
     var dropdown = document.getElementById('g1');
                 dropdown.addEventListener('change', function() 
@@ -231,6 +285,37 @@ const g3 = new Chart("graph3", {
                 });
  });
 
+document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('scatterX');
+                dropdown.addEventListener('change', function() 
+                {
+                    clearGraph(scatter);
+                    selectedValue = dropdown.value;
+                    if (selectedValue == 3)
+                        currentX = "pressure";
+                    else if (selectedValue == 2)
+                        currentX = "battery";
+                    else
+                        currentX = "motor temp";
+                    get_new_data(selectedValue, scatter);
+                });
+ });
+
+ document.addEventListener('DOMContentLoaded', function() {
+    var dropdown = document.getElementById('scatterY');
+                dropdown.addEventListener('change', function() 
+                {
+                    clearGraph(scatter);
+                    selectedValue = dropdown.value;
+                    if (selectedValue == 3)
+                        currentY = "pressure";
+                    else if (selectedValue == 2)
+                        currentY = "battery";
+                    else
+                        currentY = "motor temp";
+                    get_new_data(selectedValue, scatter);
+                });
+ });
 //  get all up-to-date data of selected id
  async function get_new_data(selectedValue, g)
  {
@@ -245,7 +330,10 @@ const g3 = new Chart("graph3", {
         g.data.labels.push((all_data[r].timestamp - (start / 1000)));
         g.data.datasets[0].data.push(all_data[r].data);
     }
-    g.options.title.text = all_data[0].name + " Over Time";
+    if (g === scatter)
+        g.options.title.text = currentY + " vs " + currentX;
+    else
+        g.options.title.text = all_data[0].name + " Over Time";
     g.update();
     
     saveToSessionStorage(g1.canvas.id, {

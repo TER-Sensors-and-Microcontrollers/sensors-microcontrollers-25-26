@@ -38,13 +38,16 @@ document.addEventListener('DOMContentLoaded', function() {
     scatterOn.onclick = () => {
       scatterOff.classList.remove("hidden");
       scatterOn.classList.add("hidden");
+      scatterX.classList.remove("hidden")
       document.getElementById("sc")?.classList.remove("hidden");
+      document.getElementById("scatterChoice")?.classList.remove("hidden");
     };
 
     scatterOff.onclick = () => {
       scatterOff.classList.add("hidden");
       scatterOn.classList.remove("hidden");
       document.getElementById("sc")?.classList.add("hidden");
+      document.getElementById("scatterChoice")?.classList.add("hidden");
     };
   }
 });
