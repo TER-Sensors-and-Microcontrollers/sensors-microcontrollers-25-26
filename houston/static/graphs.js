@@ -45,7 +45,7 @@ async function updateGraph(sid, g)
         
 
         if (reading.error) {
-            console.log("longer than 500ms delay");
+            console.log("Error: No data found");
             return;
         }
 
