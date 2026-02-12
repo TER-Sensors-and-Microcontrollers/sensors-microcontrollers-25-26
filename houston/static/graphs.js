@@ -21,64 +21,46 @@ if (!start) {
 }
 
 /*
-    updateGraphs
+    updateGraph
 
-    Adds the most recently grabbed datapoints from 3 preexisting sensors,
+    Adds the most recently grabbed datapoint from a preexisting sensor,
     and adds it to its corresponding chart.
-    input(s): size-3 array of sensor ids
+    input(s): sensor id, variable name of graph
     notes: 
         - saves chart to cache based on CANVAS ID (see chartjs documentation),
         - is async
         - sensor(s) with given id must exist within database
 */
-async function updateGraphs([sid1,sid2,sid3])
+
+async function updateGraph(sid, g)
 {
-    // also TODO:
-    // add button to exchange sensors in a specific graph
-    // add button to view a specific sensor in table mode (and associated page)
     
     try{
-        const response1 = await fetch('/get_test/' + sid1);
-        if (!response1.ok) {
-        throw new Error(`HTTP error! status: ${response1.status}`);
+        const response = await fetch('/get_dp/' + sid);
+        if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const response2 = await fetch('/get_test/' + sid2);
-        if (!response2.ok) {
-        throw new Error(`HTTP error! status: ${response2.status}`);
-        }
-        const response3 = await fetch('/get_test/' + sid3);
-        if (!response3.ok) {
-        throw new Error(`HTTP error! status: ${response3.status}`);
-        }
-        const reading1 = await response1.json();
-        const reading2 = await response2.json();
-        const reading3 = await response3.json();
+
+        const reading = await response.json();
         
+
+        if (reading.error) {
+            console.log("longer than 500ms delay");
+            return;
+        }
+
         // update graphs
         // we only divide start by 1000 since timestamp is already given to us in seconds
-        g1.data.labels.push(reading1.timestamp - (start / 1000));
-        g1.data.datasets[0].data.push(reading1.data);
-        g2.data.labels.push(reading2.timestamp - (start / 1000));
-        g2.data.datasets[0].data.push(reading2.data);
-        g3.data.labels.push(reading3.timestamp - (start / 1000));
-        g3.data.datasets[0].data.push(reading3.data);
-        g1.options.title.text = reading1.name + " Over Time";
-        g2.options.title.text = reading2.name + " Over Time";
-        g3.options.title.text = reading3.name + " Over Time";
-        scatter.data.datasets[0].data.push({
-            x:reading1.data,
-            y:reading2.data
-        });
-        scatter.data.datasets[0].label = reading2.name + " vs " + reading1.name;
-        g1.update();
-        g2.update();
-        g3.update();
-        scatter.update();
+        g.data.labels.push(reading.timestamp - (start / 1000));
+        g.data.datasets[0].data.push(reading.data);
+
+        g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
+        g.update();
+
         // save chart to client's cache so that it can be reloaded on refresh
-        saveToSessionStorage(g1.canvas.id, {
-            labels: g1.data.labels,
-            datasets: g1.data.datasets.map(ds => ({
-                label: reading1.name + " Over Time",
+        saveToSessionStorage(g.canvas.id, {
+            labels: g.data.labels,
+            datasets: g.data.datasets.map(ds => ({
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -86,38 +68,9 @@ async function updateGraphs([sid1,sid2,sid3])
             options: {
                 title: {
                     display: true,
-                    text: reading1.name + " Over Time"
+                    // text: reading1.name + " Over Time"
+                }
             }
-    }})
-        saveToSessionStorage(g2.canvas.id, {
-            labels: g2.data.labels,
-            datasets: g2.data.datasets.map(ds => ({
-                label: reading2.name + " Over Time",
-                backgroundColor: ds.backgroundColor,
-                borderColor: ds.borderColor,
-                data: ds.data
-            })),
-                options: {
-        title: {
-            display: true,
-            text: reading1.name + " Over Time"
-        }
-    }
-        })
-        saveToSessionStorage(g3.canvas.id, {
-            labels: g3.data.labels,
-            datasets: g3.data.datasets.map(ds => ({
-                label: reading3.name + " Over Time",
-                backgroundColor: ds.backgroundColor,
-                borderColor: ds.borderColor,
-                data: ds.data
-            })),
-                options: {
-        title: {
-            display: true,
-            text: reading1.name + " Over Time"
-        }
-    }
         })
         saveToSessionStorage(scatter.canvas.id, {
             labels: scatter.data.labels,
@@ -138,6 +91,7 @@ async function updateGraphs([sid1,sid2,sid3])
         console.error("Error fetching or parsing data:", error);
     }
 }
+
 async function clearGraph(g) {
     g.data.labels = [];
     g.data.datasets[0].data = [];
@@ -191,6 +145,7 @@ function loadFromSessionStorage(name) {
             }]
     };
 }
+
 // define chart(s) here
 const g1 = new Chart("graph1", {
     type: "line",
@@ -260,8 +215,8 @@ const scatter = new Chart("scatter", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g1);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g1);
+                    selectedValue1 = dropdown.value;
+                    get_new_data(selectedValue1, g1);
                 });
  });
 
@@ -270,8 +225,8 @@ const scatter = new Chart("scatter", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g2);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g2);
+                    selectedValue2 = dropdown.value;
+                    get_new_data(selectedValue2, g2);
                 });
  });
 
@@ -280,8 +235,8 @@ const scatter = new Chart("scatter", {
                 dropdown.addEventListener('change', function() 
                 {
                     clearGraph(g3);
-                    selectedValue = dropdown.value;
-                    get_new_data(selectedValue, g3);
+                    selectedValue3 = dropdown.value;
+                    get_new_data(selectedValue3, g3);
                 });
  });
 
@@ -339,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
     saveToSessionStorage(g1.canvas.id, {
             labels: g.data.labels,
             datasets: g.data.datasets.map(ds => ({
-                label: all_data[0].name + " Over Time",
                 backgroundColor: ds.backgroundColor,
                 borderColor: ds.borderColor,
                 data: ds.data
@@ -347,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 title: {
                     display: true,
-                    text: all_data[0].name + " Over Time"
+                    text: all_data[0].name + " (" + all_data[0].unit + ") Over Time",
                 }
             }
         })
@@ -355,5 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
  }
 setInterval(() => {
-    updateGraphs([selectedValue1, selectedValue2, selectedValue3]);
-}, 3000);
+    updateGraph(selectedValue1, g1);
+    updateGraph(selectedValue2, g2);
+    updateGraph(selectedValue3, g3);
+}, 1000);

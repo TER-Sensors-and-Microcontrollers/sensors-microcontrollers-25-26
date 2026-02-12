@@ -25,7 +25,7 @@ body {
     color: white;
     align-items:flex-start;
     flex-direction: column;
-    min-width: 15%;
+    min-width: 18%;
     background-color:dodgerblue;
 }
 
@@ -39,6 +39,7 @@ body {
 }
 .important td {
     border: none;
+    font-size: 100%;
 }
 
 .other-readings {
@@ -47,6 +48,7 @@ body {
 .other-readings table {
     width: 100%;
     border: 2px solid #000000;
+    font-size: 0.8vw;
 }
 
 .graphs {

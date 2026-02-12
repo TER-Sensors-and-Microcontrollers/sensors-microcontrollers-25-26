@@ -93,35 +93,35 @@ def reader(ser:serial.Serial, debug=True):
                 # case 1:
                 #     message = [id, "test_data1", int(data), time.time()]
                 #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                 #         message
                 #     )
                 #     db.commit()
                 # case 36:
                 #     message = [id, "test_data2", int(data), time.time()]
                 #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                 #         message
                 #     )
                 #     db.commit()
                 # case 37:
                 #     message = [id, "test_data3", float(data), time.time()]
                 #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                 #         message
                 #     )
                 #     db.commit()
                 # case 38:
                 #     message = [id, "test_data4", int(data), time.time()]
                 #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                 #         message
                 #     )
                 #     db.commit()
                 # case 39:
                 #     message = [id, "test_data5", int(data), time.time()]
                 #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                 #         message
                 #     )
                 #     db.commit() 
@@ -135,8 +135,8 @@ if __name__ == "__main__":
     print(DATABASE)
     try:
         # loop:// creates a virtual serial port entirely in memory
-        ser = serial.Serial('/dev/serial0', baudrate=115200, timeout=1)
-        print("Connected successfully to serial0!")
+        ser = serial.Serial('/dev/ttyAMA2', baudrate=115200, timeout=1)
+        print("Connected successfully to ttyAMA2!")
         # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
