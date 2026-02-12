@@ -77,37 +77,37 @@ def reader(ser:serial.Serial):
             #print(Data)
             match iD:
                 case 1:
-                    message = [iD, "test_data1", int_value, time.time()]
+                    message = [iD, "test_data1", int_value, "m/s", time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 36:
-                    message = [iD, "test_data2", int_value, time.time()]
+                    message = [iD, "test_data2", int_value, "psi", time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 37:
-                    message = [iD, "test_data3", int_value, time.time()]
+                    message = [iD, "test_data3", int_value, "s", time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 38:
-                    message = [iD, "test_data4", int_value, time.time()]
+                    message = [iD, "test_data4", int_value, "celcius", time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 39:
-                    message = [iD, "test_data5", int_value, time.time()]
+                    message = [iD, "test_data5", int_value, "m/s^2", time.time()]
                     cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()  

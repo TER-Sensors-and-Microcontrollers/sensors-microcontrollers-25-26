@@ -7,7 +7,7 @@ const container = document.getElementById('tableContainer');
 const table = document.createElement('table');
 const thead = document.createElement('thead');
 const headerRow = document.createElement('tr');
-const headers = ['ID', 'Name', 'Value'];
+const headers = ['ID', 'Name', 'Value', "Unit"];
 
 headers.forEach(headerText => {
     const th = document.createElement('th');
@@ -75,13 +75,16 @@ async function updateTable(mode) {
                 const cellID   = document.createElement('td');
                 const cellName = document.createElement('td');
                 const cellData = document.createElement('td');
+                const cellUnit = document.createElement('td');
 
                 cellID.textContent   = id.sensor_id;
                 cellName.textContent = id.name;
+                cellUnit.textContent = id.unit;
 
                 row.appendChild(cellID);
                 row.appendChild(cellName);
                 row.appendChild(cellData);
+                row.appendChild(cellUnit);
                    
                 tbody_new.appendChild(row);
                });
@@ -97,11 +100,15 @@ async function updateTable(mode) {
         for (const row of tbody_old.rows) {
             const cells = row.cells;
 
-            const response_data = await fetch('/get_test/' + cells[0].textContent);
+            const response_data = await fetch('/get_dp/' + cells[0].textContent);
             if (!response_data.ok) {
                 throw new Error(`HTTP error! status: ${response_data.status}`);
             }
             const reading = await response_data.json();
+
+            if (reading.error) {
+                continue;
+            }
 
             cells[2].textContent = reading.data;
         }
