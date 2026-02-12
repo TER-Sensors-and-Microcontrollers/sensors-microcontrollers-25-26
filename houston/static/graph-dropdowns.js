@@ -37,4 +37,6 @@ setInterval(() => {
     updateDropdown("g1");
     updateDropdown("g2");
     updateDropdown("g3");
+    updateDropdown("scatterX");
+    updateDropdown("scatterY");
 }, 1000);

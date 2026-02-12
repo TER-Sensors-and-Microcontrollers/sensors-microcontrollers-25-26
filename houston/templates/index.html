@@ -63,7 +63,7 @@
                         <!-- <button onclick="clearGraph(g3)">Clear Graph</button> -->
                     </div>
                 <div class = "hidden scatterArea", id="sc">
-
+                    <canvas class ="graph" id="scatter"></canvas>
                 </div>
             </div>
             <div class = "options"> 
@@ -76,6 +76,10 @@
                 <button id="openWeb">Upload From SD</button>
                 <button id="scatterOn">View Scatterplot</button>
                 <button class = "hidden" id="scatterOff">View Graphs</button>
+                <div class = "hidden", id="scatterChoice">
+                    <select name = "links" id = "scatterX"><option value="" disabled selected>Select new sensor for X-axis</option></select>
+                    <select name = "links" id = "scatterY"><option value="" disabled selected>Select new sensor for Y-axis</option></select>
+                </div>
             </div>
         </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
