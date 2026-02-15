@@ -40,6 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+FDCAN_HandleTypeDef hfdcan3;
 
 /* USER CODE BEGIN PV */
 
@@ -47,6 +48,8 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_FDCAN3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -84,6 +87,8 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_FDCAN3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -137,6 +142,68 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief FDCAN3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_FDCAN3_Init(void)
+{
+
+  /* USER CODE BEGIN FDCAN3_Init 0 */
+
+  /* USER CODE END FDCAN3_Init 0 */
+
+  /* USER CODE BEGIN FDCAN3_Init 1 */
+
+  /* USER CODE END FDCAN3_Init 1 */
+  hfdcan3.Instance = FDCAN3;
+  hfdcan3.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+  hfdcan3.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan3.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan3.Init.AutoRetransmission = DISABLE;
+  hfdcan3.Init.TransmitPause = DISABLE;
+  hfdcan3.Init.ProtocolException = DISABLE;
+  hfdcan3.Init.NominalPrescaler = 16;
+  hfdcan3.Init.NominalSyncJumpWidth = 1;
+  hfdcan3.Init.NominalTimeSeg1 = 1;
+  hfdcan3.Init.NominalTimeSeg2 = 1;
+  hfdcan3.Init.DataPrescaler = 1;
+  hfdcan3.Init.DataSyncJumpWidth = 1;
+  hfdcan3.Init.DataTimeSeg1 = 1;
+  hfdcan3.Init.DataTimeSeg2 = 1;
+  hfdcan3.Init.StdFiltersNbr = 0;
+  hfdcan3.Init.ExtFiltersNbr = 0;
+  hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN FDCAN3_Init 2 */
+
+  /* USER CODE END FDCAN3_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+
+  /* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+
+  /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
