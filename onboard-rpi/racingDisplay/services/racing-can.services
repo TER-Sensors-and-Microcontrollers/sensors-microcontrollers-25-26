@@ -1,54 +1,29 @@
 # racing-can.service
-# Systemd service file for Electric Racing CAN processor
-#
-# Installation:
-#   1. Copy this file to /etc/systemd/system/
-#      sudo cp racing-can.service /etc/systemd/system/
-#
-#   2. Update the paths in ExecStartPre and ExecStart to match your installation
-#
-#   3. Reload systemd:
-#      sudo systemctl daemon-reload
-#
-#   4. Enable service to start on boot:
-#      sudo systemctl enable racing-can
-#
-#   5. Start service now:
-#      sudo systemctl start racing-can
-#
-# Usage:
-#   sudo systemctl start racing-can    # Start service
-#   sudo systemctl stop racing-can     # Stop service
-#   sudo systemctl restart racing-can  # Restart service
-#   sudo systemctl status racing-can   # Check status
-#   journalctl -u racing-can -f        # View logs
+# Electric Racing CAN Processor Service
 
 [Unit]
 Description=Electric Racing CAN Bus Processor
 After=network.target
-Wants=network.target
 
 [Service]
 Type=simple
-User=racing
-Group=racing
-WorkingDirectory=/home/racing/racing-display/core
 
-# Setup CAN interface before starting
-ExecStartPre=/home/racing/racing-display/scripts/setup_can.sh
+# Run as root (required for CAN configuration)
+User=root
+Group=root
+
+# Adjust this to your ACTUAL project path
+WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
+
+# Setup CAN before starting processor
+ExecStartPre=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can0 250000
 
 # Start CAN processor
-ExecStart=/usr/bin/python3 /home/racing/racing-display/core/can_processor.py
+ExecStart=/usr/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
 
-# Restart on failure
-Restart=on-failure
-RestartSec=5s
+Restart=always
+RestartSec=3
 
-# Resource limits
-Nice=-10
-CPUQuota=50%
-
-# Logging
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-can

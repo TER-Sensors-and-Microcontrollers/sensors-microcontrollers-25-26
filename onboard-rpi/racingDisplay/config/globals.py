@@ -70,8 +70,8 @@ MOTOR_START_IDX = SENS_NAMES.index("MotorPlaceholder")  # 14
 BMS_START_IDX = SENS_NAMES.index("BMSVolt1")            # 30
 
 # ==================== CAN BUS CONFIG ====================
-CAN_INTERFACE = "vcan0"          # SocketCAN interface name
-CAN_BITRATE = 500000            # 500 kbps
+CAN_INTERFACE = "can0"          # SocketCAN interface name
+CAN_BITRATE = 250000            # 500 kbps
 CAN_CHANNEL = "canusb_data"     # Legacy - not used without Redis
 
 # ==================== DISPLAY CONFIG ====================

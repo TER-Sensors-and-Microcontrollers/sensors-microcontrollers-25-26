@@ -15,7 +15,7 @@
 #   all_data = can.get_all_values()
 #   can.close()
 #
-# Alex Lee, Robi
+# Abdi
 # January 2026
 
 import sys

@@ -44,7 +44,7 @@ class CANTestGenerator:
         self.direction = 1  # 1=forward, 0=reverse
         
         try:
-            self.bus = can.interface.Bus(channel=interface, interface='virtual')
+            self.bus = can.interface.Bus(channel=interface, interface='socketcan')
             print(f"✓ Connected to {interface}")
         except Exception as e:
             print(f"✗ Failed to connect to {interface}: {e}")
