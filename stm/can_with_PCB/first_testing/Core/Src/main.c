@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
+#include "string.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -43,7 +45,9 @@
 FDCAN_HandleTypeDef hfdcan3;
 
 /* USER CODE BEGIN PV */
-
+FDCAN_RxHeaderTypeDef RxHeader;
+uint8_t RxData[8];
+volatile uint8_t datacheck = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,7 +93,25 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FDCAN3_Init();
+  MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
+  /* Accept ALL standard-ID messages into RX FIFO 0 */
+    HAL_FDCAN_ConfigGlobalFilter(&hfdcan3,
+        FDCAN_ACCEPT_IN_RX_FIFO0,   /* non-matching std frames  */
+        FDCAN_ACCEPT_IN_RX_FIFO0,   /* non-matching ext frames  */
+        FDCAN_REJECT_REMOTE,         /* reject remote std frames */
+        FDCAN_REJECT_REMOTE);        /* reject remote ext frames */
+
+    /* Start FDCAN */
+    if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
+      Error_Handler();
+    }
+
+    /* Enable interrupt: fires when a new message lands in RX FIFO 0 */
+    if (HAL_FDCAN_ActivateNotification(&hfdcan3,
+          FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+      Error_Handler();
+    }
 
   /* USER CODE END 2 */
 
@@ -99,6 +121,19 @@ int main(void)
   {
     /* USER CODE END WHILE */
 
+	    if (datacheck) {
+	      char msg[100];
+	      int len = snprintf(msg, sizeof(msg),
+	          "RX | ID=0x%03lX  Data=[%d %d %d %d %d %d %d %d]\r\n",
+	          RxHeader.Identifier,
+	          RxData[0], RxData[1], RxData[2], RxData[3],
+	          RxData[4], RxData[5], RxData[6], RxData[7]);
+
+	      CDC_Transmit_FS((uint8_t *)msg, len);
+	      datacheck = 0;
+	    }
+
+	    HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -123,7 +158,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 12;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -163,13 +204,13 @@ static void MX_FDCAN3_Init(void)
   hfdcan3.Init.ClockDivider = FDCAN_CLOCK_DIV1;
   hfdcan3.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
   hfdcan3.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan3.Init.AutoRetransmission = DISABLE;
+  hfdcan3.Init.AutoRetransmission = ENABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 16;
+  hfdcan3.Init.NominalPrescaler = 2;
   hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 1;
-  hfdcan3.Init.NominalTimeSeg2 = 1;
+  hfdcan3.Init.NominalTimeSeg1 = 13;
+  hfdcan3.Init.NominalTimeSeg2 = 2;
   hfdcan3.Init.DataPrescaler = 1;
   hfdcan3.Init.DataSyncJumpWidth = 1;
   hfdcan3.Init.DataTimeSeg1 = 1;
@@ -207,7 +248,16 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+{
+  if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != 0)
+  {
+    if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &RxHeader, RxData) != HAL_OK) {
+      Error_Handler();
+    }
+    datacheck = 1;
+  }
+}
 /* USER CODE END 4 */
 
 /**
