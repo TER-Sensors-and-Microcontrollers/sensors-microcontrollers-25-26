@@ -19,11 +19,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_device.h"
-#include "string.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -95,24 +96,41 @@ int main(void)
   MX_FDCAN3_Init();
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
-  /* Accept ALL standard-ID messages into RX FIFO 0 */
-    HAL_FDCAN_ConfigGlobalFilter(&hfdcan3,
-        FDCAN_ACCEPT_IN_RX_FIFO0,   /* non-matching std frames  */
-        FDCAN_ACCEPT_IN_RX_FIFO0,   /* non-matching ext frames  */
-        FDCAN_REJECT_REMOTE,         /* reject remote std frames */
-        FDCAN_REJECT_REMOTE);        /* reject remote ext frames */
 
-    /* Start FDCAN */
-    if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
-      Error_Handler();
-    }
+  HAL_Delay(1000);  /* let USB CDC enumerate */
 
-    /* Enable interrupt: fires when a new message lands in RX FIFO 0 */
-    if (HAL_FDCAN_ActivateNotification(&hfdcan3,
-          FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
-      Error_Handler();
-    }
+  char msg[100];
+  int len;
 
+  /* Step 1: Global filter */
+  if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan3,
+        FDCAN_ACCEPT_IN_RX_FIFO0,
+        FDCAN_ACCEPT_IN_RX_FIFO0,
+        FDCAN_REJECT_REMOTE,
+        FDCAN_REJECT_REMOTE) != HAL_OK) {
+    len = snprintf(msg, sizeof(msg), "FAIL: GlobalFilter\r\n");
+    CDC_Transmit_FS((uint8_t *)msg, len);
+    HAL_Delay(100);
+  }
+
+  /* Step 2: Start FDCAN */
+  if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
+    len = snprintf(msg, sizeof(msg), "FAIL: FDCAN Start\r\n");
+    CDC_Transmit_FS((uint8_t *)msg, len);
+    HAL_Delay(100);
+  }
+
+  /* Step 3: Activate RX interrupt */
+  if (HAL_FDCAN_ActivateNotification(&hfdcan3,
+        FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+    len = snprintf(msg, sizeof(msg), "FAIL: ActivateNotification\r\n");
+    CDC_Transmit_FS((uint8_t *)msg, len);
+    HAL_Delay(100);
+  }
+
+  len = snprintf(msg, sizeof(msg), "FDCAN3 init OK — waiting for CAN data...\r\n");
+  CDC_Transmit_FS((uint8_t *)msg, len);
+  HAL_Delay(100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,21 +138,20 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  /* USER CODE BEGIN 3 */
+	  if (datacheck) {
+	        char msg[100];
+	        int len = snprintf(msg, sizeof(msg),
+	            "RX | ID=0x%03lX  Data=[%d %d %d %d %d %d %d %d]\r\n",
+	            RxHeader.Identifier,
+	            RxData[0], RxData[1], RxData[2], RxData[3],
+	            RxData[4], RxData[5], RxData[6], RxData[7]);
+	        CDC_Transmit_FS((uint8_t *)msg, len);
+	        HAL_Delay(10);
+	        datacheck = 0;
+	      }
 
-	    if (datacheck) {
-	      char msg[100];
-	      int len = snprintf(msg, sizeof(msg),
-	          "RX | ID=0x%03lX  Data=[%d %d %d %d %d %d %d %d]\r\n",
-	          RxHeader.Identifier,
-	          RxData[0], RxData[1], RxData[2], RxData[3],
-	          RxData[4], RxData[5], RxData[6], RxData[7]);
-
-	      CDC_Transmit_FS((uint8_t *)msg, len);
-	      datacheck = 0;
-	    }
-
-	    HAL_Delay(10);
-    /* USER CODE BEGIN 3 */
+	      HAL_Delay(10);
   }
   /* USER CODE END 3 */
 }
