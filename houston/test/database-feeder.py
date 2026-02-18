@@ -13,12 +13,12 @@ def insert_test_data():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     readings = [
-        (1, "motor temp", random.random() * 100, time.time()),
-        (2, "battery", random.random() * 100, time.time()),
-        (3, "pressure", random.random() * 100, time.time())
+        (1, "motor temp", random.random() * 100, "m/s", time.time()),
+        (2, "battery", random.random() * 100, "celcius", time.time()),
+        (3, "pressure", random.random() * 100, "s", time.time())
     ]
     cursor.executemany(
-        "INSERT INTO sensor_readings (sensor_id, name, data, timestamp) VALUES (?, ?, ?, ?)",
+        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
         readings
     )
     conn.commit()

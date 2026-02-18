@@ -38,6 +38,7 @@
  - sensor_id: the reading's associated CAN frame ID
  - name: the name of the sensor
  - data: the reading's associated data as seen in the CAN frame DATA field
+ - unit: string representing unit of measurement for the associated reading
  - timestamp: the datetime of when the reading was entered to the database
 
 **Links for Knowledge**
