@@ -63,7 +63,7 @@ body {
     height: 100%;
     /* z-index: 999; */
 
-    background-color: aquamarine;
+    background-color: black;
 }
 
 .other {
@@ -104,7 +104,7 @@ body {
 /* ----------------------------------------------------------- */
 
 .SD_page {
-    background: linear-gradient(to bottom right, #ff7e5f, #feb47b);
+    background-color: dodgerblue; 
     margin: 5% auto; /* 5% from the top and centered */
     padding: 20px;
     border: 1px solid #888;

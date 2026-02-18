@@ -4,7 +4,6 @@
     logic for popups + buttons
 */
         
-        
 document.addEventListener('DOMContentLoaded', function() {
   const openWeb = document.getElementById('openWeb');
   const uploadDB = document.getElementById('upload');
@@ -23,11 +22,23 @@ document.addEventListener('DOMContentLoaded', function() {
       fileInput.click();
     });
 
-    fileInput.addEventListener("change", (e) => {
+    fileInput.addEventListener("change", async (e) => {
       fileName = e.target.files[0];
       length = fileName.name.length;
       if (fileName.name[length - 3] == '.' && fileName.name[length - 2] == 'd' && fileName.name[length - 1] == 'b') {
         console.log("Success!");
+
+        const arrayBuffer = await fileName.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        const SQL = await initSqlJs ({
+          locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+        })
+
+        const db = new SQL.Database(uint8Array);
+
+        const result = db.exec("SELECT * FROM my_table");
+        console.log(result);
       } else {
         console.log("Not a DB File");
       }
@@ -35,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   if (scatterOn && scatterOff) {
+    const scatterX = document.getElementById('scatterX');
     scatterOn.onclick = () => {
       scatterOff.classList.remove("hidden");
       scatterOn.classList.add("hidden");
