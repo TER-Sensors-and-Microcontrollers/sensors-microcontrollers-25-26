@@ -35,6 +35,7 @@ async function updateDropdown(d) {
 
 setInterval(() => {
     updateDropdown("g1");
+    updateDropdown("g1-1");
     updateDropdown("g2");
     updateDropdown("g3");
     updateDropdown("scatterX");
