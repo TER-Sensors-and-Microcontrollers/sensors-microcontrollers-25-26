@@ -235,7 +235,7 @@ class CANProcessor:
         print("  Press Ctrl+C to stop")
 
         t = 0.0
-
+        print("✓ Generating fake data for testing...")
         try:
             while self.running:
                 # ---- FAKE SPEED ----
@@ -253,7 +253,7 @@ class CANProcessor:
                 # ---- FAKE CURRENT ----
                 fake_current = 100 + 30 * np.sin(t)
                 self.data[MOTOR_START_IDX + 9] = fake_current
-
+                print(f"Speed: {fake_speed:.2f}", end="\r")
                 t += 0.1
                 import time
                 time.sleep(0.05)
