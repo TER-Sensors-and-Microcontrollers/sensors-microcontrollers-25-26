@@ -239,7 +239,7 @@ class CANProcessor:
         try:
             while self.running:
                 # ---- FAKE SPEED ----
-                fake_speed = 40 + 20 * np.sin(t)
+                fake_speed =  4000 + 2000 * np.sin(t)
                 self.data[MOTOR_START_IDX + 8] = fake_speed  # motor_speed index
 
                 # ---- FAKE MOTOR TEMP ----
