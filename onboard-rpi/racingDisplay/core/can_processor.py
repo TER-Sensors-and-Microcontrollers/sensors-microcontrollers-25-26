@@ -228,31 +228,39 @@ class CANProcessor:
     
     def run(self):
         """
-        Main loop with timeout to allow signal checking.
+        Main loop.
+        If no real CAN messages, generate fake test data.
         """
-        print(f"✓ CAN Processor running. Listening on {self.interface}...")
+        print(f"✓ CAN Processor running (FAKE DATA MODE)...")
         print("  Press Ctrl+C to stop")
-        
-        msg_count = 0
+
+        t = 0.0
+
         try:
             while self.running:
-                # Use recv(timeout) instead of direct iteration
-                # 0.5 seconds is enough to stay responsive to Ctrl+C
-                msg = self.bus.recv(timeout=0.5)
-                
-                if msg is not None:
-                    self.process_message(msg)
-                    msg_count += 1
-                    
-                    if msg_count % 1000 == 0:
-                        print(f"  Processed {msg_count} CAN messages...")
-                
+                # ---- FAKE SPEED ----
+                fake_speed = 40 + 20 * np.sin(t)
+                self.data[MOTOR_START_IDX + 8] = fake_speed  # motor_speed index
+
+                # ---- FAKE MOTOR TEMP ----
+                fake_temp = 50 + 10 * np.sin(t / 2)
+                self.data[MOTOR_START_IDX + 4] = fake_temp
+
+                # ---- FAKE DC VOLTAGE ----
+                fake_voltage = 300 + 5 * np.sin(t / 3)
+                self.data[MOTOR_START_IDX + 10] = fake_voltage
+
+                # ---- FAKE CURRENT ----
+                fake_current = 100 + 30 * np.sin(t)
+                self.data[MOTOR_START_IDX + 9] = fake_current
+
+                t += 0.1
+                import time
+                time.sleep(0.05)
+
         except KeyboardInterrupt:
-            # This might not trigger if the signal handler catches it first, 
-            # which is fine since self.running will be False.
+            print("\n✓ Keyboard interrupt received, shutting down...")
             pass
-        except Exception as e:
-            print(f"✗ Error in main loop: {e}")
         finally:
             self.cleanup()
     
