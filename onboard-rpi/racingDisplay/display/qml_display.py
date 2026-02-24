@@ -99,22 +99,7 @@ class DashboardBackend(QObject):
             new_volt = self.can.get_dc_voltage()
             new_power = self.can.get_power() / 1000.0  # Convert W to kW
 
-            # Update Properties (only emit if changed to save CPU)
-            if abs(self._speed - new_speed) > 0.1:
-                self._speed = new_speed
-                self.speedChanged.emit(self._speed)
-
-            if abs(self._temp - new_temp) > 0.1:
-                self._temp = new_temp
-                self.tempChanged.emit(self._temp)
-                
-            if abs(self._voltage - new_volt) > 0.1:
-                self._voltage = new_volt
-                self.voltageChanged.emit(self._voltage)
-
-            if abs(self._power - new_power) > 0.1:
-                self._power = new_power
-                self.powerChanged.emit(self._power)
+            
 
         except Exception as e:
             # If reading fails, assume disconnected
