@@ -88,25 +88,41 @@ Window {
                 property var value: ""
                 property string unit: ""
                 property color valueColor: "white"
-                
-                Layout.fillWidth: true; Layout.preferredHeight: 60
-                color: "#2c2c2c"; radius: 10
-                
+    
+                Layout.fillWidth: true
+                Layout.preferredHeight: 60
+                color: "#2c2c2c"
+                radius: 10
+    
                 Column {
                     anchors.centerIn: parent
-                    Text { text: parent.label; color: "#888"; font.pixelSize: 14; anchors.horizontalCenter: parent }
-                    Row {
-                        anchors.horizontalCenter: parent
-                        spacing: 5
-                        Text { Text {
-    text: (parent.value !== undefined && !isNaN(Number(parent.value)))
-      ? Number(parent.value).toFixed(1)
-      : "0.0"
-} color: parent.valueColor; font.pixelSize: 22; font.bold: true }
-                        Text { text: parent.unit; color: "#aaa"; font.pixelSize: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 4 }
-                    }
-                }
+                        Text { 
+                        text: label
+                        color: "#888"
+            font.pixelSize: 14
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 5
+            Text { 
+                text: (value !== undefined && !isNaN(Number(value)))
+                      ? Number(value).toFixed(1)
+                      : "0.0"
+                color: valueColor
+                font.pixelSize: 22
+                font.bold: true
             }
+            Text { 
+                text: unit
+                color: "#aaa"
+                font.pixelSize: 14
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 4
+            }
+        }
+    }
+}
 
             InfoBox { label: "POWER"; value: backend.power; unit: "kW" }
             InfoBox { 
