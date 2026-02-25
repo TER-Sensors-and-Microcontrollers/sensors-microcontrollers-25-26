@@ -101,6 +101,7 @@ class DashboardBackend(QObject):
             # ---- UPDATE + EMIT ----
             self._speed = new_speed
             self.speedChanged.emit(self._speed)
+            print(f"✓ Updated data: Speed={self._speed:.1f} mph, Temp={self._temp:.1f}°C, Voltage={self._voltage:.1f} V, Power={self._power:.2f} kW")
 
             self._temp = new_temp
             self.tempChanged.emit(self._temp)
@@ -110,7 +111,7 @@ class DashboardBackend(QObject):
 
             self._power = new_power
             self.powerChanged.emit(self._power)
-
+            print(f"✓ Updated data: Speed={self._speed:.1f} mph, Temp={self._temp:.1f}°C, Voltage={self._voltage:.1f} V, Power={self._power:.2f} kW")
         except Exception as e:
             # If reading fails, assume disconnected
             self._connected = False
