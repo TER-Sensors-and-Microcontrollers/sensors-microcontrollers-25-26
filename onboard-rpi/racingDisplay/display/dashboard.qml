@@ -99,9 +99,9 @@ Window {
                         anchors.horizontalCenter: parent
                         spacing: 5
                         Text { Text {
-    text: (parent.value !== undefined && !isNaN(parent.value))
-          ? Number(parent.value).toFixed(1)
-          : "0.0"
+    text: (parent.value !== undefined && !isNaN(Number(parent.value)))
+      ? Number(parent.value).toFixed(1)
+      : "0.0"
 } color: parent.valueColor; font.pixelSize: 22; font.bold: true }
                         Text { text: parent.unit; color: "#aaa"; font.pixelSize: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 4 }
                     }
