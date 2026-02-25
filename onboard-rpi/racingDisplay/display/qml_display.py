@@ -98,8 +98,18 @@ class DashboardBackend(QObject):
             new_temp = self.can.get_motor_temp()
             new_volt = self.can.get_dc_voltage()
             new_power = self.can.get_power() / 1000.0  # Convert W to kW
+            # ---- UPDATE + EMIT ----
+            self._speed = new_speed
+            self.speedChanged.emit(self._speed)
 
-            
+            self._temp = new_temp
+            self.tempChanged.emit(self._temp)
+
+            self._voltage = new_volt
+            self.voltageChanged.emit(self._voltage)
+
+            self._power = new_power
+            self.powerChanged.emit(self._power)
 
         except Exception as e:
             # If reading fails, assume disconnected
