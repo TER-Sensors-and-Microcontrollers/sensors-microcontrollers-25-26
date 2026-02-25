@@ -78,7 +78,7 @@ Window {
         // --- LOWER STATS ROW ---
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 100
+            Layout.preferredHeight: 50
             spacing: 20
             
             // Reusable Info Box
@@ -103,13 +103,13 @@ Window {
                 }
             }
 
-            InfoBox { label: "POWER"; value: backend.power.toFixed(1); unit: "kW" }
+            InfoBox { label: "POWER"; value: backend.power; unit: "kW" }
             InfoBox { 
-                label: "VOLTAGE"; value: backend.voltage.toFixed(1); unit: "V"; 
+                label: "VOLTAGE"; value: backend.voltage; unit: "V"; 
                 valueColor: backend.voltage < 88 ? "#f39c12" : "white" 
             }
             InfoBox { 
-                label: "MOTOR TEMP"; value: backend.temp.toFixed(1); unit: "°C"; 
+                label: "MOTOR TEMP"; value: backend.temp; unit: "°C"; 
                 valueColor: backend.temp > 70 ? "#e74c3c" : "#2ecc71" 
             }
         }
