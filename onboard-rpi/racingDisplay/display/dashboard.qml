@@ -78,13 +78,13 @@ Window {
         // --- LOWER STATS ROW ---
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 50
+            Layout.preferredHeight: 20
             spacing: 20
             
             // Reusable Info Box
             component InfoBox: Rectangle {
                 property string label: ""
-                property string value: ""
+                property var value: ""
                 property string unit: ""
                 property color valueColor: "white"
                 
@@ -97,7 +97,7 @@ Window {
                     Row {
                         anchors.horizontalCenter: parent
                         spacing: 5
-                        Text { text: parent.value; color: parent.valueColor; font.pixelSize: 32; font.bold: true }
+                        Text { text: Number(parent.value); color: parent.valueColor; font.pixelSize: 32; font.bold: true }
                         Text { text: parent.unit; color: "#aaa"; font.pixelSize: 18; anchors.bottom: parent.bottom; anchors.bottomMargin: 4 }
                     }
                 }
