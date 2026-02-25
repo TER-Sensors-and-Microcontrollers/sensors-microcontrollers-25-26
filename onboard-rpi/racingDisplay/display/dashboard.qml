@@ -78,8 +78,9 @@ Window {
         // --- LOWER STATS ROW ---
         RowLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: 20
-            spacing: 20
+            Layout.maximumHeight: 70
+            Layout.minimumHeight: 60
+            spacing: 15
             
             // Reusable Info Box
             component InfoBox: Rectangle {
@@ -88,7 +89,7 @@ Window {
                 property string unit: ""
                 property color valueColor: "white"
                 
-                Layout.fillWidth: true; Layout.fillHeight: true
+                Layout.fillWidth: true; Layout.preferredHeight: 60
                 color: "#2c2c2c"; radius: 10
                 
                 Column {
@@ -97,8 +98,12 @@ Window {
                     Row {
                         anchors.horizontalCenter: parent
                         spacing: 5
-                        Text { text: Number(parent.value); color: parent.valueColor; font.pixelSize: 32; font.bold: true }
-                        Text { text: parent.unit; color: "#aaa"; font.pixelSize: 18; anchors.bottom: parent.bottom; anchors.bottomMargin: 4 }
+                        Text { Text {
+    text: (parent.value !== undefined && !isNaN(parent.value))
+          ? Number(parent.value).toFixed(1)
+          : "0.0"
+} color: parent.valueColor; font.pixelSize: 22; font.bold: true }
+                        Text { text: parent.unit; color: "#aaa"; font.pixelSize: 14; anchors.bottom: parent.bottom; anchors.bottomMargin: 4 }
                     }
                 }
             }
