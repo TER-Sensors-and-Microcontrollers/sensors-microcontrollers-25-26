@@ -89,7 +89,13 @@ class DashboardBackend(QObject):
             else:
                 # Simulate data for UI testing if libraries missing
                 self._speed = (self._speed + 0.5) % 100
+                self._temp = 30.0 + 10.0 * math.sin(time.time())
+                self._voltage = 90.0 + 5.0 * math.cos(time.time() / 2)
+                self._power = 20.0 + 5.0 * math.sin(time.time() / 3)
                 self.speedChanged.emit(self._speed)
+                self.tempChanged.emit(self._temp)
+                self.voltageChanged.emit(self._voltage)
+                self.powerChanged.emit(self._power)
                 return
 
         try:

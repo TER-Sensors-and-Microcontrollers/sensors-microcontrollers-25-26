@@ -119,4 +119,15 @@ Window {
             }
         }
     }
+    Timer {
+        interval: 1000; running: true; repeat: true
+        onTriggered: {
+            console.log("QML values:",
+                "Power:", backend.power,
+                "Voltage:", backend.voltage,
+                "Temp:", backend.temp,
+                "Speed:", backend.speed
+            )
+        }
+    }
 }
