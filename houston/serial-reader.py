@@ -2,14 +2,8 @@
 # Reads incoming can packet from the on-car sender
 # 
 # 
-import time
-import os
-import random
-import serial
-import threading
 
-from flask import Flask, render_template, g, jsonify
-import sqlite3
+from globals import *
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -71,8 +65,9 @@ def parse_frame(frame:bytes):
 # from serial port, and stores it in Flask database. does not return anything
 # prints debug messages if debug flag set to True
 def reader(ser:serial.Serial, debug=True):
-    # db = get_db()
-    # cursor = db.cursor()
+    db = get_db()
+    cursor = db.cursor()
+
     start = time.time()
     while True:
         if ser.in_waiting > 0:
@@ -85,46 +80,62 @@ def reader(ser:serial.Serial, debug=True):
             
             if debug:
                 print(f"RECIEVED: {time.time() - start:.2f}    ID: {id}    DLC: {dlc}    DATA: {data}")
-            
+            if len(data) == 8: # skip chopped messages [tentatively]
+                print(f"Error: data length is not 8!")
+                continue
+                
             match id:
                 # interpret data as appropriate type per case
-                case _:
-                    pass
-                # case 1:
-                #     message = [id, "test_data1", int(data), time.time()]
-                #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                #         message
-                #     )
-                #     db.commit()
-                # case 36:
-                #     message = [id, "test_data2", int(data), time.time()]
-                #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                #         message
-                #     )
-                #     db.commit()
-                # case 37:
-                #     message = [id, "test_data3", float(data), time.time()]
-                #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                #         message
-                #     )
-                #     db.commit()
-                # case 38:
-                #     message = [id, "test_data4", int(data), time.time()]
-                #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                #         message
-                #     )
-                #     db.commit()
-                # case 39:
-                #     message = [id, "test_data5", int(data), time.time()]
-                #     cursor.execute(
-                #         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                #         message
-                #     )
-                #     db.commit() 
+                    case 160: # 'A0' - template value
+                        pass
+                    case 161: # Temp 2
+                        cb_temp = np.float32(struct.unpack('<H', data[0:2])[0]) / 10
+                        reading = [id, "CB Temp", float(cb_temp), time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            reading
+                        )
+                        db.commit()
+                    case 162: # Temp 3
+                        cool_temp = np.float32(struct.unpack('<H', data[0:2])[0]) / 10
+                        htspt_temp = np.float32(struct.unpack('<H', data[2:4])[0]) / 10
+                        mot_temp = np.float32(struct.unpack('<H', data[4:6])[0]) / 10
+                        readingCool = [id, "Coolant Temp", float(cool_temp),"todo", time.time()]
+                        readingHtspt = [id, "Hotspot Temp", float(htspt_temp),"todo", time.time()]
+                        readingMot = [id, "Motor Temp", float(mot_temp),"todo", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingCool
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingHtspt
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingMot
+                        )
+                        db.commit()
+                    case 163: # Analog Input
+                        bit_string = ''.join(format(byte, '08b') for byte in data) # for bitops.
+                        pedal1 = bit_string[-10:]
+                        # this grabs the proper bit sequence for the brake pedal
+                        pedal2 = bit_string[20:30]
+                        readingP1 = [id, "Pedal1", float(pedal1),"todo", time.time()]
+                        readingP2 = [id, "Pedal2", float(pedal2),"todo", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingP1
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingP2
+                        )
+                        db.commit()
+                    case 164: # Dig. Input Status
+                        pass
+                    case _:
+                        pass
         else:
             print("Waiting for serial data...") 
         time.sleep(0.5)
@@ -135,8 +146,8 @@ if __name__ == "__main__":
     print(DATABASE)
     try:
         # loop:// creates a virtual serial port entirely in memory
-        ser = serial.Serial('/dev/ttyAMA2', baudrate=115200, timeout=1)
-        print("Connected successfully to ttyAMA2!")
+        ser = serial.Serial(PI_RADIO, baudrate=115200, timeout=1)
+        print(f"Connected successfully to {PI_RADIO}")
         # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
