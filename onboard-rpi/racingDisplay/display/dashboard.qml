@@ -121,7 +121,7 @@ Item {
             }
             Text { 
                 text: unit
-                color: "#aaa"
+                color: '#000000'
                 font.pixelSize: 14
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 4
