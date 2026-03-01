@@ -3,14 +3,15 @@
     
     logic for popups + buttons
 */
-        
+
 document.addEventListener('DOMContentLoaded', function() {
   const openWeb = document.getElementById('openWeb');
   const uploadDB = document.getElementById('upload');
   const fileInput = document.getElementById('file-input');
   const scatterOn = document.getElementById('scatterOn');
   const scatterOff = document.getElementById('scatterOff');
-
+  const message = document.getElementById('message');
+  
   if (openWeb) {
     openWeb.onclick = () => {
       window.location.href = "/SD";
@@ -27,6 +28,16 @@ document.addEventListener('DOMContentLoaded', function() {
       length = fileName.name.length;
       if (fileName.name[length - 3] == '.' && fileName.name[length - 2] == 'd' && fileName.name[length - 1] == 'b') {
         console.log("Success!");
+        message.textContent = "SUCCESS";
+        message.style.color = "green";
+
+        const formData = new FormData();
+        formData.append('file', fileName);
+
+        await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
 
         const arrayBuffer = await fileName.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
@@ -37,9 +48,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const db = new SQL.Database(uint8Array);
 
-        const result = db.exec("SELECT * FROM my_table");
-        console.log(result);
+        const result = db.exec("SELECT * FROM sensor_readings WHERE sensor_id = 1 ORDER BY timestamp DESC LIMIT 1");
+        console.log(result[0].values[0]);
       } else {
+        message.textContent = "NOT A DB FILE";
+        message.style.color = "red";
         console.log("Not a DB File");
       }
     });

@@ -5,7 +5,8 @@
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
-from flask import Flask, render_template, g, jsonify
+from flask import Flask, render_template, g, jsonify, request
+import os
 import sqlite3
 from flask_socketio import SocketIO
 import threading
@@ -113,11 +114,10 @@ def get_datapoint(sensor_id:int):
     cursor = db.cursor()
     # '?' character in the cursor query uses the value passed in from get_datapoint
     # otherwise using sensor_id = sensor_id would query for itself
-   
+
     cursor.execute(
         "SELECT * FROM sensor_readings "
-        "WHERE sensor_id = ? AND "
-        "timestamp >= ((strftime('%s','now') * 1000) - 500) "
+        "WHERE sensor_id = ?"
         "ORDER BY timestamp DESC LIMIT 1",
         (sensor_id,)
     )
@@ -126,8 +126,8 @@ def get_datapoint(sensor_id:int):
 
     # return error if the query does not return any results
     if not rows:
-        return jsonify({"error": "No up-to-date sensor data found for id " + sensor_id})
-    
+        return jsonify({"error": "No up-to-date sensor data found for id " + sensor_id}), 404
+
     # turn reading into JSON object
     reading = {
         "reading_id": rows[0][0],
@@ -139,7 +139,6 @@ def get_datapoint(sensor_id:int):
     }
 
     return jsonify(reading)
-
 # /unique_sensors
 # 
 # returns JSON response of all unique sensor id,name,unit tuples ordered by id, ascending
@@ -176,6 +175,12 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    file.save(os.path.join('database.db'))
+    return 'success'
 
 # main driver function
 

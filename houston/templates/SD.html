@@ -10,7 +10,9 @@
             width="337.5" length="750"/>
         </div>
         <button id = "upload">Upload Db File</button>
+        <div id="message"></div>
         <input type = "file" id = "file-input" style = "display: none">
-        <script src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script  src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script  src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
     </body>
 </html>
