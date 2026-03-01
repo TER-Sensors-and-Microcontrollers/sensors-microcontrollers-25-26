@@ -43,7 +43,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-FDCAN_HandleTypeDef hfdcan3;
+FDCAN_HandleTypeDef hfdcan2;
 
 /* USER CODE BEGIN PV */
 FDCAN_TxHeaderTypeDef TxHeader;
@@ -54,7 +54,7 @@ uint8_t counter = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_FDCAN3_Init(void);
+static void MX_FDCAN2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,10 +93,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_FDCAN3_Init();
   MX_USB_Device_Init();
+  MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(1000);  /* let USB CDC enumerate */
+  HAL_Delay(3000);  /* let USB CDC enumerate */
 
   char initmsg[80];
   int initlen;
@@ -111,12 +111,12 @@ int main(void)
   TxHeader.TxEventFifoControl  = FDCAN_NO_TX_EVENTS;
   TxHeader.MessageMarker       = 0;
 
-  if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
+  if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
     initlen = snprintf(initmsg, sizeof(initmsg), "FAIL: FDCAN Start\r\n");
     CDC_Transmit_FS((uint8_t *)initmsg, initlen);
     HAL_Delay(100);
   } else {
-    initlen = snprintf(initmsg, sizeof(initmsg), "FDCAN3 started — transmitting...\r\n");
+    initlen = snprintf(initmsg, sizeof(initmsg), "FDCAN2 started — transmitting...\r\n");
     CDC_Transmit_FS((uint8_t *)initmsg, initlen);
     HAL_Delay(100);
   }
@@ -127,32 +127,35 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	    /* Fill dummy data — byte 0 counts up so you can see it changing */
-	    TxData[0] = counter;
-	    TxData[1] = 0xAA;
-	    TxData[2] = 0xBB;
-	    TxData[3] = 0xCC;
-	    TxData[4] = 0xDD;
-	    TxData[5] = 0xEE;
-	    TxData[6] = 0xFF;
-	    TxData[7] = counter;
-
-	    /* Attempt to send */
-	    char msg[80];
-	    int len;
-
-	    if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan3, &TxHeader, TxData) == HAL_OK) {
-	      len = snprintf(msg, sizeof(msg), "TX OK  | counter=%d\r\n", counter);
-	    } else {
-	      len = snprintf(msg, sizeof(msg), "TX FAIL| counter=%d\r\n", counter);
-	    }
-
-	    CDC_Transmit_FS((uint8_t *)msg, len);
-
-	    counter++;
-	    HAL_Delay(500);  /* Send every 500 ms */
 
     /* USER CODE BEGIN 3 */
+	  /* Fill dummy data — byte 0 counts up so you can see it changing */
+	  	    TxData[0] = counter;
+	  	    TxData[1] = 0xAA;
+	  	    TxData[2] = 0xBB;
+	  	    TxData[3] = 0xCC;
+	  	    TxData[4] = 0xDD;
+	  	    TxData[5] = 0xEE;
+	  	    TxData[6] = 0xFF;
+	  	    TxData[7] = counter;
+
+	  	    /* Attempt to send */
+	  	    char msg[80];
+	  	    int len;
+
+	  	    if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData) == HAL_OK) {
+	  	      len = snprintf(msg, sizeof(msg), "TX OK  | counter=%d\r\n", counter);
+	  	    } else {
+	  	    	Error_Handler();
+
+	  	    	len = snprintf(msg, sizeof(msg), "TX FAIL| counter=%d\r\n", counter);
+	  	    }
+
+	  	    CDC_Transmit_FS((uint8_t *)msg, len);
+
+	  	    counter++;
+	  	    HAL_Delay(500);  /* Send every 500 ms */
+
   }
   /* USER CODE END 3 */
 }
@@ -204,45 +207,45 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief FDCAN3 Initialization Function
+  * @brief FDCAN2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_FDCAN3_Init(void)
+static void MX_FDCAN2_Init(void)
 {
 
-  /* USER CODE BEGIN FDCAN3_Init 0 */
+  /* USER CODE BEGIN FDCAN2_Init 0 */
 
-  /* USER CODE END FDCAN3_Init 0 */
+  /* USER CODE END FDCAN2_Init 0 */
 
-  /* USER CODE BEGIN FDCAN3_Init 1 */
+  /* USER CODE BEGIN FDCAN2_Init 1 */
 
-  /* USER CODE END FDCAN3_Init 1 */
-  hfdcan3.Instance = FDCAN3;
-  hfdcan3.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan3.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan3.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan3.Init.AutoRetransmission = ENABLE;
-  hfdcan3.Init.TransmitPause = DISABLE;
-  hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 2;
-  hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 13;
-  hfdcan3.Init.NominalTimeSeg2 = 2;
-  hfdcan3.Init.DataPrescaler = 1;
-  hfdcan3.Init.DataSyncJumpWidth = 1;
-  hfdcan3.Init.DataTimeSeg1 = 1;
-  hfdcan3.Init.DataTimeSeg2 = 1;
-  hfdcan3.Init.StdFiltersNbr = 0;
-  hfdcan3.Init.ExtFiltersNbr = 0;
-  hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
+  /* USER CODE END FDCAN2_Init 1 */
+  hfdcan2.Instance = FDCAN2;
+  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+  hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan2.Init.AutoRetransmission = ENABLE;
+  hfdcan2.Init.TransmitPause = DISABLE;
+  hfdcan2.Init.ProtocolException = DISABLE;
+  hfdcan2.Init.NominalPrescaler = 2;
+  hfdcan2.Init.NominalSyncJumpWidth = 1;
+  hfdcan2.Init.NominalTimeSeg1 = 13;
+  hfdcan2.Init.NominalTimeSeg2 = 2;
+  hfdcan2.Init.DataPrescaler = 1;
+  hfdcan2.Init.DataSyncJumpWidth = 1;
+  hfdcan2.Init.DataTimeSeg1 = 1;
+  hfdcan2.Init.DataTimeSeg2 = 1;
+  hfdcan2.Init.StdFiltersNbr = 0;
+  hfdcan2.Init.ExtFiltersNbr = 0;
+  hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN FDCAN3_Init 2 */
+  /* USER CODE BEGIN FDCAN2_Init 2 */
 
-  /* USER CODE END FDCAN3_Init 2 */
+  /* USER CODE END FDCAN2_Init 2 */
 
 }
 
@@ -258,6 +261,7 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
