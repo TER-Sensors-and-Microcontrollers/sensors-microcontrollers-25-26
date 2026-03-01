@@ -5,8 +5,8 @@ import QtQuick.Controls 2.15
 
 Window {
     visible: true
-    width: 800
-    height: 480
+    width: 480
+    height: 800
     color: "#1e1e1e"
     title: "Tufts Electric Racing"
     
@@ -91,27 +91,27 @@ Window {
     
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
-                color: "#2c2c2c"
+                color: "#e74c3c"
                 radius: 10
     
                 Column {
                     anchors.centerIn: parent
-                        Text { 
+                    Text { 
                         text: label
                         color: "#888"
-            font.pixelSize: 14
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 5
-            Text { 
-                text: (value !== undefined && !isNaN(Number(value)))
+                    font.pixelSize: 14
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 5
+                    Text { 
+                    text: (value !== undefined && !isNaN(Number(value)))
                       ? Number(value).toFixed(1)
                       : "0.0"
-                color: valueColor
-                font.pixelSize: 22
-                font.bold: true
+                    color: valueColor
+                    font.pixelSize: 22
+                    font.bold: true
             }
             Text { 
                 text: unit
