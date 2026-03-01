@@ -97,7 +97,7 @@ Item {
     
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
-                color: '#e9867b'
+                color: '#e74c3c'
                 radius: 10
     
                 Column {
@@ -133,11 +133,9 @@ Item {
             InfoBox { label: "POWER"; value: backend.power; unit: "kW" }
             InfoBox { 
                 label: "VOLTAGE"; value: backend.voltage; unit: "V"; 
-                valueColor: backend.voltage < 88 ? "#f39c12" : "white" 
             }
             InfoBox { 
                 label: "MOTOR TEMP"; value: backend.temp; unit: "°C"; 
-                valueColor: backend.temp > 70 ? "#e74c3c" : "#2ecc71" 
             }
         }
     }
