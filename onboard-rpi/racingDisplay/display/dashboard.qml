@@ -18,7 +18,13 @@ Window {
             GradientStop { position: 1.0; color: "#000000" }
         }
     }
+Item {
+    width: parent.height
+    height: parent.width
 
+    anchors.centerIn: parent
+    rotation: 90
+    transformOrigin: Item.Center 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
@@ -135,6 +141,7 @@ Window {
             }
         }
     }
+}
     Timer {
         interval: 1000; running: true; repeat: true
         onTriggered: {
@@ -146,4 +153,5 @@ Window {
             )
         }
     }
+
 }
