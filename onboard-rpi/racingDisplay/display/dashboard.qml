@@ -5,8 +5,8 @@ import QtQuick.Controls 2.15
 
 Window {
     visible: true
-    width: 480
-    height: 800
+    width: 800
+    height: 480
     color: "#1e1e1e"
     title: "Tufts Electric Racing"
     
@@ -23,7 +23,7 @@ Item {
     height: parent.width
 
     anchors.centerIn: parent
-    rotation: 90
+    rotation: -90
     transformOrigin: Item.Center 
     ColumnLayout {
         anchors.fill: parent
