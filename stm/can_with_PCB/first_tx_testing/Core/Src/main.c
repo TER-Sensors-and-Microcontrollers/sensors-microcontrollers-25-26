@@ -146,7 +146,7 @@ int main(void)
 	  	    if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData) == HAL_OK) {
 	  	      len = snprintf(msg, sizeof(msg), "TX OK  | counter=%d\r\n", counter);
 	  	    } else {
-	  	    	Error_Handler();
+	  	    	Error_Handler(); //this code is not flashed
 
 	  	    	len = snprintf(msg, sizeof(msg), "TX FAIL| counter=%d\r\n", counter);
 	  	    }
