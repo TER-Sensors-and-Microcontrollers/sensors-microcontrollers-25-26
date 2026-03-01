@@ -6,7 +6,7 @@ import QtQuick.Controls 2.15
 Window {
     visible: true
     width: 800
-    height: 480
+    height: 460
     color: "#1e1e1e"
     title: "Tufts Electric Racing"
     
@@ -57,7 +57,7 @@ Item {
                 width: 260; height: 260
                 radius: 130
                 color: "#111"
-                border.color: backend.speed > 50 ? "#e74c3c" : "#3498db"
+                border.color: backend.speed > 50 ? "#e74c3c" : '#08fb86'
                 border.width: 8
                 anchors.centerIn: parent
 
@@ -72,7 +72,7 @@ Item {
                     }
                     Text {
                         text: "MPH"
-                        color: "#aaa"
+                        color: '#aaaaaa'
                         font.pixelSize: 24
                         font.bold: true
                         anchors.horizontalCenter: parent
@@ -97,7 +97,7 @@ Item {
     
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
-                color: "#e74c3c"
+                color: '#e9867b'
                 radius: 10
     
                 Column {
