@@ -72,7 +72,7 @@ Item {
                     }
                     Text {
                         text: "MPH"
-                        color: '#aaaaaa'
+                        color: '#000000'
                         font.pixelSize: 24
                         font.bold: true
                         anchors.horizontalCenter: parent
@@ -104,7 +104,7 @@ Item {
                     anchors.centerIn: parent
                     Text { 
                         text: label
-                        color: "#888"
+                        color: '#010000'
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
