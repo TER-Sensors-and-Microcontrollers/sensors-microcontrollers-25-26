@@ -5,7 +5,8 @@ import QtQuick.Controls 2.15
 
 Window {
     visible: true
-    visibility: Window.FullScreen
+    width: 1024
+    height: 460
     color: "#1e1e1e"
     title: "Tufts Electric Racing"
     
