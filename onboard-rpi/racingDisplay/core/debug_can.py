@@ -10,7 +10,7 @@ def main():
     print("Listening on can0...\n")
 
     try:
-        bus = can.interface.Bus(channel='can0', bustype='socketcan')
+        bus = can.interface.Bus(channel='can0', interface='socketcan')
     except Exception as e:
         print(f"Failed to connect to can0: {e}")
         return
