@@ -10,26 +10,8 @@ echo "  Starting Racing Display System"
 echo "=========================================="
 echo ""
 
-# Check if running in a graphical environment
-if [ -z "$DISPLAY" ]; then
-    echo "❌ Error: No display detected. Run this script in a graphical environment."
-    exit 1
-fi
-
-# Determine which terminal emulator is available
-if command -v gnome-terminal &> /dev/null; then
-    TERMINAL="gnome-terminal --"
-elif command -v xterm &> /dev/null; then
-    TERMINAL="xterm -hold -e"
-elif command -v konsole &> /dev/null; then
-    TERMINAL="konsole -e"
-else
-    echo "❌ Error: No terminal emulator found (gnome-terminal, xterm, or konsole)"
-    exit 1
-fi
-
 echo "🚀 Launching CAN Processor terminal..."
-$TERMINAL bash -c "
+lxterminal -e bash -c "
     cd '$PROJECT_ROOT' || exit
     echo '=========================================='
     echo '  CAN Processor Terminal'
@@ -54,7 +36,7 @@ echo "⏳ Waiting 2 seconds for shared memory setup..."
 sleep 2
 
 echo "🚀 Launching QML Display terminal..."
-$TERMINAL bash -c "
+lxterminal -e bash -c "
     cd '$PROJECT_ROOT/display' || exit
     echo '=========================================='
     echo '  QML Display Terminal'
@@ -69,8 +51,4 @@ $TERMINAL bash -c "
 
 echo ""
 echo "✓ Both terminals launched successfully"
-echo ""
-echo "To stop the system:"
-echo "  • Press Ctrl+C in each terminal window"
-echo "  • Or close the terminal windows"
 echo ""
