@@ -90,7 +90,7 @@ def reader(ser:serial.Serial, debug=True):
                         pass
                     case 161: # Temp 2
                         cb_temp = np.float32(struct.unpack('<H', data[0:2])[0]) / 10
-                        reading = [id, "CB Temp", float(cb_temp),"todo", time.time()]
+                        reading = [id, "CB Temp", float(cb_temp), time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
