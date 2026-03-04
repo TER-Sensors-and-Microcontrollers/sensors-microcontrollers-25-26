@@ -1,5 +1,5 @@
-../Core/Src/main.c:71:5:main	176	static
-../Core/Src/main.c:167:6:SystemClock_Config	88	static
-../Core/Src/main.c:214:13:MX_FDCAN2_Init	8	static
-../Core/Src/main.c:257:13:MX_GPIO_Init	16	static
-../Core/Src/main.c:280:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:71:5:main	184	static
+../Core/Src/main.c:169:6:SystemClock_Config	88	static
+../Core/Src/main.c:216:13:MX_FDCAN2_Init	8	static
+../Core/Src/main.c:259:13:MX_GPIO_Init	16	static
+../Core/Src/main.c:282:6:Error_Handler	4	static,ignoring_inline_asm

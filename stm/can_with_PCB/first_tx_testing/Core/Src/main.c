@@ -143,11 +143,13 @@ int main(void)
 	  	    char msg[80];
 	  	    int len;
 
-	  	    if (HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData) == HAL_OK) {
+	  	    HAL_StatusTypeDef whatsTheError = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData);
+	  	    len = snprintf(msg, sizeof(msg), "%d\r\n", whatsTheError);
+	  	    CDC_Transmit_FS((uint8_t *)msg, len);
+
+	  	    if (whatsTheError == HAL_OK) {
 	  	      len = snprintf(msg, sizeof(msg), "TX OK  | counter=%d\r\n", counter);
 	  	    } else {
-	  	    	Error_Handler(); //this code is not flashed
-
 	  	    	len = snprintf(msg, sizeof(msg), "TX FAIL| counter=%d\r\n", counter);
 	  	    }
 
