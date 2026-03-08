@@ -7,7 +7,7 @@ Window {
     visible: true
     width: 800
     height: 480
-    color: "#0a0a0a"
+    color: '#ee1c1c'
     title: "Tufts Electric Racing"
     
     // Rotated container for landscape orientation
@@ -55,8 +55,8 @@ Window {
                 anchors.left: parent.left
                 anchors.leftMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: 180
-                height: 180
+                width: 190
+                height: 190
                 
                 minValue: 0
                 maxValue: 60
@@ -72,8 +72,8 @@ Window {
                 anchors.right: parent.right
                 anchors.rightMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: 180
-                height: 180
+                width: 190
+                height: 190
                 
                 minValue: 0
                 maxValue: 6000
@@ -88,7 +88,7 @@ Window {
                 id: mileageBox
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 200
+                anchors.verticalCenterOffset: 210
                 width: 180
                 height: 80
                 color: "#2c3e50"
@@ -181,7 +181,7 @@ Window {
 
                 Text {
                     text: label
-                    color: "#7f8c8d"
+                    color: '#e8f4f5'
                     font.pixelSize: 14
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -197,7 +197,7 @@ Window {
 
                 Text {
                     text: unit
-                    color: "#95a5a6"
+                    color: '#f1f5f5'
                     font.pixelSize: 16
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
