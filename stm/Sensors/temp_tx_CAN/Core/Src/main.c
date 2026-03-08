@@ -112,7 +112,7 @@ int main(void)
   MX_USB_Device_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_Delay(3000); /* let USB CDC enumerate */
+  HAL_Delay(10000); /* let USB CDC enumerate */
 
   HAL_StatusTypeDef st;
 
@@ -170,7 +170,7 @@ int main(void)
 
 		// Read object temperature register (0x07)
 		// read 3 bytes: LSB, MSB, PEC
-		st = HAL_I2C_Mem_Read(&hi2c2,vMLX90614_ADDR, MLX90614_TOBJ1, I2C_MEMADD_SIZE_8BIT, buf, 3, 200);
+		st = HAL_I2C_Mem_Read(&hi2c2,MLX90614_ADDR, MLX90614_TOBJ1, I2C_MEMADD_SIZE_8BIT, buf, 3, 200);
 
 		if (st == HAL_OK) {
 			raw_temp = ((uint16_t) buf[1] << 8) | buf[0];
@@ -185,17 +185,38 @@ int main(void)
 //					abs(temp_c_x100 % 100), temp_f_x100 / 100,
 //					abs(temp_f_x100 % 100));
 
+			TxData[0] = (uint8_t) temp_c_x100;
+			TxData[1] = 0x00;
+			TxData[2] = 0x00;
+			TxData[3] = 0x00;
+			TxData[4] = 0x00;
+			TxData[5] = 0x00;
+			TxData[6] = 0x00;
+			TxData[7] = (uint8_t) temp_f_x100;
 
+			/* Attempt to send */
+			char msg[80];
+			int len;
 
+			HAL_StatusTypeDef whatsTheError = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData);
+			len = snprintf(msg, sizeof(msg), "%d\r\n", whatsTheError);
+			CDC_Transmit_FS((uint8_t*) msg, len);
+
+			if (whatsTheError == HAL_OK) {
+				len = snprintf(msg, sizeof(msg), "TX OK | TxData=%d\r\n", TxData[0]);
+				len = snprintf(msg, sizeof(msg), "TX OK | TxData=%d\r\n", TxData[7]);
+			} else {
+				len = snprintf(msg, sizeof(msg), "TX FAIL");
+			}
+
+			CDC_Transmit_FS((uint8_t*) msg, len);
+
+			HAL_Delay(1500);
 
 		} else {
-			snprintf(msg, sizeof(msg), "I2C read fail st=%d err=%lu\r\n",
-					(int) st, (unsigned long) HAL_I2C_GetError(&hi2c2));
+			snprintf(msg, sizeof(msg), "I2C read fail st=%d err=%lu\r\n", (int) st, (unsigned long) HAL_I2C_GetError(&hi2c2));
+			HAL_Delay(500);
 		}
-
-		CDC_Print(msg);
-
-		HAL_Delay(500);
   }
   /* USER CODE END 3 */
 }
