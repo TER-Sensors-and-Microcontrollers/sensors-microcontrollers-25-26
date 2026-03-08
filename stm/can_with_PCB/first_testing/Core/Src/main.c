@@ -43,7 +43,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-FDCAN_HandleTypeDef hfdcan3;
+FDCAN_HandleTypeDef hfdcan2;
 
 /* USER CODE BEGIN PV */
 FDCAN_RxHeaderTypeDef RxHeader;
@@ -54,7 +54,7 @@ volatile uint8_t datacheck = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_FDCAN3_Init(void);
+static void MX_FDCAN2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,8 +93,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_FDCAN3_Init();
   MX_USB_Device_Init();
+  MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_Delay(1000);  /* let USB CDC enumerate */
@@ -103,7 +103,7 @@ int main(void)
   int len;
 
   /* Step 1: Global filter */
-  if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan3,
+  if (HAL_FDCAN_ConfigGlobalFilter(&hfdcan2,
         FDCAN_ACCEPT_IN_RX_FIFO0,
         FDCAN_ACCEPT_IN_RX_FIFO0,
         FDCAN_REJECT_REMOTE,
@@ -114,21 +114,21 @@ int main(void)
   }
 
   /* Step 2: Start FDCAN */
-  if (HAL_FDCAN_Start(&hfdcan3) != HAL_OK) {
+  if (HAL_FDCAN_Start(&hfdcan2) != HAL_OK) {
     len = snprintf(msg, sizeof(msg), "FAIL: FDCAN Start\r\n");
     CDC_Transmit_FS((uint8_t *)msg, len);
     HAL_Delay(100);
   }
 
   /* Step 3: Activate RX interrupt */
-  if (HAL_FDCAN_ActivateNotification(&hfdcan3,
+  if (HAL_FDCAN_ActivateNotification(&hfdcan2,
         FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
     len = snprintf(msg, sizeof(msg), "FAIL: ActivateNotification\r\n");
     CDC_Transmit_FS((uint8_t *)msg, len);
     HAL_Delay(100);
   }
 
-  len = snprintf(msg, sizeof(msg), "FDCAN3 init OK — waiting for CAN data...\r\n");
+  len = snprintf(msg, sizeof(msg), "FDCAN2 init OK — waiting for CAN data...\r\n");
   CDC_Transmit_FS((uint8_t *)msg, len);
   HAL_Delay(100);
   /* USER CODE END 2 */
@@ -138,7 +138,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  /* USER CODE BEGIN 3 */
+
+    /* USER CODE BEGIN 3 */
 	  if (datacheck) {
 	        char msg[100];
 	        int len = snprintf(msg, sizeof(msg),
@@ -203,45 +204,45 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief FDCAN3 Initialization Function
+  * @brief FDCAN2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_FDCAN3_Init(void)
+static void MX_FDCAN2_Init(void)
 {
 
-  /* USER CODE BEGIN FDCAN3_Init 0 */
+  /* USER CODE BEGIN FDCAN2_Init 0 */
 
-  /* USER CODE END FDCAN3_Init 0 */
+  /* USER CODE END FDCAN2_Init 0 */
 
-  /* USER CODE BEGIN FDCAN3_Init 1 */
+  /* USER CODE BEGIN FDCAN2_Init 1 */
 
-  /* USER CODE END FDCAN3_Init 1 */
-  hfdcan3.Instance = FDCAN3;
-  hfdcan3.Init.ClockDivider = FDCAN_CLOCK_DIV1;
-  hfdcan3.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
-  hfdcan3.Init.Mode = FDCAN_MODE_NORMAL;
-  hfdcan3.Init.AutoRetransmission = ENABLE;
-  hfdcan3.Init.TransmitPause = DISABLE;
-  hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 2;
-  hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 13;
-  hfdcan3.Init.NominalTimeSeg2 = 2;
-  hfdcan3.Init.DataPrescaler = 1;
-  hfdcan3.Init.DataSyncJumpWidth = 1;
-  hfdcan3.Init.DataTimeSeg1 = 1;
-  hfdcan3.Init.DataTimeSeg2 = 1;
-  hfdcan3.Init.StdFiltersNbr = 0;
-  hfdcan3.Init.ExtFiltersNbr = 0;
-  hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
+  /* USER CODE END FDCAN2_Init 1 */
+  hfdcan2.Instance = FDCAN2;
+  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+  hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan2.Init.AutoRetransmission = DISABLE;
+  hfdcan2.Init.TransmitPause = DISABLE;
+  hfdcan2.Init.ProtocolException = DISABLE;
+  hfdcan2.Init.NominalPrescaler = 2;
+  hfdcan2.Init.NominalSyncJumpWidth = 1;
+  hfdcan2.Init.NominalTimeSeg1 = 13;
+  hfdcan2.Init.NominalTimeSeg2 = 2;
+  hfdcan2.Init.DataPrescaler = 1;
+  hfdcan2.Init.DataSyncJumpWidth = 1;
+  hfdcan2.Init.DataTimeSeg1 = 1;
+  hfdcan2.Init.DataTimeSeg2 = 1;
+  hfdcan2.Init.StdFiltersNbr = 0;
+  hfdcan2.Init.ExtFiltersNbr = 0;
+  hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN FDCAN3_Init 2 */
+  /* USER CODE BEGIN FDCAN2_Init 2 */
 
-  /* USER CODE END FDCAN3_Init 2 */
+  /* USER CODE END FDCAN2_Init 2 */
 
 }
 
@@ -257,6 +258,7 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
