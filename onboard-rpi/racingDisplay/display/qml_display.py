@@ -5,6 +5,7 @@
 
 import sys
 import os
+import time
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtProperty, QTimer, QUrl
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtQml import QQmlApplicationEngine
@@ -28,9 +29,14 @@ class DashboardBackend(QObject):
     """
     # Define Signals (notify QML when data changes)
     speedChanged = pyqtSignal(float)
+    rpmChanged = pyqtSignal(float)
     tempChanged = pyqtSignal(float)
     voltageChanged = pyqtSignal(float)
     powerChanged = pyqtSignal(float)
+    batteryPercentChanged = pyqtSignal(float)
+    mileageChanged = pyqtSignal(float)
+    motorStateChanged = pyqtSignal(str)
+    directionChanged = pyqtSignal(str)
     statusChanged = pyqtSignal(str)
     connectionStatusChanged = pyqtSignal(bool)
 
@@ -38,11 +44,23 @@ class DashboardBackend(QObject):
         super().__init__()
         # Initial values
         self._speed = 0.0
+        self._rpm = 0.0
         self._temp = 0.0
         self._voltage = 0.0
         self._power = 0.0
+        self._battery_percent = 0.0
+        self._mileage = 0.0
+        self._motor_state = "IDLE"
+        self._direction = "FWD"
         self._status = "Initializing..."
         self._connected = False
+        
+        # Mileage tracking
+        self._last_update_time = time.time()
+        
+        # Battery voltage range (adjust for your system)
+        self.VOLTAGE_MIN = 80.0  # 0% battery
+        self.VOLTAGE_MAX = 100.0  # 100% battery
         
         # Connect to Shared Memory
         self.connect_shared_memory()
@@ -88,38 +106,87 @@ class DashboardBackend(QObject):
                     return
             else:
                 # Simulate data for UI testing if libraries missing
-                self._speed = (self._speed + 0.5) % 100
-                self._temp = 30.0 + 10.0 * math.sin(time.time())
+                import math
+                self._speed = abs(30 * math.sin(time.time() / 2))
+                self._rpm = abs(3000 * math.sin(time.time() / 2))
+                self._temp = 50.0 + 20.0 * math.sin(time.time() / 3)
                 self._voltage = 90.0 + 5.0 * math.cos(time.time() / 2)
-                self._power = 20.0 + 5.0 * math.sin(time.time() / 3)
+                self._battery_percent = 50.0 + 30.0 * math.sin(time.time() / 5)
                 self.speedChanged.emit(self._speed)
+                self.rpmChanged.emit(self._rpm)
                 self.tempChanged.emit(self._temp)
                 self.voltageChanged.emit(self._voltage)
-                self.powerChanged.emit(self._power)
+                self.batteryPercentChanged.emit(self._battery_percent)
                 return
 
         try:
-            # Read from Shared Memory using your existing getters
+            current_time = time.time()
+            dt = current_time - self._last_update_time
+            self._last_update_time = current_time
+
+            # Read from Shared Memory
             new_speed = self.can.get_speed_mph()
+            new_rpm = self.can.get_motor_speed()
             new_temp = self.can.get_motor_temp()
             new_volt = self.can.get_dc_voltage()
             new_power = self.can.get_power() / 1000.0  # Convert W to kW
-            # ---- UPDATE + EMIT ----
-            self._speed = new_speed
-            self.speedChanged.emit(self._speed)
-            print(f"✓ Updated data: Speed={self._speed:.1f} mph, Temp={self._temp:.1f}°C, Voltage={self._voltage:.1f} V, Power={self._power:.2f} kW")
+            
+            # Calculate battery percentage from voltage
+            new_battery_percent = ((new_volt - self.VOLTAGE_MIN) / 
+                                  (self.VOLTAGE_MAX - self.VOLTAGE_MIN)) * 100.0
+            new_battery_percent = max(0.0, min(100.0, new_battery_percent))
+            
+            # Update mileage (integrate speed over time)
+            # Speed is in MPH, dt is in seconds
+            # miles = mph * (hours) = mph * (seconds / 3600)
+            self._mileage += new_speed * (dt / 3600.0)
+            
+            # Get motor state
+            vsm_state = self.can.get_vsm_state()
+            state_names = {0: "IDLE", 1: "INIT", 2: "READY", 3: "RUNNING", 
+                          4: "ERROR", 5: "ACTIVE"}
+            new_motor_state = state_names.get(int(vsm_state), "UNKNOWN")
+            
+            # Get direction
+            new_direction = self.can.get_direction_text()
 
-            self._temp = new_temp
-            self.tempChanged.emit(self._temp)
+            # Update and emit all changes
+            if self._speed != new_speed:
+                self._speed = new_speed
+                self.speedChanged.emit(self._speed)
+            
+            if self._rpm != new_rpm:
+                self._rpm = new_rpm
+                self.rpmChanged.emit(self._rpm)
 
-            self._voltage = new_volt
-            self.voltageChanged.emit(self._voltage)
+            if self._temp != new_temp:
+                self._temp = new_temp
+                self.tempChanged.emit(self._temp)
 
-            self._power = new_power
-            self.powerChanged.emit(self._power)
-            print(f"✓ Updated data: Speed={self._speed:.1f} mph, Temp={self._temp:.1f}°C, Voltage={self._voltage:.1f} V, Power={self._power:.2f} kW")
+            if self._voltage != new_volt:
+                self._voltage = new_volt
+                self.voltageChanged.emit(self._voltage)
+
+            if self._power != new_power:
+                self._power = new_power
+                self.powerChanged.emit(self._power)
+            
+            if self._battery_percent != new_battery_percent:
+                self._battery_percent = new_battery_percent
+                self.batteryPercentChanged.emit(self._battery_percent)
+            
+            self.mileageChanged.emit(self._mileage)
+            
+            if self._motor_state != new_motor_state:
+                self._motor_state = new_motor_state
+                self.motorStateChanged.emit(self._motor_state)
+            
+            if self._direction != new_direction:
+                self._direction = new_direction
+                self.directionChanged.emit(self._direction)
+
         except Exception as e:
-            # If reading fails, assume disconnected
+            print(f"Error reading data: {e}")
             self._connected = False
             self.connectionStatusChanged.emit(False)
 
@@ -127,6 +194,9 @@ class DashboardBackend(QObject):
     
     @pyqtProperty(float, notify=speedChanged)
     def speed(self): return self._speed
+    
+    @pyqtProperty(float, notify=rpmChanged)
+    def rpm(self): return self._rpm
 
     @pyqtProperty(float, notify=tempChanged)
     def temp(self): return self._temp
@@ -136,6 +206,18 @@ class DashboardBackend(QObject):
 
     @pyqtProperty(float, notify=powerChanged)
     def power(self): return self._power
+    
+    @pyqtProperty(float, notify=batteryPercentChanged)
+    def batteryPercent(self): return self._battery_percent
+    
+    @pyqtProperty(float, notify=mileageChanged)
+    def mileage(self): return self._mileage
+    
+    @pyqtProperty(str, notify=motorStateChanged)
+    def motorState(self): return self._motor_state
+    
+    @pyqtProperty(str, notify=directionChanged)
+    def direction(self): return self._direction
         
     @pyqtProperty(str, notify=statusChanged)
     def status(self): return self._status
