@@ -53,7 +53,7 @@ Window {
             CircularGauge {
                 id: speedGauge
                 anchors.left: parent.left
-                anchors.leftMargin: 10
+                anchors.leftMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
                 width: 200
                 height: 200
@@ -70,7 +70,7 @@ Window {
             CircularGauge {
                 id: rpmGauge
                 anchors.right: parent.right
-                anchors.rightMargin: 10
+                anchors.rightMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
                 width: 200
                 height: 200
@@ -88,7 +88,7 @@ Window {
                 id: mileageBox
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 90
+                anchors.verticalCenterOffset: 110
                 width: 180
                 height: 80
                 color: "#2c3e50"
@@ -127,8 +127,8 @@ Window {
 
                 // Motor Info Button
                 InfoButton {
-                    width: 150
-                    height: 60
+                    width: 180
+                    height: 80
                     title: "MOTOR"
                     value: backend.motorState
                     subtext: backend.direction
@@ -137,8 +137,8 @@ Window {
 
                 // Temperature Button
                 InfoButton {
-                    width: 150
-                    height: 60
+                    width: 180
+                    height: 80
                     title: "TEMP"
                     value: backend.temp.toFixed(1) + "°C"
                     subtext: backend.temp > 85 ? "HOT" : "OK"
