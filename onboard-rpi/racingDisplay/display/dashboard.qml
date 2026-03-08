@@ -55,8 +55,8 @@ Window {
                 anchors.left: parent.left
                 anchors.leftMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: 200
-                height: 200
+                width: 180
+                height: 180
                 
                 minValue: 0
                 maxValue: 60
@@ -72,8 +72,8 @@ Window {
                 anchors.right: parent.right
                 anchors.rightMargin: 0
                 anchors.verticalCenter: parent.verticalCenter
-                width: 200
-                height: 200
+                width: 180
+                height: 180
                 
                 minValue: 0
                 maxValue: 6000
@@ -88,7 +88,7 @@ Window {
                 id: mileageBox
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 110
+                anchors.verticalCenterOffset: 200
                 width: 180
                 height: 80
                 color: "#2c3e50"
