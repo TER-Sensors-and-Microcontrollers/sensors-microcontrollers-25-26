@@ -38,8 +38,8 @@ Window {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: 20
-                width: 140
-                height: 140
+                width: 190
+                height: 190
                 
                 minValue: 0
                 maxValue: 100
@@ -93,7 +93,7 @@ Window {
                 height: 80
                 color: "#2c3e50"
                 radius: 10
-                border.color: "#34495e"
+                border.color: '#f0f2f0'
                 border.width: 2
 
                 Column {
@@ -102,7 +102,7 @@ Window {
                     
                     Text {
                         text: "MILEAGE"
-                        color: "#95a5a6"
+                        color: '#f5f7f7'
                         font.pixelSize: 14
                         font.bold: true
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -142,7 +142,7 @@ Window {
                     title: "TEMP"
                     value: backend.temp.toFixed(1) + "°C"
                     subtext: backend.temp > 85 ? "HOT" : "OK"
-                    buttonColor: backend.temp > 85 ? "#e74c3c" : "#16a085"
+                    buttonColor: backend.temp > 85 ? "#e74c3c" : "#0d89ef"
                 }
             }
 
@@ -166,7 +166,7 @@ Window {
         property real value: 0
         property string unit: ""
         property string label: ""
-        property color gaugeColor: "#3498db"
+        property color gaugeColor:  '#0d89ef'
 
         Rectangle {
             anchors.fill: parent
