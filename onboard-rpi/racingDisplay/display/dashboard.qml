@@ -31,54 +31,57 @@ Window {
         Item {
             anchors.fill: parent
             anchors.margins: 10
-        RowLayout {
-    anchors.top: parent.top
-    anchors.topMargin: 20
-    anchors.horizontalCenter: parent.horizontalCenter
-    spacing: 40
 
-    // Speed Gauge
-    CircularGauge {
-        id: speedGauge
-        Layout.preferredWidth: 200
-        Layout.preferredHeight: 200
+            // Top Battery Gauge
+            CircularGauge {
+                id: batteryGauge
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 20
+                width: 140
+                height: 140
+                
+                minValue: 0
+                maxValue: 100
+                value: backend.batteryPercent
+                unit: "%"
+                label: "VOLTAGE"
+                gaugeColor: backend.batteryPercent > 20 ? "#2ecc71" : "#e74c3c"
+            }
 
-        minValue: 0
-        maxValue: 60
-        value: backend.speed
-        unit: "MPH"
-        label: "SPEED"
-        gaugeColor: backend.speed > 50 ? "#e74c3c" : "#3498db"
-    }
+            // Left MPH Gauge
+            CircularGauge {
+                id: speedGauge
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                width: 200
+                height: 200
+                
+                minValue: 0
+                maxValue: 60
+                value: backend.speed
+                unit: "MPH"
+                label: "SPEED"
+                gaugeColor: backend.speed > 50 ? "#e74c3c" : "#3498db"
+            }
 
-    // Voltage Gauge
-    CircularGauge {
-        id: voltageGauge
-        Layout.preferredWidth: 140
-        Layout.preferredHeight: 140
-
-        minValue: 0
-        maxValue: 100
-        value: backend.batteryPercent
-        unit: "%"
-        label: "VOLTAGE"
-        gaugeColor: backend.batteryPercent > 20 ? "#2ecc71" : "#e74c3c"
-    }
-
-    // Motor RPM Gauge
-    CircularGauge {
-        id: rpmGauge
-        Layout.preferredWidth: 200
-        Layout.preferredHeight: 200
-
-        minValue: 0
-        maxValue: 6000
-        value: backend.rpm
-        unit: "RPM"
-        label: "MOTOR"
-        gaugeColor: backend.rpm > 5000 ? "#e74c3c" : "#f39c12"
-    }
-}
+            // Right RPM Gauge
+            CircularGauge {
+                id: rpmGauge
+                anchors.right: parent.right
+                anchors.rightMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                width: 200
+                height: 200
+                
+                minValue: 0
+                maxValue: 6000
+                value: backend.rpm
+                unit: "RPM"
+                label: "MOTOR"
+                gaugeColor: backend.rpm > 5000 ? "#e74c3c" : "#f39c12"
+            }
 
             // Center Mileage Display
             Rectangle {
