@@ -1,0 +1,13 @@
+../Core/Src/main.c:69:13:uart_print	16	static
+../Core/Src/main.c:75:16:am2301b_crc8	24	static
+../Core/Src/main.c:89:26:am2301b_read_status	32	static
+../Core/Src/main.c:101:26:am2301b_trigger_measurement	32	static
+../Core/Src/main.c:108:26:am2301b_read_data6	24	static
+../Core/Src/main.c:114:13:am2301b_convert	32	static
+../Core/Src/main.c:131:26:am2301b_read	32	static
+../Core/Src/main.c:179:5:main	168	static
+../Core/Src/main.c:251:6:SystemClock_Config	88	static
+../Core/Src/main.c:292:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:340:13:MX_USART2_UART_Init	8	static
+../Core/Src/main.c:388:13:MX_GPIO_Init	16	static
+../Core/Src/main.c:411:6:Error_Handler	4	static,ignoring_inline_asm
