@@ -18,13 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_cdc_if.h"
 #include "string.h"
 #include "stdbool.h"
 #include "stdio.h"
 #include <stdint.h>
+
 
 
 /* USER CODE END Includes */
@@ -40,7 +43,7 @@ typedef enum {
 
 /* Structure for one outgoing UART packet in the TX ring buffer */
 
-#define UART_PKT_MAX   (1u + 1u + 1u + 4u + 1u + 1u + 8u + 1u) // 18
+#define UART_PKT_MAX   64
 typedef struct {
   uint8_t data[UART_PKT_MAX];
   uint8_t len;
@@ -141,7 +144,11 @@ static void CAN_GlobalAcceptAll(void)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+static void usb_print(const char *s)
+{
+  if (s == NULL) return;
+  (void)CDC_Transmit_FS((uint8_t*)s, (uint16_t)strlen(s));
+}
 /* -------------------------------------------------------------------------
  * CRC-8/ATM  (poly 0x07, init 0x00, no reflect)
  * ------------------------------------------------------------------------- */
@@ -184,50 +191,45 @@ static void enqueue_can_over_uart(uint32_t id, bool ext, bool rtr,
                                   uint8_t dlc, const uint8_t *data)
 {
   if (dlc > 8) return;
+  if (ext) return;   /* Pi parser expects standard IDs only */
+  if (rtr) return;   /* skip remote frames */
+
+  /* total length = 2-byte ID + 1-byte DLC + dlc bytes + '\n' */
+  uint8_t pkt_len = (uint8_t)(2u + 1u + dlc + 1u);
+  if (pkt_len > UART_PKT_MAX) return;
 
   /* Check ring buffer space (leave one slot as sentinel) */
   uint8_t next_head = (tx_head + 1) & TX_RING_MASK;
-  if (next_head == tx_tail) { ring_drops++; return; }
-//  if (next_head == tx_tail) return;   /* buffer full — drop frame */
+  if (next_head == tx_tail) {
+    ring_drops++;
+    return;
+  }
 
   uart_tx_pkt_t *slot = &tx_ring[tx_head];
   uint8_t *pkt = slot->data;
-  uint8_t  idx = 0;
+  uint8_t idx = 0;
 
-  uint8_t flags = 0;
-  if (ext) flags |= 0x01;
-  if (rtr) flags |= 0x02;
+  /* standard CAN ID, 11-bit, BIG ENDIAN */
+  id &= 0x7FFu;
+  pkt[idx++] = (uint8_t)((id >> 8) & 0xFF);
+  pkt[idx++] = (uint8_t)(id & 0xFF);
 
-  /* body = TYPE(1) + ID(4) + FLAGS(1) + DLC(1) + DATA(dlc) */
-  uint8_t body_len = (uint8_t)(1u + 4u + 1u + 1u + dlc);
-
-  pkt[idx++] = SOF;
-  pkt[idx++] = body_len;
-  pkt[idx++] = PKT_TYPE_CAN;
-
-  uint8_t id_le[4];
-  u32_to_le(id, id_le);
-  memcpy(&pkt[idx], id_le, 4); idx += 4;
-
-  pkt[idx++] = flags;
+  /* DLC */
   pkt[idx++] = dlc;
 
-  if (!rtr && dlc > 0 && data != NULL) {
-    memcpy(&pkt[idx], data, dlc);
-    idx += dlc;
+  /* data bytes */
+  for (uint8_t i = 0; i < dlc; i++) {
+    pkt[idx++] = data[i];
   }
 
-  /* CRC covers LEN + body (bytes 1 .. 1+body_len) */
-  uint8_t crc = crc8_atm(&pkt[1], (uint32_t)(1u + body_len));
-  pkt[idx++] = crc;
+  /* newline terminator so Pi readline() returns */
+  pkt[idx++] = '\n';
 
   slot->len = idx;
 
   /* Commit — advance head after fully writing the slot */
   tx_head = next_head;
-
 }
-
 /* -------------------------------------------------------------------------
  * Drain the TX ring buffer.  Call from the main loop only (blocking TX).
  * ------------------------------------------------------------------------- */
@@ -408,6 +410,21 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 
   uint32_t id = rxHeader.Identifier;
   if (!ext) id &= 0x7FFu;
+  {
+      char msg[128];
+      int len = snprintf(msg, sizeof(msg),
+                         "RX id=0x%08lX ext=%u rtr=%u dlc=%u data=%02X %02X %02X %02X %02X %02X %02X %02X\r\n",
+                         id,
+                         (unsigned)ext,
+                         (unsigned)rtr,
+                         (unsigned)dlc,
+                         rxData[0], rxData[1], rxData[2], rxData[3],
+                         rxData[4], rxData[5], rxData[6], rxData[7]);
+
+      if (len > 0) {
+        (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
+      }
+    }
 
   enqueue_can_over_uart(id, ext, rtr, dlc, rxData);
 }
@@ -457,11 +474,14 @@ int main(void)
   MX_GPIO_Init();
   MX_FDCAN3_Init();
   MX_USART3_UART_Init();
+  MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
+
   const uint8_t hello[] = "UART OK\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)hello, sizeof(hello)-1, 100);
+  CAN_FilterAcceptAll();
+  CAN_GlobalAcceptAll();
   CAN_StartAndEnableRxIRQ();
-
 
 
 
@@ -472,10 +492,22 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint32_t last_print = 0;
   while (1)
   {
 	  drain_uart_tx();
-	  HAL_Delay(100);
+
+	  if (HAL_GetTick() - last_print >= 1000) {
+	        last_print = HAL_GetTick();
+
+	        char msg[128];
+	        int len = snprintf(msg, sizeof(msg),
+	                           "CAN irq=%lu  getmsg_fail=%lu  uart_tx_pkts=%lu  ring_drops=%lu\r\n",
+	                           can_rx_irq_count, can_getmsg_fail, uart_tx_pkts, ring_drops);
+	        if (len > 0) {
+	          (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
+	        }}
+	  HAL_Delay(1);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -502,7 +534,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 12;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -545,16 +583,16 @@ static void MX_FDCAN3_Init(void)
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 16;
+  hfdcan3.Init.NominalPrescaler = 2;
   hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 1;
-  hfdcan3.Init.NominalTimeSeg2 = 1;
+  hfdcan3.Init.NominalTimeSeg1 = 13;
+  hfdcan3.Init.NominalTimeSeg2 = 2;
   hfdcan3.Init.DataPrescaler = 1;
   hfdcan3.Init.DataSyncJumpWidth = 1;
   hfdcan3.Init.DataTimeSeg1 = 1;
   hfdcan3.Init.DataTimeSeg2 = 1;
-  hfdcan3.Init.StdFiltersNbr = 0;
-  hfdcan3.Init.ExtFiltersNbr = 0;
+  hfdcan3.Init.StdFiltersNbr = 1;
+  hfdcan3.Init.ExtFiltersNbr = 1;
   hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
   {
