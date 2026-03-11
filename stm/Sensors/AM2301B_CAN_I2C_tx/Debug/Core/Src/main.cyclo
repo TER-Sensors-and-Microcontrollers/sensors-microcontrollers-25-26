@@ -1,0 +1,12 @@
+../Core/Src/main.c:69:16:am2301b_crc8	4
+../Core/Src/main.c:83:26:am2301b_read_status	2
+../Core/Src/main.c:95:26:am2301b_trigger_measurement	1
+../Core/Src/main.c:102:26:am2301b_read_data6	1
+../Core/Src/main.c:108:13:am2301b_convert	1
+../Core/Src/main.c:125:26:am2301b_read	8
+../Core/Src/main.c:172:5:main	4
+../Core/Src/main.c:287:6:SystemClock_Config	3
+../Core/Src/main.c:334:13:MX_FDCAN2_Init	2
+../Core/Src/main.c:377:13:MX_I2C2_Init	4
+../Core/Src/main.c:425:13:MX_GPIO_Init	1
+../Core/Src/main.c:448:6:Error_Handler	1
