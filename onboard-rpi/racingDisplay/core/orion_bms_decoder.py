@@ -41,5 +41,7 @@ class OrionBMSDecoder:
         elif can_id == 0x6B3:
             self.data["max_temp"] = d[0] - 40
             print(f"Max Temp: {self.data['max_temp']} °C")
+        elif can_id ==0x36:
+            print("Received CAN message with ID 0x36, but no decoding implemented yet.")
 
         return self.data
