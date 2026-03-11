@@ -37,7 +37,7 @@ Window {
                 id: batteryGauge
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
-                anchors.topMargin: 20
+                anchors.topMargin: 40
                 width: 190
                 height: 190
                 
@@ -45,7 +45,7 @@ Window {
                 maxValue: 100
                 value: backend.batteryPercent
                 unit: "%"
-                label: "VOLTAGE"
+                label: "BATTERY"
                 gaugeColor: backend.batteryPercent > 20 ? "#2ecc71" : "#e74c3c"
             }
 
@@ -53,7 +53,7 @@ Window {
             CircularGauge {
                 id: speedGauge
                 anchors.left: parent.left
-                anchors.leftMargin: 0
+                anchors.leftMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 width: 190
                 height: 190
@@ -70,7 +70,7 @@ Window {
             CircularGauge {
                 id: rpmGauge
                 anchors.right: parent.right
-                anchors.rightMargin: 0
+                anchors.rightMargin: 10
                 anchors.verticalCenter: parent.verticalCenter
                 width: 190
                 height: 190
@@ -83,40 +83,75 @@ Window {
                 gaugeColor: backend.rpm > 5000 ? "#e74c3c" : "#f39c12"
             }
 
-            // Center Mileage Display
-            Rectangle {
-                id: mileageBox
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: 210
-                width: 180
-                height: 80
-                color: "#2c3e50"
-                radius: 10
-                border.color: '#f0f2f0'
-                border.width: 2
+           Row {
+    id: bottomStats
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.verticalCenterOffset: 100
+    spacing: 20
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 5
-                    
-                    Text {
-                        text: "MILEAGE"
-                        color: '#f5f7f7'
-                        font.pixelSize: 14
-                        font.bold: true
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                    
-                    Text {
-                        text: backend.mileage.toFixed(2) + " mi"
-                        color: "#ecf0f1"
-                        font.pixelSize: 28
-                        font.bold: true
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
+    // Mileage Box
+    Rectangle {
+        width: 160
+        height: 80
+        color: "#2c3e50"
+        radius: 10
+        border.color: '#f0f2f0'
+        border.width: 2
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 5
+
+            Text {
+                text: "MILEAGE"
+                color: "#ecf0f1"
+                font.pixelSize: 14
+                font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
             }
+
+            Text {
+                text: backend.mileage.toFixed(2) + " mi"
+                color: "#ecf0f1"
+                font.pixelSize: 28
+                font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+    }
+
+    // Voltage Box
+    Rectangle {
+        width: 160
+        height: 80
+        color: "#2c3e50"
+        radius: 10
+        border.color: "#f0f2f0"
+        border.width: 2
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 5
+
+            Text {
+                text: "PACK VOLTAGE"
+                color: "#ecf0f1"
+                font.pixelSize: 14
+                font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            Text {
+                text: backend.voltage.toFixed(1) + " V"
+                color: "#ecf0f1"
+                font.pixelSize: 28
+                font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+    }
+}         
 
             // Bottom Info Buttons
             Row {

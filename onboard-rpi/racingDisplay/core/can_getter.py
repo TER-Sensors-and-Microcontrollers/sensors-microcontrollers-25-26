@@ -42,10 +42,10 @@ class CANGetter:
         try:
             self.shm = shared_memory.SharedMemory(name=SHMEM_NAME)
             self.data = np.ndarray(
-                shape=SHMEM_NMEM, 
+                shape=(SHMEM_NMEM,), 
                 dtype=SHMEM_DTYPE, 
                 buffer=self.shm.buf
-            )
+        )
         except FileNotFoundError:
             raise FileNotFoundError(
                 f"Shared memory '{SHMEM_NAME}' not found. "
@@ -260,6 +260,11 @@ class CANGetter:
         """
         direction = self.get_direction()
         return 'Forward' if direction == 1 else 'Reverse'
+    # =================== BMS values ====================
+    def get_bms_max_temp(self):
+        return float(self.data[BMS_START_IDX + 3])
+    def get_pack_voltage(self):
+        return float(self.data[BMS_START_IDX + 0])
     
     # ==================== UTILITY METHODS ====================
     
@@ -277,7 +282,11 @@ class CANGetter:
         # Simple check: if motor values are non-zero, assume valid
         speed = self.get_motor_speed()
         voltage = self.get_dc_voltage()
-        return speed != 0 or voltage != 0
+        # old
+        #return speed != 0 or voltage != 0
+        #new
+        print(f"Motor Speed: {speed}, DC Voltage: {voltage}")
+        return voltage > 0
     
     def print_summary(self):
         """Print a summary of key sensor values (useful for debugging)"""
@@ -321,7 +330,8 @@ def main():
     except KeyboardInterrupt:
         print("\n✓ Exiting...")
     finally:
-        can.close()
+        if 'can' in locals():
+            can.close()
 
 
 if __name__ == "__main__":

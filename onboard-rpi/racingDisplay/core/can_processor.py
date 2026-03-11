@@ -24,6 +24,7 @@ import numpy as np
 # Add config directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'config'))
 from globals import *
+from orion_bms_decoder import OrionBMSDecoder
 
 try:
     import can
@@ -74,12 +75,12 @@ class CANProcessor:
             buffer=self.shm.buf
         )
         self.data[:] = 0  # Initialize all values to zero
-        
+        self.bms_decoder = OrionBMSDecoder()
         # Initialize CAN bus
         try:
             self.bus = can.interface.Bus(
                 channel=self.interface, 
-                interface='virtual'
+                interface='socketcan'
             )
             print(f"✓ Connected to CAN interface '{self.interface}'")
         except Exception as e:
@@ -114,7 +115,7 @@ class CANProcessor:
             return  # Skip incomplete messages
         # associates can_ID to the correct index in shared memory and
         # parses the data accordingly. See self.data area is the same as 
-        # the SENS_NAMES list in globals.py for index mapping.
+        # the SENS_NAMES list in py for index mapping.
         try:
             if can_id == 161:  # 0xA1 - Temp 2
                 cb_temp = struct.unpack('<H', data[0:2])[0] / 10.0
@@ -222,8 +223,15 @@ class CANProcessor:
             # Motor Controller messages
             self.parse_motor_controller(can_id, data)
         elif can_id < 160:
-            # BMS messages
-            self.parse_bms(can_id, data)
+            print(f"CAN ID: {hex(can_id)} DATA: {msg.data.hex()}")
+            decoded = self.bms_decoder.decode(msg)
+            if decoded:
+                self.data[BMS_START_IDX + 0] = decoded["pack_voltage"]
+                self.data[BMS_START_IDX + 1] = decoded["pack_current"]
+                self.data[BMS_START_IDX + 2] = decoded["soc"]
+                self.data[BMS_START_IDX + 3] = decoded["max_temp"]
+            print(f"ID:{hex(msg.arbitration_id)} DATA:{msg.data.hex()}")
+            print(f"Decoded BMS Data: Voltage={decoded['pack_voltage']} V, Current={decoded['pack_current']} A, SOC={decoded['soc']} %, Max Temp={decoded['max_temp']} °C")
         # Ignore other IDs
     
     def run(self):
@@ -231,38 +239,50 @@ class CANProcessor:
         Main loop.
         If no real CAN messages, generate fake test data.
         """
-        print(f"✓ CAN Processor running (FAKE DATA MODE)...")
-        print("  Press Ctrl+C to stop")
+        print("✓ CAN Processor running...")
 
-        t = 0.0
-        print("✓ Generating fake data for testing...")
         try:
             while self.running:
-                # ---- FAKE SPEED ----
-                fake_speed =  4000 + 2000 * np.sin(t)
-                self.data[MOTOR_START_IDX + 8] = fake_speed  # motor_speed index
-
-                # ---- FAKE MOTOR TEMP ----
-                fake_temp = 50 + 10 * np.sin(t / 2)
-                self.data[MOTOR_START_IDX + 4] = fake_temp
-
-                # ---- FAKE DC VOLTAGE ----
-                fake_voltage = 300 + 5 * np.sin(t / 3)
-                self.data[MOTOR_START_IDX + 10] = fake_voltage
-
-                # ---- FAKE CURRENT ----
-                fake_current = 100 + 30 * np.sin(t)
-                self.data[MOTOR_START_IDX + 9] = fake_current
-                print(f"Speed: {fake_speed:.2f}", end="\r")
-                t += 0.1
-                import time
-                time.sleep(0.05)
-
+                msg = self.bus.recv(timeout=1.0)
+                if msg is not None:
+                    self.process_message(msg)
         except KeyboardInterrupt:
-            print("\n✓ Keyboard interrupt received, shutting down...")
             pass
         finally:
             self.cleanup()
+        # this is the fake data generation loop for testing without a real CAN bus
+        # print(f"✓ CAN Processor running (FAKE DATA MODE)...")
+        # print("  Press Ctrl+C to stop")
+
+        # t = 0.0
+        # print("✓ Generating fake data for testing...")
+        # try:
+        #     while self.running:
+        #         # ---- FAKE SPEED ----
+        #         fake_speed =  4000 + 2000 * np.sin(t)
+        #         self.data[MOTOR_START_IDX + 8] = fake_speed  # motor_speed index
+
+        #         # ---- FAKE MOTOR TEMP ----
+        #         fake_temp = 50 + 10 * np.sin(t / 2)
+        #         self.data[MOTOR_START_IDX + 4] = fake_temp
+
+        #         # ---- FAKE DC VOLTAGE ----
+        #         fake_voltage = 300 + 5 * np.sin(t / 3)
+        #         self.data[MOTOR_START_IDX + 10] = fake_voltage
+
+        #         # ---- FAKE CURRENT ----
+        #         fake_current = 100 + 30 * np.sin(t)
+        #         self.data[MOTOR_START_IDX + 9] = fake_current
+        #         print(f"Speed: {fake_speed:.2f}", end="\r")
+        #         t += 0.1
+        #         import time
+        #         time.sleep(0.05)
+
+        # except KeyboardInterrupt:
+        #     print("\n✓ Keyboard interrupt received, shutting down...")
+        #     pass
+        # finally:
+        #     self.cleanup()
     
     def cleanup(self):
         """Clean up resources"""

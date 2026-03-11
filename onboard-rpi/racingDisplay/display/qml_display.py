@@ -59,8 +59,8 @@ class DashboardBackend(QObject):
         self._last_update_time = time.time()
         
         # Battery voltage range (adjust for your system)
-        self.VOLTAGE_MIN = 80.0  # 0% battery
-        self.VOLTAGE_MAX = 100.0  # 100% battery
+        self.VOLTAGE_MIN = 300.0  # 0% battery
+        self.VOLTAGE_MAX = 400.0  # 100% battery
         
         # Connect to Shared Memory
         self.connect_shared_memory()
@@ -127,8 +127,8 @@ class DashboardBackend(QObject):
             # Read from Shared Memory
             new_speed = self.can.get_speed_mph()
             new_rpm = self.can.get_motor_speed()
-            new_temp = self.can.get_motor_temp()
-            new_volt = self.can.get_dc_voltage()
+            new_temp = self.can.get_bms_max_temp()
+            new_volt = self.can.get_pack_voltage()
             new_power = self.can.get_power() / 1000.0  # Convert W to kW
             
             # Calculate battery percentage from voltage
