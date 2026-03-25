@@ -12,6 +12,8 @@ Type=simple
 User=root
 Group=root
 
+Environment=PATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin:/usr/bin:/bin
+
 # Adjust this to your ACTUAL project path
 WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
 

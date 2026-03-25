@@ -130,14 +130,12 @@ class CANProcessor:
                 self.data[MOTOR_START_IDX + 4] = mot_temp
                 
             elif can_id == 163:  # 0xA3 - Analog Input (Pedals)
-                # Convert data to bit string for bit operations
-                bit_string = ''.join(format(byte, '08b') for byte in data)
-                pedal1_bits = bit_string[-10:]  # Last 10 bits
-                pedal2_bits = bit_string[20:30]  # Bits 20-30
-                
-                pedal1 = int(pedal1_bits, 2) / 1000.0  # Convert to percentage
-                pedal2 = int(pedal2_bits, 2) / 100.0 + 1.03
-                
+                # Each pedal is a 16-bit little-endian value
+                pedal1_raw = struct.unpack('<H', data[0:2])[0]
+                pedal2_raw = struct.unpack('<H', data[2:4])[0]
+                 # Apply scaling (based on your generator)
+                pedal1 = pedal1_raw / 1000.0
+                pedal2 = pedal2_raw / 100.0 + 1.03
                 self.data[MOTOR_START_IDX + 5] = pedal1
                 self.data[MOTOR_START_IDX + 6] = pedal2
                 
@@ -146,14 +144,17 @@ class CANProcessor:
                 motor_speed = struct.unpack('<H', data[2:4])[0]
                 self.data[MOTOR_START_IDX + 7] = motor_angle
                 self.data[MOTOR_START_IDX + 8] = motor_speed
+                printf("Motor Angle: %.2f deg, Speed: %d RPM" % (motor_angle, motor_speed))
                 
             elif can_id == 166:  # 0xA6 - Current Info
                 dc_curr = struct.unpack('<H', data[6:8])[0] / 10.0
                 self.data[MOTOR_START_IDX + 9] = dc_curr
+                printf("DC Current: %.2f A" % dc_curr)
                 
             elif can_id == 167:  # 0xA7 - Voltage Info
                 dc_volt = struct.unpack('<H', data[0:2])[0] / 10.0
                 self.data[MOTOR_START_IDX + 10] = dc_volt
+                printf("DC Voltage: %.2f V" % dc_volt)
                 
             elif can_id == 170:  # 0xAA - Internal States
                 vsm_state = float(data[0])
@@ -162,12 +163,14 @@ class CANProcessor:
                 self.data[MOTOR_START_IDX + 11] = vsm_state
                 self.data[MOTOR_START_IDX + 12] = inv_state
                 self.data[MOTOR_START_IDX + 13] = direction
+                printf("VSM State: %.0f, Inverter State: %.0f, Direction: %s" % (vsm_state, inv_state, "Forward" if direction == 0 else "Reverse"))
                 
             elif can_id == 172:  # 0xAC - Torque & Timer
                 torque = struct.unpack('<H', data[0:2])[0] / 10.0
                 timer = struct.unpack('<H', data[2:4])[0]
                 self.data[MOTOR_START_IDX + 14] = torque
                 self.data[MOTOR_START_IDX + 15] = timer
+                printf("Torque: {torque:.2f} Nm, Timer: {timer} ms")
                 
         except struct.error as e:
             print(f"Warning: Failed to parse motor controller ID {can_id}: {e}")

@@ -1,0 +1,23 @@
+#this is the copy from the WorkingDirectory
+[Unit]
+Description=Electric Racing QML Display
+After=graphical.target racing-can.service
+Requires=racing-can.service
+
+[Service]
+Type=simple
+User=racing
+Group=racing
+WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display/qml_display.py
+Restart=on-failure
+RestartSec=3
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/racing/.Xauthority
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=racing-display
+
+[Install]
+WantedBy=graphical.target
