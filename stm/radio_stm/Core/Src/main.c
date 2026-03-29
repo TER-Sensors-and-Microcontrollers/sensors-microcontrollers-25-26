@@ -60,7 +60,7 @@ typedef struct {
 #define MAX_BODY_LEN       32
 
 /* TX ring buffer depth — must be power of 2 */
-#define TX_RING_SIZE       16
+#define TX_RING_SIZE       128
 #define TX_RING_MASK       (TX_RING_SIZE - 1)
 /* USER CODE END PD */
 
@@ -70,6 +70,7 @@ typedef struct {
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+FDCAN_HandleTypeDef hfdcan2;
 FDCAN_HandleTypeDef hfdcan3;
 
 UART_HandleTypeDef huart3;
@@ -119,6 +120,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_FDCAN3_Init(void);
 static void MX_USART3_UART_Init(void);
+static void MX_FDCAN2_Init(void);
 /* USER CODE BEGIN PFP */
 static uint8_t  crc8_atm(const uint8_t *data, uint32_t len);
 static void     u32_to_le(uint32_t v, uint8_t out[4]);
@@ -129,12 +131,12 @@ static void drain_uart_tx(void);
 static void parser_feed(uint8_t byte);
 static void process_can_packet(const uint8_t *b, uint8_t len);
 
-static void CAN_FilterAcceptAll(void);
-static void CAN_StartAndEnableRxIRQ(void);
+static void CAN_FilterAcceptAll(FDCAN_HandleTypeDef *hfdcan);
+static void CAN_StartAndEnableRxIRQ(FDCAN_HandleTypeDef *hfdcan);
 
-static void CAN_GlobalAcceptAll(void)
+static void CAN_GlobalAcceptAll(FDCAN_HandleTypeDef *hfdcan)
 {
-  (void)HAL_FDCAN_ConfigGlobalFilter(&hfdcan3,
+  (void)HAL_FDCAN_ConfigGlobalFilter(hfdcan,
         FDCAN_ACCEPT_IN_RX_FIFO0,   // std frames
         FDCAN_ACCEPT_IN_RX_FIFO0,   // ext frames
         FDCAN_REJECT_REMOTE,        // std remote
@@ -351,7 +353,30 @@ static void parser_feed(uint8_t byte)
  * StdFiltersNbr = 1 and ExtFiltersNbr = 1 must be set in MX_FDCAN3_Init
  * (already done) so HAL allocates the filter RAM slots before this runs.
  * ------------------------------------------------------------------------- */
-static void CAN_FilterAcceptAll(void)
+//static void CAN_FilterAcceptAll(void)
+//{
+//  FDCAN_FilterTypeDef sFilter = {0};
+//
+//  /* Standard IDs: mask = 0 accepts everything */
+//  sFilter.IdType       = FDCAN_STANDARD_ID;
+//  sFilter.FilterIndex  = 0;
+//  sFilter.FilterType   = FDCAN_FILTER_MASK;
+//  sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+//  sFilter.FilterID1    = 0x000;
+//  sFilter.FilterID2    = 0x000;
+//  (void)HAL_FDCAN_ConfigFilter(&hfdcan3, &sFilter);
+//
+//  /* Extended IDs: mask = 0 accepts everything */
+//  sFilter.IdType       = FDCAN_EXTENDED_ID;
+//  sFilter.FilterIndex  = 0;
+//  sFilter.FilterType   = FDCAN_FILTER_MASK;
+//  sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+//  sFilter.FilterID1    = 0x00000000;
+//  sFilter.FilterID2    = 0x00000000;
+//  (void)HAL_FDCAN_ConfigFilter(&hfdcan3, &sFilter);
+//}
+
+static void CAN_FilterAcceptAll(FDCAN_HandleTypeDef *hfdcan)
 {
   FDCAN_FilterTypeDef sFilter = {0};
 
@@ -362,7 +387,7 @@ static void CAN_FilterAcceptAll(void)
   sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
   sFilter.FilterID1    = 0x000;
   sFilter.FilterID2    = 0x000;
-  (void)HAL_FDCAN_ConfigFilter(&hfdcan3, &sFilter);
+  (void)HAL_FDCAN_ConfigFilter(hfdcan, &sFilter);
 
   /* Extended IDs: mask = 0 accepts everything */
   sFilter.IdType       = FDCAN_EXTENDED_ID;
@@ -371,14 +396,23 @@ static void CAN_FilterAcceptAll(void)
   sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
   sFilter.FilterID1    = 0x00000000;
   sFilter.FilterID2    = 0x00000000;
-  (void)HAL_FDCAN_ConfigFilter(&hfdcan3, &sFilter);
+  (void)HAL_FDCAN_ConfigFilter(hfdcan, &sFilter);
 }
 
 /* Start FDCAN and enable RX FIFO0 new-message interrupt */
-static void CAN_StartAndEnableRxIRQ(void)
+//static void CAN_StartAndEnableRxIRQ(void)
+//{
+//  (void)HAL_FDCAN_Start(&hfdcan3);
+//  (void)HAL_FDCAN_ActivateNotification(&hfdcan3, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+//}
+
+static void CAN_StartAndEnableRxIRQ(FDCAN_HandleTypeDef *hfdcan)
 {
-  (void)HAL_FDCAN_Start(&hfdcan3);
-  (void)HAL_FDCAN_ActivateNotification(&hfdcan3, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+  HAL_FDCAN_Start(hfdcan);
+  HAL_FDCAN_ActivateNotification(
+      hfdcan,
+      FDCAN_IT_RX_FIFO0_NEW_MESSAGE,
+      0);
 }
 
 /* -------------------------------------------------------------------------
@@ -475,13 +509,17 @@ int main(void)
   MX_FDCAN3_Init();
   MX_USART3_UART_Init();
   MX_USB_Device_Init();
+  MX_FDCAN2_Init();
   /* USER CODE BEGIN 2 */
 
   const uint8_t hello[] = "UART OK\r\n";
   HAL_UART_Transmit(&huart3, (uint8_t*)hello, sizeof(hello)-1, 100);
-  CAN_FilterAcceptAll();
-  CAN_GlobalAcceptAll();
-  CAN_StartAndEnableRxIRQ();
+  CAN_FilterAcceptAll(&hfdcan3);
+  CAN_FilterAcceptAll(&hfdcan2);
+  CAN_GlobalAcceptAll(&hfdcan3);
+  CAN_GlobalAcceptAll(&hfdcan2);
+  CAN_StartAndEnableRxIRQ(&hfdcan3);
+  CAN_StartAndEnableRxIRQ(&hfdcan2);
 
 
 
@@ -562,6 +600,49 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief FDCAN2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_FDCAN2_Init(void)
+{
+
+  /* USER CODE BEGIN FDCAN2_Init 0 */
+
+  /* USER CODE END FDCAN2_Init 0 */
+
+  /* USER CODE BEGIN FDCAN2_Init 1 */
+
+  /* USER CODE END FDCAN2_Init 1 */
+  hfdcan2.Instance = FDCAN2;
+  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+  hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
+  hfdcan2.Init.AutoRetransmission = DISABLE;
+  hfdcan2.Init.TransmitPause = DISABLE;
+  hfdcan2.Init.ProtocolException = DISABLE;
+  hfdcan2.Init.NominalPrescaler = 4;
+  hfdcan2.Init.NominalSyncJumpWidth = 1;
+  hfdcan2.Init.NominalTimeSeg1 = 13;
+  hfdcan2.Init.NominalTimeSeg2 = 2;
+  hfdcan2.Init.DataPrescaler = 1;
+  hfdcan2.Init.DataSyncJumpWidth = 1;
+  hfdcan2.Init.DataTimeSeg1 = 1;
+  hfdcan2.Init.DataTimeSeg2 = 1;
+  hfdcan2.Init.StdFiltersNbr = 0;
+  hfdcan2.Init.ExtFiltersNbr = 0;
+  hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+  if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN FDCAN2_Init 2 */
+
+  /* USER CODE END FDCAN2_Init 2 */
+
+}
+
+/**
   * @brief FDCAN3 Initialization Function
   * @param None
   * @retval None
@@ -583,7 +664,7 @@ static void MX_FDCAN3_Init(void)
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 2;
+  hfdcan3.Init.NominalPrescaler = 4;
   hfdcan3.Init.NominalSyncJumpWidth = 1;
   hfdcan3.Init.NominalTimeSeg1 = 13;
   hfdcan3.Init.NominalTimeSeg2 = 2;
@@ -591,8 +672,8 @@ static void MX_FDCAN3_Init(void)
   hfdcan3.Init.DataSyncJumpWidth = 1;
   hfdcan3.Init.DataTimeSeg1 = 1;
   hfdcan3.Init.DataTimeSeg2 = 1;
-  hfdcan3.Init.StdFiltersNbr = 1;
-  hfdcan3.Init.ExtFiltersNbr = 1;
+  hfdcan3.Init.StdFiltersNbr = 0;
+  hfdcan3.Init.ExtFiltersNbr = 0;
   hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
   {
