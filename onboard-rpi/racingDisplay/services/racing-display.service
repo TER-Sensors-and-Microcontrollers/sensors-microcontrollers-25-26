@@ -1,4 +1,3 @@
-#this is the copy from the WorkingDirectory
 [Unit]
 Description=Electric Racing QML Display
 After=graphical.target racing-can.service
@@ -8,13 +7,22 @@ Requires=racing-can.service
 Type=simple
 User=racing
 Group=racing
-WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
-ExecStartPre=/bin/sleep 2
-ExecStart=/usr/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display/qml_display.py
-Restart=on-failure
-RestartSec=3
+
+WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display
+
+# Wait for can_processor to initialize shared memory
+ExecStartPre=/bin/sleep 3
+
+# Use venv python
+ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
+    /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display/qml_display.py
+
+Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/racing/.Xauthority
+
+Restart=on-failure
+RestartSec=3
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-display
