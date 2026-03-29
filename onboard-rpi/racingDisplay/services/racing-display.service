@@ -6,23 +6,17 @@ Requires=racing-can.service
 [Service]
 Type=simple
 User=racing
-Group=racing
+WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
 
-WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display
-
-# Wait for can_processor to initialize shared memory
-ExecStartPre=/bin/sleep 3
-
-# Use venv python
 ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
     /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display/qml_display.py
 
-Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
+Restart=on-failure
+RestartSec=3
+
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/racing/.Xauthority
 
-Restart=on-failure
-RestartSec=3
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-display
