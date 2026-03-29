@@ -13,8 +13,7 @@ WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingD
 ExecStartPre=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can1 250000
 
 # Use venv python so python-can and numpy are available
-ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
-    /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
+ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
 
 # So can_processor.py can find globals.py and orion_bms_decoder.py
 Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
