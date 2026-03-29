@@ -43,7 +43,7 @@
 ADC_HandleTypeDef hadc1;
 
 /* USER CODE BEGIN PV */
-#define ADC_THRESHOLD 500 // anything between 0-4095
+#define ADC_THRESHOLD 2048 // anything between 0-4095
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +97,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+	  HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	  uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
 
@@ -110,7 +110,11 @@ int main(void)
 		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET); // LED OFF
 	  }
 
+	  HAL_ADC_Stop(&hadc1);
+
 	  HAL_Delay(1000);
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
