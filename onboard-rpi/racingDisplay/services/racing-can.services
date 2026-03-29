@@ -9,19 +9,18 @@ Group=root
 
 WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
 
-# Setup CAN interface first (must match globals.py CAN_INTERFACE = "can1")
-ExecStartPre=/bin/rm -f /dev/shm/mem123
-ExecStartPre=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can1 250000
+# '-' prefix means failure here is non-fatal (interface may not exist yet at boot)
+ExecStartPre=-/bin/rm -f /dev/shm/mem123
+ExecStartPre=-/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can1 250000
 
-# Use venv python so python-can and numpy are available
-ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
+ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
+    /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
 
-# So can_processor.py can find globals.py and orion_bms_decoder.py
 Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
 
 UMask=000
 Restart=always
-RestartSec=3
+RestartSec=5
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-can

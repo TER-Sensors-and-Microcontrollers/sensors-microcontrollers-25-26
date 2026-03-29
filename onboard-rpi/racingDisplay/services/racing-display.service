@@ -6,17 +6,22 @@ Requires=racing-can.service
 [Service]
 Type=simple
 User=racing
+Group=racing
 WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
 
-ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
+ExecStartPre=/bin/sleep 3
+
+# Use system python3 so it can see apt-installed PyQt5
+ExecStart=/usr/bin/python3 \
     /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/display/qml_display.py
 
-Restart=on-failure
-RestartSec=3
-
+# Point to both venv packages (python-can, numpy) AND project modules
+Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/lib/python3.11/site-packages:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/racing/.Xauthority
 
+Restart=on-failure
+RestartSec=3
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-display
