@@ -179,8 +179,17 @@ def close_connection(exception):
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
-    file.save(os.path.join('database.db'))
-    return 'success'
+
+    if not file.filename.endswith('.db'):
+        return jsonify({"error": "Invalid file type"}), 400
+
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+        g._database = None
+    
+    file.save(DATABASE)  # DATABASE = 'database.db' already defined at top
+    return jsonify({"success": True})
 
 # main driver function
 

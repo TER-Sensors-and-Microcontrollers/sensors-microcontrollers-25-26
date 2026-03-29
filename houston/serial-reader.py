@@ -17,6 +17,11 @@ parent_dir = os.path.dirname(current_dir)
 app = Flask(__name__)
 DATABASE = parent_dir +'/database.db'
 
+currentVoltage = 0
+currentResistance = 0
+
+start_time = time.time()
+
 # helper func that returns 8 bytes, randomized (CAN DATA bytestring)
 def randomize_bytes():
     return os.urandom(8)
@@ -71,9 +76,11 @@ def parse_frame(frame:bytes):
 # from serial port, and stores it in Flask database. does not return anything
 # prints debug messages if debug flag set to True
 def reader(ser:serial.Serial, debug=True):
-    # db = get_db()
-    # cursor = db.cursor()
+    db = get_db()
+    cursor = db.cursor()
     start = time.time()
+    global currentVoltage, currentResistance
+    
     while True:
         if ser.in_waiting > 0:
             frame = ser.readline()
@@ -88,6 +95,49 @@ def reader(ser:serial.Serial, debug=True):
             
             match id:
                 # interpret data as appropriate type per case
+                
+                case 61492:
+                    elapsed_time = time.time() - start_time
+                    message = [id, "Avg. Cell voltage", int(data), "Volts", elapsed_time]
+                    currentVoltage = int(data)
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                        message
+                    )
+                    if (currentResistance != 0):
+                        chargeVal = currentVoltage / (currentResistance/1000) * elapsed_time
+                        charge = [id, "Charge", chargeVal, "Coulombs", elapsed_time]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                        charge
+                        )
+
+                    db.commit()
+                case 61495:
+                    elapsed_time = time.time() - start_time
+                    message = [id, "Avg. Opencell Voltage", int(data), "Volts", elapsed_time]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                        message
+                    )
+                    db.commit()
+
+                case 61498:
+                    elapsed_time = time.time() - start_time
+                    message = [id, "Avg. Cell Resistance", int(data), "mOhm", elapsed_time]
+                    currentResistance = int(data)
+                    resistance = [id, "Resistance", chargeVal, "mOhm", elapsed_time]
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                        message
+                    )
+                    if (currentVoltage != 0):
+                        chargeVal = currentVoltage / (currentResistance/1000) * elapsed_time
+                        cursor.execute(
+                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            resistance
+                        )
+                    db.commit()
                 case _:
                     pass
                 # case 1:
