@@ -5,8 +5,8 @@ Requires=racing-can.service
 
 [Service]
 Type=simple
-User=racing
-Group=racing
+User=root
+Group=root
 WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
 
 ExecStartPre=/bin/sleep 3
@@ -20,7 +20,7 @@ Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/r
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/racing/.Xauthority
 
-Restart=on-failure
+Restart=no
 RestartSec=3
 StandardOutput=journal
 StandardError=journal
