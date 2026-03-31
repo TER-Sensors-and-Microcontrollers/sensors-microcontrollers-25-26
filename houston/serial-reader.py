@@ -86,23 +86,24 @@ def reader(ser:serial.Serial, debug=True):
                 
             match id:
                 # interpret data as appropriate type per case
+                    # START MC Values
                     case 160: # 'A0' - template value
                         pass
                     case 161: # Temp 2
-                        cb_temp = np.float32(struct.unpack('<H', data[0:2])[0]) / 10
-                        reading = [id, "CB Temp", float(cb_temp), time.time()]
+                        cb_temp = np.float32(struct.unpack('<H', data[0:2])[0])
+                        reading = [id, "CB Temp", float(cb_temp),"C", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
                         )
                         db.commit()
                     case 162: # Temp 3
-                        cool_temp = np.float32(struct.unpack('<H', data[0:2])[0]) / 10
-                        htspt_temp = np.float32(struct.unpack('<H', data[2:4])[0]) / 10
-                        mot_temp = np.float32(struct.unpack('<H', data[4:6])[0]) / 10
-                        readingCool = [id, "Coolant Temp", float(cool_temp),"todo", time.time()]
-                        readingHtspt = [id, "Hotspot Temp", float(htspt_temp),"todo", time.time()]
-                        readingMot = [id, "Motor Temp", float(mot_temp),"todo", time.time()]
+                        cool_temp = np.float32(struct.unpack('<H', data[0:2])[0])
+                        htspt_temp = np.float32(struct.unpack('<H', data[2:4])[0])
+                        mot_temp = np.float32(struct.unpack('<H', data[4:6])[0])
+                        readingCool = [id, "Coolant Temp", float(cool_temp),"C", time.time()]
+                        readingHtspt = [id + ID_OFFSET, "Hotspot Temp", float(htspt_temp),"C", time.time()]
+                        readingMot = [id, "Motor Temp", float(mot_temp),"C", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingCool
@@ -116,24 +117,101 @@ def reader(ser:serial.Serial, debug=True):
                             readingMot
                         )
                         db.commit()
-                    case 163: # Analog Input
-                        bit_string = ''.join(format(byte, '08b') for byte in data) # for bitops.
-                        pedal1 = bit_string[-10:]
-                        # this grabs the proper bit sequence for the brake pedal
-                        pedal2 = bit_string[20:30]
-                        readingP1 = [id, "Pedal1", float(pedal1),"todo", time.time()]
-                        readingP2 = [id, "Pedal2", float(pedal2),"todo", time.time()]
-                        cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                            readingP1
-                        )
-                        cursor.execute(
-                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                            readingP2
-                        )
-                        db.commit()
+                    case 163: # Analog Input - Not impl. this year
+                        pass
                     case 164: # Dig. Input Status
                         pass
+                    case 165: # Motor Pos.
+                        motor_angle = np.float32(struct.unpack('<H', data[0:2])[0])
+                        motor_speed = np.float32(struct.unpack('<H', data[2:4])[0])
+                        readingA = [id, "Motor Angle", float(motor_angle),"Degrees", time.time()]
+                        readingS = [id, "Motor Speed", float(motor_speed),"RPM", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingA
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingS
+                        )
+                        db.commit()
+                    case 166: # Current Info
+                        dc_curr = np.float32(struct.unpack('<H', data[6:])[0])
+                        reading = [id, "DC Current", float(dc_curr),"Amps", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            reading
+                        )
+                        db.commit()
+                    case 167: # Voltage Info
+                        dc_volt = np.float32(struct.unpack('<H', data[0:2])[0])
+                        reading = [id, "DC Voltage", float(dc_volt),"Volts", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            reading
+                        )
+                        db.commit()
+                    case 170: # Internal States
+                        vsm_state = np.uint8(data[0])
+                        inv_state = np.uint8(data[2])
+                        other = np.uint8(data[7])
+                        readingV = [id, "VSM State", vsm_state,"Bits", time.time()]
+                        readingI = [id, "Inverter State", inv_state,"Bits", time.time()]
+                        readingO = [id, "DC Voltage", other,"Bits", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingV
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingI
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingO
+                        )
+                        db.commit()
+                    case 171: # Fault codes
+                        post_fault_lo = np.int16(struct.unpack('<H', data[0:2])[0])
+                        post_fault_hi = np.int16(struct.unpack('<H', data[2:4])[0])
+                        run_fault_lo = np.int16(struct.unpack('<H', data[4:6])[0])
+                        run_fault_hi = np.int16(struct.unpack('<H', data[6:])[0])
+                        readingPl= [id, "Low Post Faults", post_fault_lo,"Bits", time.time()]
+                        readingPh = [id, "High Post Faults", post_fault_hi,"Bits", time.time()]
+                        readingRl= [id, "Low Post Faults", run_fault_lo,"Bits", time.time()]
+                        readingRh = [id, "High Run Faults", run_fault_hi,"Bits", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingPl
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingPh
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingRl
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingRh
+                        )
+                        db.commit()
+                    case 172: # Torque / Timer
+                        torque = np.float32(struct.unpack('<H', data[0:2])[0])
+                        timer = np.float32(struct.unpack('<H', data[2:4])[0])
+                        readingTq = [id, "Torque", torque,"N.m.", time.time()]
+                        readingTm = [id, "Inverter State", timer * .003,"Seconds", time.time()]
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingTq
+                        )
+                        cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                            readingTm
+                        )
+                        db.commit()
+                    # END MC values
                     case _:
                         pass
         else:
