@@ -60,7 +60,7 @@ Window {
                 
                 minValue: 0
                 maxValue: 60
-                value: backend.speed ? backend.speed : 0
+                value: backend.speed
                 unit: "MPH"
                 label: "SPEED"
                 gaugeColor: backend.speed > 50 ? "#e74c3c" : "#3498db"
