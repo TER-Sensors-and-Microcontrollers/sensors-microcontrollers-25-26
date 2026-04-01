@@ -22,8 +22,13 @@ import numpy as np
 # port names
 PI_RADIO = '/dev/ttyAMA2'
 
-# required for readings that are packed into the same CAN ID (motor controller)
-ID_OFFSET = 1000
+# required to avoid id collisions
+# amongsts readings packed into single messages;
+# ===================================================
+# change this by a power of 10 if there are more 
+# than 10 readings per unique id!!
+# ===================================================
+CONST_OFFSET = 10
 
 # length of sensor data array stored in shm
 # Steering + IMU + Reserved wheel speeds [unused as of Spring 2025] + Motor + BMS

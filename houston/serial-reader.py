@@ -91,7 +91,7 @@ def reader(ser:serial.Serial, debug=True):
                         pass
                     case 161: # Temp 2
                         cb_temp = np.float32(struct.unpack('<H', data[0:2])[0])
-                        reading = [id, "CB Temp", float(cb_temp),"C", time.time()]
+                        reading = [id * CONST_OFFSET, "CB Temp", float(cb_temp),"C", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
@@ -101,9 +101,9 @@ def reader(ser:serial.Serial, debug=True):
                         cool_temp = np.float32(struct.unpack('<H', data[0:2])[0])
                         htspt_temp = np.float32(struct.unpack('<H', data[2:4])[0])
                         mot_temp = np.float32(struct.unpack('<H', data[4:6])[0])
-                        readingCool = [id, "Coolant Temp", float(cool_temp),"C", time.time()]
-                        readingHtspt = [id + ID_OFFSET, "Hotspot Temp", float(htspt_temp),"C", time.time()]
-                        readingMot = [id, "Motor Temp", float(mot_temp),"C", time.time()]
+                        readingCool = [id * CONST_OFFSET, "Coolant Temp", float(cool_temp),"C", time.time()]
+                        readingHtspt = [id * CONST_OFFSET + 1, "Hotspot Temp", float(htspt_temp),"C", time.time()]
+                        readingMot = [id * CONST_OFFSET + 2, "Motor Temp", float(mot_temp),"C", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingCool
@@ -124,8 +124,8 @@ def reader(ser:serial.Serial, debug=True):
                     case 165: # Motor Pos.
                         motor_angle = np.float32(struct.unpack('<H', data[0:2])[0])
                         motor_speed = np.float32(struct.unpack('<H', data[2:4])[0])
-                        readingA = [id, "Motor Angle", float(motor_angle),"Degrees", time.time()]
-                        readingS = [id, "Motor Speed", float(motor_speed),"RPM", time.time()]
+                        readingA = [id * CONST_OFFSET, "Motor Angle", float(motor_angle),"Degrees", time.time()]
+                        readingS = [id * CONST_OFFSET + 1, "Motor Speed", float(motor_speed),"RPM", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingA
@@ -137,7 +137,7 @@ def reader(ser:serial.Serial, debug=True):
                         db.commit()
                     case 166: # Current Info
                         dc_curr = np.float32(struct.unpack('<H', data[6:])[0])
-                        reading = [id, "DC Current", float(dc_curr),"Amps", time.time()]
+                        reading = [id * CONST_OFFSET, "DC Current", float(dc_curr),"Amps", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
@@ -145,7 +145,7 @@ def reader(ser:serial.Serial, debug=True):
                         db.commit()
                     case 167: # Voltage Info
                         dc_volt = np.float32(struct.unpack('<H', data[0:2])[0])
-                        reading = [id, "DC Voltage", float(dc_volt),"Volts", time.time()]
+                        reading = [id * CONST_OFFSET, "DC Voltage", float(dc_volt),"Volts", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
@@ -155,9 +155,9 @@ def reader(ser:serial.Serial, debug=True):
                         vsm_state = np.uint8(data[0])
                         inv_state = np.uint8(data[2])
                         other = np.uint8(data[7])
-                        readingV = [id, "VSM State", vsm_state,"Bits", time.time()]
-                        readingI = [id, "Inverter State", inv_state,"Bits", time.time()]
-                        readingO = [id, "DC Voltage", other,"Bits", time.time()]
+                        readingV = [id * CONST_OFFSET, "VSM State", vsm_state,"Bits", time.time()]
+                        readingI = [id * CONST_OFFSET + 1, "Inverter State", inv_state,"Bits", time.time()]
+                        readingO = [id * CONST_OFFSET + 2, "DC Voltage", other,"Bits", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingV
@@ -176,10 +176,10 @@ def reader(ser:serial.Serial, debug=True):
                         post_fault_hi = np.int16(struct.unpack('<H', data[2:4])[0])
                         run_fault_lo = np.int16(struct.unpack('<H', data[4:6])[0])
                         run_fault_hi = np.int16(struct.unpack('<H', data[6:])[0])
-                        readingPl= [id, "Low Post Faults", post_fault_lo,"Bits", time.time()]
-                        readingPh = [id, "High Post Faults", post_fault_hi,"Bits", time.time()]
-                        readingRl= [id, "Low Post Faults", run_fault_lo,"Bits", time.time()]
-                        readingRh = [id, "High Run Faults", run_fault_hi,"Bits", time.time()]
+                        readingPl= [id * CONST_OFFSET, "Low Post Faults", post_fault_lo,"Bits", time.time()]
+                        readingPh = [id * CONST_OFFSET + 1, "High Post Faults", post_fault_hi,"Bits", time.time()]
+                        readingRl= [id * CONST_OFFSET + 2, "Low Post Faults", run_fault_lo,"Bits", time.time()]
+                        readingRh = [id * CONST_OFFSET + 3, "High Run Faults", run_fault_hi,"Bits", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingPl
@@ -200,8 +200,8 @@ def reader(ser:serial.Serial, debug=True):
                     case 172: # Torque / Timer
                         torque = np.float32(struct.unpack('<H', data[0:2])[0])
                         timer = np.float32(struct.unpack('<H', data[2:4])[0])
-                        readingTq = [id, "Torque", torque,"N.m.", time.time()]
-                        readingTm = [id, "Inverter State", timer * .003,"Seconds", time.time()]
+                        readingTq = [id * CONST_OFFSET, "Torque", torque,"N.m.", time.time()]
+                        readingTm = [id * CONST_OFFSET + 1, "Inverter State", timer * .003,"Seconds", time.time()]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingTq
