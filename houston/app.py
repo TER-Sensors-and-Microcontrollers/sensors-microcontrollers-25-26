@@ -158,6 +158,47 @@ def get_unique_sensors():
 
     return [dict(r) for r in rows]
 
+# /faults
+# 
+# returns JSON response of all faults found in the Motor Controller
+# based on latest database results of ids 1710 -> 1713
+@app.route('/faults')
+def get_faults():
+    errors = []
+    db = get_db()
+    cursor = db.cursor()
+    # Post faults low bits (2 Bytes)
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1710"
+        "ORDER BY timestamp DESC LIMIT 1",
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+    if (bits[0] >> 1 & 1):
+        errors.append({"type": "post", "error": "HW de-saturation fault"})
+    if (bits[0] >> 2 & 1):
+        errors.append({"type": "post", "error": "HW Over-current fault"})
+    if (bits[0] >> 3 & 1):
+        errors.append({"type": "post", "error": "Accelerator Shorted"})
+    if (bits[0] >> 4 & 1):
+        errors.append({"type": "post", "error": "Accelerator Open"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "post", "error": "Current Sensor Low"})
+    if (bits[0] >> 6 & 1):
+        errors.append({"type": "post", "error": "Module Temperature Low"})
+    if (bits[0] >> 7 & 1):
+        errors.append({"type": "post", "error": "Module Temperature High"})
+    
+    # Post faults high bits (2 Bytes)
+
+    # Run faults low bits (2 Bytes)
+
+    # Post faults high bits (2 Bytes)
+    cursor.close()
+
+    return jsonify(errors)
+
 """
 DATABASE INITIALIZATION
 """

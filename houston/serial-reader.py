@@ -86,7 +86,7 @@ def reader(ser:serial.Serial, debug=True):
                 
             match id:
                 # interpret data as appropriate type per case
-                    # START MC Values
+                    # START MC Values - Handle as Little Endian
                     case 160: # 'A0' - template value
                         pass
                     case 161: # Temp 2
