@@ -144,17 +144,17 @@ class CANProcessor:
                 motor_speed = struct.unpack('<H', data[2:4])[0]
                 self.data[MOTOR_START_IDX + 7] = motor_angle
                 self.data[MOTOR_START_IDX + 8] = motor_speed
-                printf("Motor Angle: %.2f deg, Speed: %d RPM" % (motor_angle, motor_speed))
+                print(f"Motor Angle: {motor_angle:.2f} deg, Speed: {motor_speed} RPM")
                 
             elif can_id == 166:  # 0xA6 - Current Info
                 dc_curr = struct.unpack('<H', data[6:8])[0] / 10.0
                 self.data[MOTOR_START_IDX + 9] = dc_curr
-                printf("DC Current: %.2f A" % dc_curr)
+                print(f"DC Current: {dc_curr:.2f} A")
                 
             elif can_id == 167:  # 0xA7 - Voltage Info
                 dc_volt = struct.unpack('<H', data[0:2])[0] / 10.0
                 self.data[MOTOR_START_IDX + 10] = dc_volt
-                printf("DC Voltage: %.2f V" % dc_volt)
+                print(f"DC Voltage: {dc_volt:.2f} V")
                 
             elif can_id == 170:  # 0xAA - Internal States
                 vsm_state = float(data[0])
@@ -163,14 +163,14 @@ class CANProcessor:
                 self.data[MOTOR_START_IDX + 11] = vsm_state
                 self.data[MOTOR_START_IDX + 12] = inv_state
                 self.data[MOTOR_START_IDX + 13] = direction
-                printf("VSM State: %.0f, Inverter State: %.0f, Direction: %s" % (vsm_state, inv_state, "Forward" if direction == 0 else "Reverse"))
+                print(f"VSM State: {vsm_state:.0f}, Inverter State: {inv_state:.0f}, Direction: {'Forward' if direction == 0 else 'Reverse'}")
                 
             elif can_id == 172:  # 0xAC - Torque & Timer
                 torque = struct.unpack('<H', data[0:2])[0] / 10.0
                 timer = struct.unpack('<H', data[2:4])[0]
                 self.data[MOTOR_START_IDX + 14] = torque
                 self.data[MOTOR_START_IDX + 15] = timer
-                printf("Torque: {torque:.2f} Nm, Timer: {timer} ms")
+                print(f"Torque: {torque:.2f} Nm, Timer: {timer} ms")
                 
         except struct.error as e:
             print(f"Warning: Failed to parse motor controller ID {can_id}: {e}")
@@ -225,7 +225,8 @@ class CANProcessor:
         if can_id >= 160 and can_id <= 172:
             # Motor Controller messages
             self.parse_motor_controller(can_id, data)
-        elif can_id < 160:
+        elif can_id in (0x6B0, 0x6B1, 0x6B2, 0x6B3):
+             # Orion BMS pack-level messages (IDs 1712-1715)
             print(f"CAN ID: {hex(can_id)} DATA: {msg.data.hex()}")
             decoded = self.bms_decoder.decode(msg)
             if decoded:
@@ -233,8 +234,10 @@ class CANProcessor:
                 self.data[BMS_START_IDX + 1] = decoded["pack_current"]
                 self.data[BMS_START_IDX + 2] = decoded["soc"]
                 self.data[BMS_START_IDX + 3] = decoded["max_temp"]
-            print(f"ID:{hex(msg.arbitration_id)} DATA:{msg.data.hex()}")
             print(f"Decoded BMS Data: Voltage={decoded['pack_voltage']} V, Current={decoded['pack_current']} A, SOC={decoded['soc']} %, Max Temp={decoded['max_temp']} °C")
+        elif can_id < 160:
+        # Old per-cell BMS format — not used with Orion, silently ignore
+            pass     
         # Ignore other IDs
     
     def run(self):

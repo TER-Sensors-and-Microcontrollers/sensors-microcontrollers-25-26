@@ -52,14 +52,14 @@ SENS_NAMES = [
     "Timer",             # 29 - Internal Timer
     
     # BMS Data (indices 30-37)
-    "BMSVolt1",          # 30 - Voltage sample 1
-    "BMSVolt2",          # 31 - Voltage sample 2
-    "BMSRes1",           # 32 - Resistance sample 1
-    "BMSRes2",           # 33 - Resistance sample 2
-    "BMSOV1",            # 34 - Open voltage sample 1
-    "BMSOV2",            # 35 - Open voltage sample 2
-    "BMSResAvg",         # 36 - Average resistance
-    "BMSOVAvg",          # 37 - Average open voltage
+    "BMSPackVoltage",    # 30 - Total pack voltage (V)
+    "BMSPackCurrent",    # 31 - Pack current (A)
+    "BMSSOC",           # 32 - State of charge (%)
+    "BMSMaxTemp",        # 33 - Max cell temperature (°C)
+    "BMSReserved1",      # 34 - Unused
+    "BMSReserved2",      # 35 - Unused
+    "BMSReserved3",      # 36 - Unused
+    "BMSReserved4",      # 37 - Unused
 ]
 
 SHMEM_NMEM = len(SENS_NAMES)
@@ -67,7 +67,7 @@ SHMEM_TOTAL_SIZE = SHMEM_NMEM * SHMEM_MEMB_SIZE  # Total bytes needed
 
 # ==================== INDEX HELPERS ====================
 MOTOR_START_IDX = SENS_NAMES.index("MotorPlaceholder")  # 14
-BMS_START_IDX = SENS_NAMES.index("BMSVolt1")            # 30
+BMS_START_IDX = SENS_NAMES.index("BMSPackVoltage")       # 30
 
 # ==================== CAN BUS CONFIG ====================
 CAN_INTERFACE = "can1"          # SocketCAN interface name
