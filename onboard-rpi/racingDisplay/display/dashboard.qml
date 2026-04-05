@@ -30,7 +30,7 @@ Window {
         // Main layout
         Item {
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: 20
 
             // Top Battery Gauge
             CircularGauge {
@@ -91,7 +91,7 @@ Window {
 
     // Mileage Box
     Rectangle {
-        width: 160
+        width: 180
         height: 80
         color: "#2c3e50"
         radius: 10
@@ -122,7 +122,7 @@ Window {
 
     // Voltage Box
     Rectangle {
-        width: 160
+        width: 180
         height: 80
         color: "#2c3e50"
         radius: 10
@@ -131,7 +131,7 @@ Window {
 
         Column {
             anchors.centerIn: parent
-            spacing: 5
+            spacing: 20
 
             Text {
                 text: "PACK VOLTAGE"
