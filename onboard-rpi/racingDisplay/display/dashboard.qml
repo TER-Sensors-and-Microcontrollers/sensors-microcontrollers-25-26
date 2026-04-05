@@ -30,7 +30,7 @@ Window {
         // Main layout
         Item {
             anchors.fill: parent
-            anchors.margins: 20
+            anchors.margins: 0
 
             // Top Battery Gauge
             CircularGauge {
@@ -53,7 +53,7 @@ Window {
             CircularGauge {
                 id: speedGauge
                 anchors.left: parent.left
-                anchors.leftMargin: 10
+                anchors.leftMargin: 5
                 anchors.verticalCenter: parent.verticalCenter
                 width: 190
                 height: 190
@@ -70,7 +70,7 @@ Window {
             CircularGauge {
                 id: rpmGauge
                 anchors.right: parent.right
-                anchors.rightMargin: 10
+                anchors.rightMargin: 5
                 anchors.verticalCenter: parent.verticalCenter
                 width: 190
                 height: 190
@@ -87,7 +87,8 @@ Window {
     id: bottomStats
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: bottomButtons.top
-    anchors.bottomMargin: 20
+    anchors.bottomMargin: 15
+    spacing: 20
 
     // Mileage Box
     Rectangle {
@@ -131,7 +132,7 @@ Window {
 
         Column {
             anchors.centerIn: parent
-            spacing: 20
+            spacing: 5
 
             Text {
                 text: "PACK VOLTAGE"
