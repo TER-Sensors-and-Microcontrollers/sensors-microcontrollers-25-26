@@ -86,9 +86,8 @@ Window {
            Row {
     id: bottomStats
     anchors.horizontalCenter: parent.horizontalCenter
-    anchors.verticalCenter: parent.verticalCenter
-    anchors.verticalCenterOffset: 100
-    spacing: 20
+    anchors.bottom: bottomButtons.top
+    anchors.bottomMargin: 20
 
     // Mileage Box
     Rectangle {
@@ -155,6 +154,7 @@ Window {
 
             // Bottom Info Buttons
             Row {
+                id: bottomButtons
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 20
                 anchors.horizontalCenter: parent.horizontalCenter
