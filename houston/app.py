@@ -185,16 +185,169 @@ def get_faults():
         errors.append({"type": "post", "error": "Accelerator Open"})
     if (bits[0] >> 5 & 1):
         errors.append({"type": "post", "error": "Current Sensor Low"})
+    # if (bits[0] >> 5 & 1):
+    #     errors.append({"type": "post", "error": "Current Sensor High"}) 
+    #we lowk didn't know how to do the bits for this because the conversion was weird...
     if (bits[0] >> 6 & 1):
         errors.append({"type": "post", "error": "Module Temperature Low"})
     if (bits[0] >> 7 & 1):
         errors.append({"type": "post", "error": "Module Temperature High"})
+
+
+   
+   #for now this is gone....this is what left after the 8 we did for high
+    # if (bits[0] >> 17 & 1):
+    #     errors.append({"type": "post", "error": "2.5V Sense Voltage Low"})
+    # if (bits[0] >> 16 & 1):
+    #     errors.append({"type": "post", "error": "12V Sense Voltage High"})
+    # if (bits[0] >> 18 & 1):
+    #     errors.append({"type": "post", "error": "2.5V Sense Voltage High"})
+    # if (bits[0] >> 19 & 1):
+    #     errors.append({"type": "post", "error": "1.5V Sense Voltage Low"})
+    # if (bits[0] >> 20 & 1):
+    #     errors.append({"type": "post", "error": "1.5V Sense Voltage High"})
+    # if (bits[0] >> 21 & 1):
+    #     errors.append({"type": "post", "error": "DC Bus Voltage High"})
+    # if (bits[0] >> 22 & 1):
+    #     errors.append({"type": "post", "error": "DC Bus Voltage Low"})
+    # if (bits[0] >> 23 & 1):
+    #     errors.append({"type": "post", "error": "Pre-charge Timeout"})
+    # if (bits[0] >> 24 & 1):
+    #     errors.append({"type": "post", "error": "Pre-charge Voltage Failure"})
+    # if (bits[0] >> 25 & 1):
+    #     errors.append({"type": "post", "error": "EEPROM Checksum Invalid"})
+    # if (bits[0] >> 26 & 1):
+    #     errors.append({"type": "post", "error": "EEPROM Data Out of Range"})
+    # if (bits[0] >> 27 & 1):
+    #     errors.append({"type": "post", "error": "EEPROM Update Required"})
+    # if (bits[0] >> 28 & 1):
+    #     errors.append({"type": "post", "error": "Reserved"})
+    # if (bits[0] >> 29 & 1):
+    #     errors.append({"type": "post", "error": "Reserved"}) #showed up twice only wrote if statement once
+    # if (bits[0] >> 31 & 1):
+    #     errors.append({"type": "post", "error": "Brake Shorted"})
+    # if (bits[0] >> 32 & 1):
+    #     errors.append({"type": "post", "error": "Brake Open"})
+
+
+
+    # Post faults high bits (2 Bytes)!!!
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1711"
+        "ORDER BY timestamp DESC LIMIT 1",
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+    if (bits[0] >> 9 & 1):
+        errors.append({"type": "post", "error": "Control PCB Temperature Low"})
+    if (bits[0] >> 10 & 1):
+        errors.append({"type": "post", "error": "Control PCB Temperature High"})
+    if (bits[0] >> 11 & 1):
+        errors.append({"type": "post", "error": "Gate Drive PCB Temperature Low"})
+    if (bits[0] >> 12 & 1):
+        errors.append({"type": "post", "error": "Gate Drive PCB Temperature High"})
+    if (bits[0] >> 13 & 1):
+        errors.append({"type": "post", "error": "5V Sense Voltage Low"})
+    if (bits[0] >> 14 & 1):
+        errors.append({"type": "post", "error": "5V Sense Voltage High"})
+    if (bits[0] >> 15 & 1):
+        errors.append({"type": "post", "error": "12V Sense Voltage Low"})
+    if (bits[0] >> 16 & 1):
+        errors.append({"type": "post", "error": "12V Sense Voltage High"})
+
     
-    # Post faults high bits (2 Bytes)
 
     # Run faults low bits (2 Bytes)
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1712"
+        "ORDER BY timestamp DESC LIMIT 1",
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+    if (bits[0] >> 1 & 1):
+        errors.append({"type": "run", "error": "Motor Over-speed Fault"})
+    if (bits[0] >> 2 & 1):
+        errors.append({"type": "run", "error": "Over Current Fault"})
+    if (bits[0] >> 3 & 1):
+        errors.append({"type": "run", "error": "Over Voltage Fault"})
+    if (bits[0] >> 4 & 1):
+        errors.append({"type": "run", "error": "Inverter Over Temperature Fault"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "run", "error": "Accelerator Input Shorted Fault"})
+    if (bits[0] >> 6 & 1):
+        errors.append({"type": "run", "error": "Accelerator Input Open Fault"})
+    if (bits[0] >> 7 & 1):
+        errors.append({"type": "run", "error": "Direction Command Fault"})
+    if (bits[0] >> 8 & 1):
+        errors.append({"type": "run", "error": "Inverter Response Time-out Fault"})
+    
+    #the rest after the first 16...
+    # if (bits[0] >> 17 & 1):
+    #     errors.append({"type": "run", "error": "Brake Input Shorted Fault"})
+    # # if (bits[0] >> 14 & 1):
+    # #     errors.append({"type": "run", "error": "Brake Input Open Fault"})
+    #!!!!!!! This matches the reserved if statments below (line 342).....
 
-    # Post faults high bits (2 Bytes)
+
+    # if (bits[0] >> 19 & 1):
+    #     errors.append({"type": "run", "error": "Module A Over-temperature Fault"})
+    # if (bits[0] >> 20 & 1):
+    #     errors.append({"type": "run", "error": "Module B Over-temperature Fault"})
+    # if (bits[0] >> 21 & 1):
+    #     errors.append({"type": "run", "error": "Module C Over-temperature Fault"})
+    # if (bits[0] >> 22 & 1):
+    #     errors.append({"type": "run", "error": "PCB Over-temperature"})
+    # if (bits[0] >> 23 & 1):
+    #     errors.append({"type": "run", "error": "GDB1 Over-temperature"})
+    # if (bits[0] >> 24 & 1):
+    #     errors.append({"type": "run", "error": "GDB 2 Over-temperature"})
+    # if (bits[0] >> 25 & 1):
+    #     errors.append({"type": "run", "error": "GDB 3 Over-temperature"})
+    # if (bits[0] >> 26 & 1):
+    #     errors.append({"type": "run", "error": "Current Sensor Fault"})
+    # if (bits[0] >> 27 & 1):
+    #     errors.append({"type": "run", "error": "Gate Driver Over Voltage"})
+    # if (bits[0] >> 28 & 1):
+    #     errors.append({"type": "run", "error": "Reserved"})
+    # if (bits[0] >> 29 & 1):
+    #     errors.append({"type": "run", "error": "HW Over Voltage"})
+    # if (bits[0] >> 30 & 1):
+    #     errors.append({"type": "run", "error": "Reserved"})
+    # if (bits[0] >> 31 & 1):
+    #     errors.append({"type": "run", "error": "Resolver Fault"})
+    # if (bits[0] >> 32 & 1):
+    #     errors.append({"type": "run", "error": "Reserved"})
+    
+    
+    # Run faults high bits (2 Bytes)
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1713"
+        "ORDER BY timestamp DESC LIMIT 1",
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+    if (bits[0] >> 9 & 1):
+        errors.append({"type": "run", "error": "HW de-saturation fault"})
+    if (bits[0] >> 10 & 1):
+        errors.append({"type": "run", "error": "HW Over-current fault"})
+    if (bits[0] >> 11 & 1):
+        errors.append({"type": "run", "error": "Under-Voltage Fault"})
+    if (bits[0] >> 12 & 1):
+        errors.append({"type": "run", "error": "CAN Command Message Lost Fault"})
+    if (bits[0] >> 13 & 1):
+        errors.append({"type": "run", "error": "Motor Over Temperature Fault"})
+    if (bits[0] >> 14 & 1):
+        errors.append({"type": "run", "error": "Reserved"})
+    if (bits[0] >> 15 & 1):
+        errors.append({"type": "run", "error": "Reserved"})
+    if (bits[0] >> 16 & 1):
+        errors.append({"type": "run", "error": "Reserved"})
+
+
+
     cursor.close()
 
     return jsonify(errors)
