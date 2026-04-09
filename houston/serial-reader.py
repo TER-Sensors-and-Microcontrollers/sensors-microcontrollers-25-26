@@ -11,6 +11,7 @@ parent_dir = os.path.dirname(current_dir)
 app = Flask(__name__)
 DATABASE = parent_dir +'/database.db'
 
+DATABASE = "/workspace/database.db"
 # helper func that returns 8 bytes, randomized (CAN DATA bytestring)
 def randomize_bytes():
     return os.urandom(8)
@@ -224,9 +225,9 @@ if __name__ == "__main__":
     print(DATABASE)
     try:
         # loop:// creates a virtual serial port entirely in memory
-        ser = serial.Serial(PI_RADIO, baudrate=115200, timeout=1)
-        print(f"Connected successfully to {PI_RADIO}")
-        # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
+        # ser = serial.Serial(PI_RADIO, baudrate=115200, timeout=1)
+        # print(f"Connected successfully to {PI_RADIO}")
+        ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
     except KeyboardInterrupt:

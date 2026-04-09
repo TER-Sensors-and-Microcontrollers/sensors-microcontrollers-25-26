@@ -7,7 +7,7 @@
 # An object of Flask class is our WSGI application.
 from flask import Flask, render_template, g, jsonify
 import sqlite3
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 import threading
 from multiprocessing import shared_memory
 import time
@@ -22,7 +22,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 DATABASE = 'database.db'
 
-
+start = time.time()
 """
 HOME SCREEN ROUTE
 """
@@ -217,6 +217,30 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
+
+def emit_dp(app):
+    last_timestamp = None
+    with app.app_context():
+        while True:
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 1")
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row and row['timestamp'] != last_timestamp:
+                last_timestamp = row['timestamp']
+                reading = {
+                    "sensor_id": row['sensor_id'],
+                    "name": row['name'],
+                    "data": row['data'],
+                    "unit": row['unit'],
+                    "timestamp": row['timestamp'],
+                }
+                print(f"{time.time() - start:.2f}")
+                socketio.emit("new_datapoint", reading)
+            
+        time.sleep(0.01)
 # main driver function
 
 #############################################################################
@@ -242,11 +266,13 @@ if __name__ == '__main__':
         "timestamp DATETIME" \
         ")")
         db.commit()
+        print("database created!")
         cursor.close()
     # Runs the app using socketio for real-time data updates from the
     # shared memory.
-    socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
+    socketio.start_background_task(emit_dp, app)
 
+    socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
 
 
 

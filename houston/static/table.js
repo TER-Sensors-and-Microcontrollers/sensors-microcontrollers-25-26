@@ -3,6 +3,7 @@
     
     real-time data logic
 */
+// const socket = io();
 const container = document.getElementById('tableContainer');
 const table = document.createElement('table');
 const thead = document.createElement('thead');
@@ -121,3 +122,89 @@ async function updateTable(mode) {
 setInterval(() => {
     updateTable("f");
 }, 1000);
+
+
+// /*
+//     table.js — real-time table (optimized)
+// */
+
+// const container = document.getElementById('tableContainer');
+// let table = null;
+// let tbody = null;
+// let sensorRows = {}; // sensor_id → <tr>
+
+// async function getIdsByMode(mode) {
+//     if (mode === "f") {
+//         const res = await fetch('/unique_sensors');
+//         if (!res.ok) throw new Error("Failed to get unique sensors");
+//         return await res.json();
+//     }
+//     throw new Error(`Unsupported mode '${mode}'`);
+// }
+
+// // Build the table one time
+// async function buildTable(mode) {
+//     const ids = await getIdsByMode(mode);
+
+//     table = document.createElement('table');
+
+//     const thead = document.createElement('thead');
+//     const headerRow = document.createElement('tr');
+//     ["ID", "Name", "Value", "Unit"].forEach(text => {
+//         const th = document.createElement('th');
+//         th.textContent = text;
+//         headerRow.appendChild(th);
+//     });
+//     thead.appendChild(headerRow);
+
+//     tbody = document.createElement('tbody');
+
+//     table.appendChild(thead);
+//     table.appendChild(tbody);
+//     container.appendChild(table);
+
+//     // create empty rows
+//     ids.forEach(sensor => {
+//         const tr = document.createElement('tr');
+
+//         const tdId   = document.createElement('td');
+//         const tdName = document.createElement('td');
+//         const tdVal  = document.createElement('td');
+//         const tdUnit = document.createElement('td');
+
+//         tdId.textContent   = sensor.sensor_id;
+//         tdName.textContent = sensor.name;
+//         tdUnit.textContent = sensor.unit;
+
+//         tr.appendChild(tdId);
+//         tr.appendChild(tdName);
+//         tr.appendChild(tdVal);
+//         tr.appendChild(tdUnit);
+
+//         tbody.appendChild(tr);
+//         sensorRows[sensor.sensor_id] = tr;
+//     });
+// }
+
+// async function updateTableValues() {
+//     // fetch all dp in parallel
+//     const promises = Object.keys(sensorRows).map(async sensorId => {
+//         const res = await fetch(`/get_dp/${sensorId}`);
+//         if (!res.ok) return;
+
+//         const reading = await res.json();
+//         if (reading.error) return;
+
+//         // Update only the value cell
+//         const tr = sensorRows[sensorId];
+//         tr.cells[2].textContent = reading.data;
+//     });
+
+//     await Promise.all(promises);
+// }
+
+// // Initialize once
+// (async function() {
+//     await buildTable("f");
+//     setInterval(updateTableValues, 1000);
+// })();

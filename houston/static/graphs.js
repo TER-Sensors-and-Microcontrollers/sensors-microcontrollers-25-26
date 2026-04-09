@@ -6,11 +6,12 @@
 
 // initial starting values for the 3 graphs, subject to change
 var selectedValue1 = 1;
-var selectedValue2 = 2;
-var selectedValue3 = 3;
+var selectedValue2 = 36;
+var selectedValue3 = 37;
 
 var currentX = "motor temp"
 var currentY = "battery"
+
 
 // get absolute start time from browser cache if it exists
 var start = sessionStorage.getItem("startTime");
@@ -19,6 +20,7 @@ if (!start) {
     start = Date.now();
     sessionStorage.setItem("startTime", JSON.stringify(start));
 }
+
 
 /*
     updateGraph
@@ -155,6 +157,12 @@ const g1 = new Chart("graph1", {
             display: true,
             text: 'Sensor 1 Over Time'
         }
+    },
+    plugins: {
+        decimation: {
+            enabled: true,
+            algorithm: 'min-max',
+        }
     }
 });
 
@@ -210,6 +218,29 @@ const scatter = new Chart("scatter", {
     }
 });
 
+// ================================================
+async function idToName(sid) {
+    try{
+        const response = await fetch('/get_dp/' + sid);
+        if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reading = await response.json();
+        
+
+        if (reading.error) {
+            console.log("Error: No data found");
+            return;
+        }
+        return reading.name;
+    }
+    catch (error) {
+        console.error("Error fetching or parsing data:", error);
+    }
+    return "ERROR";
+}
+
  document.addEventListener('DOMContentLoaded', function() {
     var dropdown = document.getElementById('g1');
                 dropdown.addEventListener('change', function() 
@@ -246,12 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {
                     clearGraph(scatter);
                     selectedValue = dropdown.value;
-                    if (selectedValue == 3)
-                        currentX = "pressure";
-                    else if (selectedValue == 2)
-                        currentX = "battery";
-                    else
-                        currentX = "motor temp";
+                    currentX = idToName(selectedValue);
                     get_new_data(selectedValue, scatter);
                 });
  });
@@ -262,15 +288,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 {
                     clearGraph(scatter);
                     selectedValue = dropdown.value;
-                    if (selectedValue == 3)
-                        currentY = "pressure";
-                    else if (selectedValue == 2)
-                        currentY = "battery";
-                    else
-                        currentY = "motor temp";
+                    currentY = idToName(selectedValue);
                     get_new_data(selectedValue, scatter);
                 });
  });
+
 //  get all up-to-date data of selected id
  async function get_new_data(selectedValue, g)
  {
@@ -308,8 +330,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
  }
-setInterval(() => {
-    updateGraph(selectedValue1, g1);
-    updateGraph(selectedValue2, g2);
-    updateGraph(selectedValue3, g3);
-}, 1000);
+
+// setInterval(() => {
+//     updateGraph(selectedValue1, g1);
+//     updateGraph(selectedValue2, g2);
+//     updateGraph(selectedValue3, g3);
+// }, 1000);
+
+// Socket stuff
+
+// const socket = io();
+
+socket.on('new_datapoint', (reading) => {
+    // reading = { sensor_id, data, timestamp, name, unit }
+    
+    if (reading.sensor_id == selectedValue1) {
+        console.log("new datapoint found for id " + selectedValue1);
+        updateChartFromSocket(reading, g1);
+    }
+    if (reading.sensor_id == selectedValue2) {
+        console.log("new datapoint found for id " + selectedValue2);
+        updateChartFromSocket(reading, g2);
+    }
+    if (reading.sensor_id == selectedValue3) {
+        console.log("new datapoint found for id " + selectedValue3);
+        updateChartFromSocket(reading, g3);
+    }
+});
+
+function updateChartFromSocket(reading, g) {
+    g.data.labels.push(reading.timestamp - (start/1000));
+    g.data.datasets[0].data.push(reading.data);
+    
+    g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
+    g.update();
+
+        // save chart to client's cache so that it can be reloaded on refresh
+        saveToSessionStorage(g.canvas.id, {
+            labels: g.data.labels,
+            datasets: g.data.datasets.map(ds => ({
+                backgroundColor: ds.backgroundColor,
+                borderColor: ds.borderColor,
+                data: ds.data
+            })),
+            options: {
+                title: {
+                    display: true,
+                    // text: reading1.name + " Over Time"
+                }
+            }
+        })
+}
