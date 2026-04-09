@@ -193,7 +193,7 @@ const scatter = new Chart("scatter", {
         datasets: [{
             label: "Sensor 1 vs Sensor 2",
             data: [],
-            backgroundColor: "rgba(255,0,0,0.7)"
+            backgroundColor: "rgba(17, 0, 255, 0.7)"
         }]
     },
     options: {
