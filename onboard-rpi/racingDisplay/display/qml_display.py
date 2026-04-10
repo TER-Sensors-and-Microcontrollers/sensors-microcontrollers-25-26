@@ -39,6 +39,8 @@ class DashboardBackend(QObject):
     directionChanged = pyqtSignal(str)
     statusChanged = pyqtSignal(str)
     connectionStatusChanged = pyqtSignal(bool)
+    faultActiveChanged = pyqtSignal(bool)
+    faultCodeChanged = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -61,6 +63,9 @@ class DashboardBackend(QObject):
         # Battery voltage range (adjust for your system)
         self.VOLTAGE_MIN = 300.0  # 0% battery
         self.VOLTAGE_MAX = 400.0  # 100% battery
+        # falt tracking
+        self._fault_active = False
+        self._fault_code = ""
         
         # Connect to Shared Memory
         self.connect_shared_memory()
@@ -184,6 +189,17 @@ class DashboardBackend(QObject):
             if self._direction != new_direction:
                 self._direction = new_direction
                 self.directionChanged.emit(self._direction)
+            # Fault tracking
+            run_lo, run_hi = self.can.get_fault_codes()
+            fault_active = run_lo != 0 or run_hi != 0
+            fault_str = f"RUN: 0x{run_lo:04X} / 0x{run_hi:04X}" if fault_active else ""
+
+            if self._fault_active != fault_active:
+                self._fault_active = fault_active
+                self.faultActiveChanged.emit(self._fault_active)
+            if self._fault_code != fault_str:
+                self._fault_code = fault_str
+                self.faultCodeChanged.emit(self._fault_code)
 
         except Exception as e:
             print(f"Error reading data: {e}")
@@ -224,6 +240,12 @@ class DashboardBackend(QObject):
 
     @pyqtProperty(bool, notify=connectionStatusChanged)
     def connected(self): return self._connected
+    # Fault properties
+    @pyqtProperty(bool, notify=faultActiveChanged)
+    def faultActive(self): return self._fault_active
+
+    @pyqtProperty(str, notify=faultCodeChanged)
+    def faultCode(self): return self._fault_code
 
 def main():
     app = QApplication(sys.argv)

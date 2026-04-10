@@ -31,7 +31,36 @@ Window {
         Item {
             anchors.fill: parent
             anchors.margins: 0
+            // Fault Banner — only visible when a fault is active
+        Rectangle {
+            id: faultBanner
+            visible: backend.faultActive
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.topMargin: 8
+            width: parent.width * 0.7
+            height: 40
+            color: "#e74c3c"
+           radius: 6
+           z: 10
 
+    Row {
+        anchors.centerIn: parent
+        spacing: 10
+        Text {
+            text: "⚠ FAULT"
+            color: "white"
+            font.pixelSize: 16
+            font.bold: true
+        }
+        Text {
+            text: backend.faultCode
+            color: "white"
+            font.pixelSize: 13
+            font.bold: false
+        }
+    }
+}
             // Top Battery Gauge
             CircularGauge {
                 id: batteryGauge

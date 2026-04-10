@@ -124,6 +124,18 @@ class CANGetter:
         """Get average BMS cell open voltage"""
         return float(self.data[BMS_START_IDX + 7])
     
+    def get_fault_codes(self):
+        """Returns (run_lo, run_hi) as ints — the active fault word"""
+        return (
+                int(self.data[BMS_START_IDX + 6]),
+                int(self.data[BMS_START_IDX + 7]),
+        )
+
+    def has_fault(self):
+        """True if any run-time fault bit is set"""
+         _, _, run_lo, run_hi = self.get_fault_codes()
+        return run_lo != 0 or run_hi != 0
+    
     # ==================== IMU GETTERS ====================
     
     def get_imu_accel_x(self):

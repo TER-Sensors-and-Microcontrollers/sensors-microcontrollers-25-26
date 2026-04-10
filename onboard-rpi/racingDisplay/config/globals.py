@@ -56,10 +56,10 @@ SENS_NAMES = [
     "BMSPackCurrent",    # 31 - Pack current (A)
     "BMSSOC",           # 32 - State of charge (%)
     "BMSMaxTemp",        # 33 - Max cell temperature (°C)
-    "BMSReserved1",      # 34 - Unused
-    "BMSReserved2",      # 35 - Unused
-    "BMSReserved3",      # 36 - Unused
-    "BMSReserved4",      # 37 - Unused
+    "FaultPostLo",       # 34 - POST fault code low word
+    "FaultPostHi",       # 35 - POST fault code high word
+    "FaultRunLo",        # 36 - Run fault code low word
+    "FaultRunHi",        # 37 - Run fault code high word
 ]
 
 SHMEM_NMEM = len(SENS_NAMES)
