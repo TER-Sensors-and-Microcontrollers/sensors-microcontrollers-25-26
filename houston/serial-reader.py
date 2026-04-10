@@ -4,6 +4,7 @@
 # 
 
 from globals import *
+from datetime import datetime
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -82,7 +83,7 @@ def reader(ser:serial.Serial, debug=True):
                 continue
             
             if debug:
-                print(f"RECIEVED: {time.time() - start:.2f}    ID: {id}    DLC: {dlc}    DATA: {data}")
+                print(f"RECIEVED: {datetime.now()}    ID: {id}    DLC: {dlc}    DATA: {data}")
             if len(data) == 8: # skip chopped messages [tentatively]
                 print(f"Error: data length is not 8!")
                 continue
