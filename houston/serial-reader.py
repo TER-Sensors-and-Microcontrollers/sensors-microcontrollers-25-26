@@ -228,9 +228,9 @@ if __name__ == "__main__":
     print(DATABASE)
     try:
         # loop:// creates a virtual serial port entirely in memory
-        # ser = serial.Serial(PI_RADIO, baudrate=115200, timeout=1)
+        ser = serial.Serial(PI_RADIO, baudrate=115200, timeout=1)
         # print(f"Connected successfully to {PI_RADIO}")
-        ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
+        # ser = serial.serial_for_url('loop://', baudrate=115200, timeout=1)
         # threading.Thread(target=feeder, args=(ser,), daemon=True).start()
         reader(ser,True)
     except KeyboardInterrupt:
