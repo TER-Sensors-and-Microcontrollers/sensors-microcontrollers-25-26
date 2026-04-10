@@ -19,6 +19,7 @@ import signal
 import struct
 import random
 from multiprocessing import shared_memory
+import time
 import numpy as np
 
 # Add config directory to path
@@ -50,6 +51,9 @@ class CANProcessor:
         self.interface = interface
         self.bitrate = bitrate
         self.running = True
+        # Timestamp tracker: maps CAN ID → last time we saw it (perf_counter seconds)
+        # We use a dict so lookups are O(1) regardless of how many IDs appear
+        self._last_seen: dict[int, float] = {}
         
         # Setup signal handlers for clean shutdown
         signal.signal(signal.SIGTERM, self._signal_handler)
@@ -164,7 +168,17 @@ class CANProcessor:
                 self.data[MOTOR_START_IDX + 12] = inv_state
                 self.data[MOTOR_START_IDX + 13] = direction
                 print(f"VSM State: {vsm_state:.0f}, Inverter State: {inv_state:.0f}, Direction: {'Forward' if direction == 0 else 'Reverse'}")
-                
+            elif can_id == 171:  # 0xAB - Fault Codes
+                post_fault_lo = struct.unpack('<H', data[0:2])[0]
+                post_fault_hi = struct.unpack('<H', data[2:4])[0]
+                run_fault_lo  = struct.unpack('<H', data[4:6])[0]
+                run_fault_hi  = struct.unpack('<H', data[6:8])[0]
+                self.data[BMS_START_IDX + 4] = float(post_fault_lo)
+                self.data[BMS_START_IDX + 5] = float(post_fault_hi)
+                self.data[BMS_START_IDX + 6] = float(run_fault_lo)
+                self.data[BMS_START_IDX + 7] = float(run_fault_hi)
+                if run_fault_lo or run_fault_hi:
+                        print(f"⚠️  FAULT: run_lo=0x{run_fault_lo:04X} run_hi=0x{run_fault_hi:04X}")
             elif can_id == 172:  # 0xAC - Torque & Timer
                 torque = struct.unpack('<H', data[0:2])[0] / 10.0
                 timer = struct.unpack('<H', data[2:4])[0]
@@ -210,7 +224,26 @@ class CANProcessor:
             
         except struct.error as e:
             print(f"Warning: Failed to parse BMS ID {can_id}: {e}")
-    
+            
+    def _log_latency(self, can_id: int):
+        """
+        Called every time a message arrives. Computes and prints the time
+        since the last message with this same CAN ID.
+        
+        perf_counter() returns seconds as a float, so we multiply by 1000
+        to get milliseconds which is a more natural unit for CAN timing.
+        """
+        now = time.perf_counter()
+        
+        if can_id in self._last_seen:
+            delta_ms = (now - self._last_seen[can_id]) * 1000.0
+            print(f"[LATENCY] ID 0x{can_id:03X} ({can_id:3d}) → {delta_ms:7.2f} ms since last")
+        else:
+            # First time we've seen this ID — nothing to compare against yet
+            print(f"[LATENCY] ID 0x{can_id:03X} ({can_id:3d}) → first message seen")
+        
+        # Always update the timestamp after logging
+        self._last_seen[can_id] = now
     def process_message(self, msg):
         """
         Process a single CAN message and route to appropriate parser.
@@ -220,6 +253,7 @@ class CANProcessor:
         """
         can_id = msg.arbitration_id
         data = msg.data
+        self._log_latency(can_id)
         
         # Route message based on ID range
         if can_id >= 160 and can_id <= 172:
@@ -235,9 +269,26 @@ class CANProcessor:
                 self.data[BMS_START_IDX + 2] = decoded["soc"]
                 self.data[BMS_START_IDX + 3] = decoded["max_temp"]
             print(f"Decoded BMS Data: Voltage={decoded['pack_voltage']} V, Current={decoded['pack_current']} A, SOC={decoded['soc']} %, Max Temp={decoded['max_temp']} °C")
+        elif 0 <= can_id <= 100:
+            # STM32 test range — log everything so you can see what's being sent
+            # We don't parse these yet, but we don't silently drop them either.
+            # The struct.unpack calls here give you a quick look at the raw values
+            # interpreted as little-endian unsigned shorts (2 bytes each = 4 values)
+            try:
+                vals = struct.unpack('<HHHH', data[0:8])
+                print(f"[STM32]  ID 0x{can_id:03X} ({can_id:3d}) | "
+                      f"raw bytes: {data.hex()} | "
+                      f"as u16 LE: {vals[0]} {vals[1]} {vals[2]} {vals[3]}")
+            except struct.error:
+                # Message shorter than 8 bytes — just print the raw hex
+                print(f"[STM32]  ID 0x{can_id:03X} ({can_id:3d}) | "
+                      f"raw bytes: {data.hex()} (only {len(data)} bytes)")
         elif can_id < 160:
         # Old per-cell BMS format — not used with Orion, silently ignore
-            pass     
+                print(f"[BMS-CELL] ID 0x{can_id:03X} DATA: {data.hex()}")
+        else:
+             # Completely unknown ID — log it so nothing is invisible during testing
+            print(f"[UNKNOWN] ID 0x{can_id:03X} ({can_id}) DATA: {data.hex()}")
         # Ignore other IDs
     
     def run(self):
