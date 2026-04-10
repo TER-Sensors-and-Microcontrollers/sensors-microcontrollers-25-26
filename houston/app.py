@@ -12,6 +12,7 @@ import threading
 from multiprocessing import shared_memory
 import time
 import atexit
+from datetime import datetime
 # import serial
 #from ER-sensors-microcontrollers.pi.globals import *
 import numpy as np
@@ -237,10 +238,9 @@ def emit_dp(app):
                     "unit": row['unit'],
                     "timestamp": row['timestamp'],
                 }
-                print(f"{time.time() - start:.2f}")
+                print(f"{datetime.now()} - TRANSMITTING ID: {row['sensor_id']}, DATA: {row['data']}")
                 socketio.emit("new_datapoint", reading)
             
-        time.sleep(0.01)
 # main driver function
 
 #############################################################################

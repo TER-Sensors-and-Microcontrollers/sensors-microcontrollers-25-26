@@ -11,7 +11,9 @@ parent_dir = os.path.dirname(current_dir)
 app = Flask(__name__)
 DATABASE = parent_dir +'/database.db'
 
-DATABASE = "/workspace/database.db"
+# FOR DOCKER ONLY
+# DATABASE = "/workspace/database.db"
+
 # helper func that returns 8 bytes, randomized (CAN DATA bytestring)
 def randomize_bytes():
     return os.urandom(8)

@@ -9,9 +9,10 @@ var selectedValue1 = 1;
 var selectedValue2 = 36;
 var selectedValue3 = 37;
 
-var currentX = "motor temp"
-var currentY = "battery"
+var currentX = "motor temp";
+var currentY = "battery";
 
+var MAX_POINTS = 200;
 
 // get absolute start time from browser cache if it exists
 var start = sessionStorage.getItem("startTime");
@@ -57,10 +58,10 @@ async function updateGraph(sid, g)
         g.data.datasets[0].data.push(reading.data);
 
         g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
-        g.update();
+        g.update({ duration: 0, lazy: true });
 
         // save chart to client's cache so that it can be reloaded on refresh
-        saveToSessionStorage(g.canvas.id, {
+        maybeSaveToSessionStorage(g.canvas.id, {
             labels: g.data.labels,
             datasets: g.data.datasets.map(ds => ({
                 backgroundColor: ds.backgroundColor,
@@ -71,10 +72,11 @@ async function updateGraph(sid, g)
                 title: {
                     display: true,
                     // text: reading1.name + " Over Time"
-                }
+                },
+                animation: false
             }
         })
-        saveToSessionStorage(scatter.canvas.id, {
+        maybeSaveToSessionStorage(scatter.canvas.id, {
             labels: scatter.data.labels,
             datasets: scatter.data.datasets.map(ds => ({
                 label: reading1.name + " vs " + reading2.name,
@@ -86,7 +88,8 @@ async function updateGraph(sid, g)
                 title: {
                     display: true,
                     text: reading1.name + " vs " + reading2.name
-            }
+            },
+            animation: false
     }})
     }
     catch (error) {
@@ -97,8 +100,8 @@ async function updateGraph(sid, g)
 async function clearGraph(g) {
     g.data.labels = [];
     g.data.datasets[0].data = [];
-    g.update();
-    saveToSessionStorage(g.canvas.id,
+    g.update({ duration: 0, lazy: true });
+    maybeSaveToSessionStorage(g.canvas.id,
     {
         labels: [],
         datasets: [{
@@ -111,13 +114,21 @@ async function clearGraph(g) {
     console.log("graph " + g + " cleared...");
 }
 /*
-    saveToSessionStorage
+    maybeSaveToSessionStorage
 
     Given chart name and cachable chart data, saves chart data in user's browser cache
+    approximately every 5 seconds.
     input(s): name/key to save chart data field as, chart data field to be cached
 */
-function saveToSessionStorage(name, data) {
-    // sessionStorage can only store strings, so we must serialize the data to JSON
+
+let lastSave = 0;
+const SAVE_INTERVAL = 5000; // save at most every 5 seconds
+
+function maybeSaveToSessionStorage(name, data) {
+    const now = Date.now();
+    if (now - lastSave < SAVE_INTERVAL) return;
+    lastSave = now;
+    console.log("Saving graph " + name + " to session storage.");
     sessionStorage.setItem(name, JSON.stringify(data));
 }
 /*
@@ -156,13 +167,13 @@ const g1 = new Chart("graph1", {
         title: {
             display: true,
             text: 'Sensor 1 Over Time'
-        }
+        },
+        animation: false
     },
-    plugins: {
-        decimation: {
-            enabled: true,
-            algorithm: 'min-max',
-        }
+    decimation: {
+        enabled: true,
+        algorithm: 'min-max',
+        samples: 200  // max points rendered at once
     }
 });
 
@@ -172,8 +183,16 @@ const g2 = new Chart("graph2", {
     options: {
         title: {
             display: true,
-            text: 'Sensor 2 Over Time'
-        }
+            text: 'Sensor 2 Over Time',
+            
+        },
+        animation: false,
+        showLine: false // disable for all datasets
+    },
+    decimation: {
+        enabled: true,
+        algorithm: 'min-max',
+        samples: 200  // max points rendered at once
     }
 });
 const g3 = new Chart("graph3", {                
@@ -183,7 +202,13 @@ const g3 = new Chart("graph3", {
         title: {
             display: true,
             text: 'Sensor 3 Over Time'
-        }
+        },
+        animation: false
+    },
+    decimation: {
+        enabled: true,
+        algorithm: 'min-max',
+        samples: 200  // max points rendered at once
     }
 });
 
@@ -214,7 +239,8 @@ const scatter = new Chart("scatter", {
                     text: "Sensor 2"
                 }
             }
-        }
+        },
+        animation: false
     }
 });
 
@@ -311,9 +337,9 @@ document.addEventListener('DOMContentLoaded', function() {
         g.options.title.text = currentY + " vs " + currentX;
     else
         g.options.title.text = all_data[0].name + " Over Time";
-    g.update();
+    g.update({ duration: 0, lazy: true });
     
-    saveToSessionStorage(g1.canvas.id, {
+    maybeSaveToSessionStorage(g1.canvas.id, {
             labels: g.data.labels,
             datasets: g.data.datasets.map(ds => ({
                 backgroundColor: ds.backgroundColor,
@@ -325,59 +351,88 @@ document.addEventListener('DOMContentLoaded', function() {
                     display: true,
                     text: all_data[0].name + " (" + all_data[0].unit + ") Over Time",
                 }
-            }
+            },
+            animation: false
         })
 
 
  }
 
-// setInterval(() => {
-//     updateGraph(selectedValue1, g1);
-//     updateGraph(selectedValue2, g2);
-//     updateGraph(selectedValue3, g3);
-// }, 1000);
-
-// Socket stuff
-
-// const socket = io();
+// buffers to push to graphs in bulk
+const buffers = { g1: [], g2: [], g3: [] };
 
 socket.on('new_datapoint', (reading) => {
-    // reading = { sensor_id, data, timestamp, name, unit }
-    
-    if (reading.sensor_id == selectedValue1) {
-        console.log("new datapoint found for id " + selectedValue1);
-        updateChartFromSocket(reading, g1);
-    }
-    if (reading.sensor_id == selectedValue2) {
-        console.log("new datapoint found for id " + selectedValue2);
-        updateChartFromSocket(reading, g2);
-    }
-    if (reading.sensor_id == selectedValue3) {
-        console.log("new datapoint found for id " + selectedValue3);
-        updateChartFromSocket(reading, g3);
-    }
+    const now = new Date();
+    console.log(now + now.getMilliseconds() + " - message recieved: ID:" + reading.sensor_id + " Data:" + reading.data);
+    if (reading.sensor_id == selectedValue1) buffers.g1.push(reading);
+    if (reading.sensor_id == selectedValue2) buffers.g2.push(reading);
+    if (reading.sensor_id == selectedValue3) buffers.g3.push(reading);
 });
 
-function updateChartFromSocket(reading, g) {
-    g.data.labels.push(reading.timestamp - (start/1000));
-    g.data.datasets[0].data.push(reading.data);
-    
-    g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
-    g.update();
+setInterval(() => {
+    flushBuffer(buffers.g1, g1);
+    flushBuffer(buffers.g2, g2);
+    flushBuffer(buffers.g3, g3);
+}, 33);
 
-        // save chart to client's cache so that it can be reloaded on refresh
-        saveToSessionStorage(g.canvas.id, {
-            labels: g.data.labels,
-            datasets: g.data.datasets.map(ds => ({
-                backgroundColor: ds.backgroundColor,
-                borderColor: ds.borderColor,
-                data: ds.data
-            })),
-            options: {
-                title: {
-                    display: true,
-                    // text: reading1.name + " Over Time"
-                }
-            }
-        })
-}
+function flushBuffer(buffer, g) {
+    if (buffer.length === 0) return;
+    buffer.forEach(reading => {
+        g.data.labels.push(reading.timestamp - (start / 1000));
+        g.data.datasets[0].data.push(reading.data);
+    });
+    buffer.length = 0; // clear in place (faster than reassigning)
+
+    // Trim oldest points if over limit
+    if (g.data.labels.length > MAX_POINTS) {
+        const excess = g.data.labels.length - MAX_POINTS;
+        g.data.labels.splice(0, excess);
+        g.data.datasets[0].data.splice(0, excess);
+    }
+
+    g.update({ duration: 0, lazy: true }); // skip animation
+
+
+    // save chart to client's cache so that it can be reloaded on refresh
+    maybeSaveToSessionStorage(g.canvas.id, {
+        labels: g.data.labels,
+        datasets: g.data.datasets.map(ds => ({
+            backgroundColor: ds.backgroundColor,
+            borderColor: ds.borderColor,
+            data: ds.data
+        })),
+        options: {
+            title: {
+                display: true,
+                // text: reading1.name + " Over Time"
+            },
+            animation: false
+        }
+    })
+}  
+
+
+// function updateChartFromSocket(reading, g) {
+//     g.data.labels.push(reading.timestamp - (start/1000));
+//     g.data.datasets[0].data.push(reading.data);
+    
+//     g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
+//     g.update('none');
+
+//         // save chart to client's cache so that it can be reloaded on refresh
+//         maybeSaveToSessionStorage(g.canvas.id, {
+//             labels: g.data.labels,
+//             datasets: g.data.datasets.map(ds => ({
+//                 backgroundColor: ds.backgroundColor,
+//                 borderColor: ds.borderColor,
+//                 data: ds.data
+//             })),
+//             options: {
+//                 title: {
+//                     display: true,
+//                     // text: reading1.name + " Over Time"
+//                 },
+//                 animation: false
+//             }
+//         })
+// }
