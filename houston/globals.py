@@ -20,7 +20,7 @@ import numpy as np
 
 
 # port names
-PI_RADIO = '/dev/tty0'
+PI_RADIO = '/dev/serial0'
 
 # required to avoid id collisions
 # amongsts readings packed into single messages;
