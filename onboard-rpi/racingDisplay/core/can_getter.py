@@ -133,7 +133,7 @@ class CANGetter:
 
     def has_fault(self):
         """True if any run-time fault bit is set"""
-         _, _, run_lo, run_hi = self.get_fault_codes()
+        _, _, run_lo, run_hi = self.get_fault_codes()
         return run_lo != 0 or run_hi != 0
     
     # ==================== IMU GETTERS ====================
