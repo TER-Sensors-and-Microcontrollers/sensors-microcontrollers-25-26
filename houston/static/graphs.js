@@ -9,8 +9,10 @@ var selectedValue1 = 1;
 var selectedValue2 = 36;
 var selectedValue3 = 37;
 
-var currentX = "motor temp";
-var currentY = "battery";
+var id_name_mappings = {} // store locally so we don't need call from backend
+var currentX = "";
+var currentY = "";
+var scatter_pt = {x: null, y: null};
 
 var MAX_POINTS = 200;
 
@@ -259,6 +261,7 @@ async function idToName(sid) {
             console.log("Error: No data found");
             return;
         }
+        console.log(reading.name);
         return reading.name;
     }
     catch (error) {
@@ -303,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {
                     clearGraph(scatter);
                     selectedValue = dropdown.value;
-                    currentX = idToName(selectedValue);
+                    currentX = id_name_mappings[selectedValue]
                     get_new_data(selectedValue, scatter);
                 });
  });
@@ -314,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {
                     clearGraph(scatter);
                     selectedValue = dropdown.value;
-                    currentY = idToName(selectedValue);
+                    currentY = id_name_mappings[selectedValue]
                     get_new_data(selectedValue, scatter);
                 });
  });
@@ -333,13 +336,14 @@ document.addEventListener('DOMContentLoaded', function() {
         g.data.labels.push((all_data[r].timestamp - (start / 1000)));
         g.data.datasets[0].data.push(all_data[r].data);
     }
-    if (g === scatter)
+    if (g === scatter) {
         g.options.title.text = currentY + " vs " + currentX;
+    }
     else
         g.options.title.text = all_data[0].name + " Over Time";
     g.update({ duration: 0, lazy: true });
     
-    maybeSaveToSessionStorage(g1.canvas.id, {
+    maybeSaveToSessionStorage(g.canvas.id, {
             labels: g.data.labels,
             datasets: g.data.datasets.map(ds => ({
                 backgroundColor: ds.backgroundColor,
@@ -359,14 +363,33 @@ document.addEventListener('DOMContentLoaded', function() {
  }
 
 // buffers to push to graphs in bulk
-const buffers = { g1: [], g2: [], g3: [] };
+const buffers = { g1: [], g2: [], g3: [], s: []};
 
 socket.on('new_datapoint', (reading) => {
+    
+    id_name_mappings[reading.sensor_id] = reading.name;
+
     const now = new Date();
-    console.log(now + now.getMilliseconds() + " - message recieved: ID:" + reading.sensor_id + " Data:" + reading.data);
+    // console.log(now + now.getMilliseconds() + " - message recieved: ID:" + reading.sensor_id + " Data:" + reading.data);
     if (reading.sensor_id == selectedValue1) buffers.g1.push(reading);
     if (reading.sensor_id == selectedValue2) buffers.g2.push(reading);
     if (reading.sensor_id == selectedValue3) buffers.g3.push(reading);
+    
+    // console.log("currentx: " + currentX + " currenty: " + currentY)
+    // Update scatterplot
+    if (reading.name == currentX) scatter_pt.x = reading.data;
+    if (reading.name == currentY) scatter_pt.y = reading.data;
+    if (scatter_pt.x != null && scatter_pt.y != null) {
+        scatter.data.datasets[0].data.push({x: scatter_pt.x, y: scatter_pt.y});
+        scatter_pt.x = null;
+        scatter_pt.y = null;
+        scatter.update({ duration: 0, lazy: true });
+
+        if (scatter.data.datasets[0].data.length > MAX_POINTS) {
+        const excess = scatter.data.datasets[0].data.length - MAX_POINTS;
+        scatter.data.datasets[0].data.splice(0, excess);
+    }
+    }
 });
 
 setInterval(() => {

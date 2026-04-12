@@ -66,6 +66,23 @@
                     <select name = "links" id = "scatterX"><option value="" disabled selected>Select new sensor for X-axis</option></select>
                     <select name = "links" id = "scatterY"><option value="" disabled selected>Select new sensor for Y-axis</option></select>
                 </div>
+
+                <div>
+                    <input type="range" id="slider" min="0" max="400" value="50">
+                    <p>Max Datapoints: <span id="currentValue">200</span></p>
+
+                    <script>
+                    const slider = document.getElementById('slider');
+                    const output = document.getElementById('currentValue');
+
+                    // Update the display whenever the slider is moved
+                    slider.oninput = function() {
+                        output.textContent = this.value;
+                        MAX_POINTS = this.value;
+                        
+                    }
+                    </script>
+                </div>
             </div>
         </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
