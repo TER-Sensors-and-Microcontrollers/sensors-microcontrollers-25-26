@@ -20,6 +20,7 @@ import struct
 import random
 from multiprocessing import shared_memory
 import time
+import threading 
 import numpy as np
 
 # Add config directory to path
@@ -40,7 +41,7 @@ class CANProcessor:
     Handles both Motor Controller (IDs 160-172) and BMS (IDs < 160) messages.
     """
     
-    def __init__(self, interface=CAN_INTERFACE, bitrate=CAN_BITRATE):
+    def __init__(self, interface=CAN_INTERFACES, bitrate=CAN_BITRATE):
         """
         Initialize CAN processor with shared memory.
         
@@ -48,8 +49,8 @@ class CANProcessor:
             interface: CAN interface name (default: 'can0')
             bitrate: CAN bus bitrate (default: 500000)
         """
-        self.interface = interface
-        self.bitrate = bitrate
+        #self.interface = interface
+        #self.bitrate = bitrate
         self.running = True
         # Timestamp tracker: maps CAN ID → last time we saw it (perf_counter seconds)
         # We use a dict so lookups are O(1) regardless of how many IDs appear
@@ -81,17 +82,31 @@ class CANProcessor:
         self.data[:] = 0  # Initialize all values to zero
         self.bms_decoder = OrionBMSDecoder()
         # Initialize CAN bus
-        try:
-            self.bus = can.interface.Bus(
-                channel=self.interface, 
-                interface='socketcan'
-            )
-            print(f"✓ Connected to CAN interface '{self.interface}'")
-        except Exception as e:
-            print(f"✗ Failed to connect to CAN interface: {e}")
-            print("  Make sure CAN interface is configured:")
-            print(f"    sudo ip link set {self.interface} type can bitrate {self.bitrate}")
-            print(f"    sudo ip link set up {self.interface}")
+        # Store the list of interfaces we'll listen on
+        self.interfaces = interfaces if isinstance(interfaces, list) else [interfaces]
+        self.bitrate = bitrate
+
+        # Initialize one Bus object per interface, storing them all in a list
+        # so cleanup() can shut them all down later
+        self.buses = []
+        for iface in self.interfaces:
+            try:
+                bus = can.interface.Bus(
+                    channel=iface,
+                    interface='socketcan'
+                )
+                self.buses.append(bus)
+                print(f"✓ Connected to CAN interface '{iface}'")
+            except Exception as e:
+                print(f"✗ Failed to connect to CAN interface '{iface}': {e}")
+                print("  Make sure that interface is configured:")
+                print(f"    sudo ip link set {iface} type can bitrate {bitrate}")
+                print(f"    sudo ip link set up {iface}")
+                # Don't exit — if one bus fails, still try the others
+
+        # If not a single bus connected, there's nothing to do
+        if not self.buses:
+            print("✗ No CAN interfaces could be connected. Exiting.")
             self.cleanup()
             sys.exit(1)
     
@@ -290,64 +305,78 @@ class CANProcessor:
              # Completely unknown ID — log it so nothing is invisible during testing
             print(f"[UNKNOWN] ID 0x{can_id:03X} ({can_id}) DATA: {data.hex()}")
         # Ignore other IDs
-    
-    def run(self):
-        """
-        Main loop.
-        If no real CAN messages, generate fake test data.
-        """
-        print("✓ CAN Processor running...")
 
+    def _listen_on_bus(self, bus):
+        """
+        Listener loop for a single CAN bus. This runs in its own thread.
+        
+        The key insight is that process_message() routes purely by arbitration ID,
+        so it doesn't matter which physical bus a message came from — both threads
+        funnel into the same shared memory. Python's GIL ensures individual
+        float32 writes to numpy are atomic enough for a live dashboard display.
+        
+        Args:
+            bus: A python-can Bus object already connected to an interface
+        """
+        print(f"✓ Listener thread started for {bus.channel_info}")
         try:
             while self.running:
-                msg = self.bus.recv(timeout=1.0)
+                # recv() with a timeout so the thread checks self.running periodically
+                # instead of blocking forever if the bus goes quiet
+                msg = bus.recv(timeout=1.0)
                 if msg is not None:
                     self.process_message(msg)
+        except Exception as e:
+            # Log but don't crash — the other bus thread keeps running
+            print(f"✗ Error in listener for {bus.channel_info}: {e}")
+
+    def run(self):
+        """
+        Main loop. Spawns one listener thread per CAN interface so that
+        can0 and can1 are read concurrently. The main thread then just
+        waits for all listener threads to finish (which happens when
+        self.running goes False on SIGTERM/SIGINT).
+        """
+        print(f"✓ CAN Processor running on {[b.channel_info for b in self.buses]}...")
+
+        # Create and start one daemon thread per bus
+        # Daemon threads are automatically killed when the main thread exits,
+        # which is a safety net if cleanup() somehow doesn't reach them
+        threads = []
+        for bus in self.buses:
+            t = threading.Thread(
+                target=self._listen_on_bus,
+                args=(bus,),
+                daemon=True
+            )
+            t.start()
+            threads.append(t)
+
+        try:
+            # Block the main thread until a keyboard interrupt or signal arrives
+            while self.running:
+                time.sleep(0.5)
         except KeyboardInterrupt:
-            pass
+            print("\n✓ Keyboard interrupt received, shutting down...")
+            self.running = False
         finally:
+            # Signal threads to stop and wait for them to finish their current recv()
+            self.running = False
+            for t in threads:
+                t.join(timeout=3.0)   # Give each thread up to 3s to exit cleanly
             self.cleanup()
-        # this is the fake data generation loop for testing without a real CAN bus
-        # print(f"✓ CAN Processor running (FAKE DATA MODE)...")
-        # print("  Press Ctrl+C to stop")
 
-        # t = 0.0
-        # print("✓ Generating fake data for testing...")
-        # try:
-        #     while self.running:
-        #         # ---- FAKE SPEED ----
-        #         fake_speed =  4000 + 2000 * np.sin(t)
-        #         self.data[MOTOR_START_IDX + 8] = fake_speed  # motor_speed index
-
-        #         # ---- FAKE MOTOR TEMP ----
-        #         fake_temp = 50 + 10 * np.sin(t / 2)
-        #         self.data[MOTOR_START_IDX + 4] = fake_temp
-
-        #         # ---- FAKE DC VOLTAGE ----
-        #         fake_voltage = 300 + 5 * np.sin(t / 3)
-        #         self.data[MOTOR_START_IDX + 10] = fake_voltage
-
-        #         # ---- FAKE CURRENT ----
-        #         fake_current = 100 + 30 * np.sin(t)
-        #         self.data[MOTOR_START_IDX + 9] = fake_current
-        #         print(f"Speed: {fake_speed:.2f}", end="\r")
-        #         t += 0.1
-        #         import time
-        #         time.sleep(0.05)
-
-        # except KeyboardInterrupt:
-        #     print("\n✓ Keyboard interrupt received, shutting down...")
-        #     pass
-        # finally:
-        #     self.cleanup()
-    
     def cleanup(self):
         """Clean up resources"""
         print("✓ Cleaning up...")
         
-        if hasattr(self, 'bus'):
-            self.bus.shutdown()
-            print("  • CAN bus closed")
+        if hasattr(self, 'buses'):
+            for bus in self.buses:
+                try:
+                    bus.shutdown()
+                except Exception:
+                    pass
+            print("  • All CAN buses closed")
         
         if hasattr(self, 'shm'):
             self.shm.close()

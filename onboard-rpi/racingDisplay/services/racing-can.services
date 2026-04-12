@@ -11,6 +11,7 @@ WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingD
 
 # '-' prefix means failure here is non-fatal (interface may not exist yet at boot)
 ExecStartPre=-/bin/rm -f /dev/shm/mem123
+ExecStartPre=-/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can0 250000
 ExecStartPre=-/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can1 250000
 
 ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
