@@ -118,6 +118,26 @@ async function updateTable(mode) {
     }
 }
 
+const WHEEL_RADIUS_M = 20.5 / 2; 
+const GEAR_RATIO = 3.8;
+
+async function updateSpeed() {
+    const response = await fetch('/get_dp/1');
+    if (!response.ok) return;
+    const reading = await response.json();
+    if (reading.error) return;
+
+    const motorRPM = reading.data;
+    const wheelRPM = motorRPM / GEAR_RATIO;
+    const speedMS = wheelRPM * 2 * Math.PI * WHEEL_RADIUS_M / 60;
+    const speedMPH = speedMS * 2.237;
+
+    document.getElementById('speed-display').textContent = speedMPH.toFixed(1) + " mph";
+}
+
+
+
 setInterval(() => {
     updateTable("f");
+    updateSpeed();
 }, 1000);

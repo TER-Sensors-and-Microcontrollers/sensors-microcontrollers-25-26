@@ -175,28 +175,156 @@ def get_faults():
     )
     row = cursor.fetchall()
     bits = row[0][3].to_bytes(2, 'little')
-    if (bits[0] >> 1 & 1):
+    if (bits[0] >> 0 & 1):
         errors.append({"type": "post", "error": "HW de-saturation fault"})
-    if (bits[0] >> 2 & 1):
+    if (bits[0] >> 1 & 1):
         errors.append({"type": "post", "error": "HW Over-current fault"})
-    if (bits[0] >> 3 & 1):
+    if (bits[0] >> 2 & 1):
         errors.append({"type": "post", "error": "Accelerator Shorted"})
-    if (bits[0] >> 4 & 1):
+    if (bits[0] >> 3 & 1):
         errors.append({"type": "post", "error": "Accelerator Open"})
-    if (bits[0] >> 5 & 1):
+    if (bits[0] >> 4 & 1):
         errors.append({"type": "post", "error": "Current Sensor Low"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "post", "error": "Current Sensor High"})
     if (bits[0] >> 6 & 1):
         errors.append({"type": "post", "error": "Module Temperature Low"})
     if (bits[0] >> 7 & 1):
         errors.append({"type": "post", "error": "Module Temperature High"})
     
+    if (bits[1] >> 0 & 1):
+        errors.append({"type": "post", "error": "Control PCB Temperature Low"})
+    if (bits[1] >> 1 & 1):
+        errors.append({"type": "post", "error": "Control PCB Temperature High"})
+    if (bits[1] >> 2 & 1):
+        errors.append({"type": "post", "error": "Gate Drive PCB Temperature Low"})
+    if (bits[1] >> 3 & 1):
+        errors.append({"type": "post", "error": "Gate Drive PCB Temperature High"})
+    if (bits[1] >> 4 & 1):
+        errors.append({"type": "post", "error": "5V Sense Voltage Low"})
+    if (bits[1] >> 5 & 1):
+        errors.append({"type": "post", "error": "5V Sense Voltage High"})
+    if (bits[1] >> 6 & 1):
+        errors.append({"type": "post", "error": "12V Sense Voltage Low"})
+    if (bits[1] >> 7 & 1):
+        errors.append({"type": "post", "error": "12V Sense Voltage High"})
     # Post faults high bits (2 Bytes)
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1711 "
+        "ORDER BY timestamp DESC LIMIT 1"
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+
+    if (bits[0] >> 0 & 1):
+        errors.append({"type": "post", "error": "2.5V Sense Voltage Low"})
+    if (bits[0] >> 1 & 1):
+        errors.append({"type": "post", "error": "2.5V Sense Voltage High"})
+    if (bits[0] >> 2 & 1):
+        errors.append({"type": "post", "error": "1.5V Sense Voltage Low"})
+    if (bits[0] >> 3 & 1):
+        errors.append({"type": "post", "error": "1.5V Sense Voltage High"})
+    if (bits[0] >> 4 & 1):
+        errors.append({"type": "post", "error": "DC Bus Voltage High"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "post", "error": "DC Bus Voltage Low"})
+    if (bits[0] >> 6 & 1):
+        errors.append({"type": "post", "error": "Pre-charge Timeout"})
+    if (bits[0] >> 7 & 1):
+        errors.append({"type": "post", "error": "Pre-charge Voltage Failure"})
+
+    if (bits[1] >> 0 & 1):
+        errors.append({"type": "post", "error": "EEPROM Checksum Invalid"})
+    if (bits[1] >> 1 & 1):
+        errors.append({"type": "post", "error": "EEPROM Data Out of Range"})
+    if (bits[1] >> 2 & 1):
+        errors.append({"type": "post", "error": "EEPROM Update Required"})
+    # bits[1] >> 3, 4, 5 are reserved 
+    if (bits[1] >> 6 & 1):
+        errors.append({"type": "post", "error": "Brake Shorted"})
+    if (bits[1] >> 7 & 1):
+        errors.append({"type": "post", "error": "Brake Open"})
 
     # Run faults low bits (2 Bytes)
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1712 "
+        "ORDER BY timestamp DESC LIMIT 1"
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
+
+    if (bits[0] >> 0 & 1):
+        errors.append({"type": "run", "error": "Motor Over-speed Fault"})
+    if (bits[0] >> 1 & 1):
+        errors.append({"type": "run", "error": "Over-current Fault"})
+    if (bits[0] >> 2 & 1):
+        errors.append({"type": "run", "error": "Over-voltage Fault"})
+    if (bits[0] >> 3 & 1):
+        errors.append({"type": "run", "error": "Inverter Over-temperature Fault"})
+    if (bits[0] >> 4 & 1):
+        errors.append({"type": "run", "error": "Accelerator Input Shorted Fault"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "run", "error": "Accelerator Input Open Fault"})
+    if (bits[0] >> 6 & 1):
+        errors.append({"type": "run", "error": "Direction Command Fault"})
+    if (bits[0] >> 7 & 1):
+        errors.append({"type": "run", "error": "Inverter Response Time-out Fault"})
+
+    if (bits[1] >> 0 & 1):
+        errors.append({"type": "run", "error": "Hardware Gate/Desaturation Fault"})
+    if (bits[1] >> 1 & 1):
+        errors.append({"type": "run", "error": "Hardware Over-current Fault"})
+    if (bits[1] >> 2 & 1):
+        errors.append({"type": "run", "error": "Under-voltage Fault"})
+    if (bits[1] >> 3 & 1):
+        errors.append({"type": "run", "error": "CAN Command Message Lost Fault"})
+    if (bits[1] >> 4 & 1):
+        errors.append({"type": "run", "error": "Motor Over-temperature Fault"})
+    # bits[1] >> 5, 6, 7 are reserved
 
     # Post faults high bits (2 Bytes)
-    cursor.close()
+    cursor.execute(
+        "SELECT * FROM sensor_readings "
+        "WHERE sensor_id = 1713 "
+        "ORDER BY timestamp DESC LIMIT 1"
+    )
+    row = cursor.fetchall()
+    bits = row[0][3].to_bytes(2, 'little')
 
+    if (bits[0] >> 0 & 1):
+        errors.append({"type": "run", "error": "Brake Input Shorted Fault"})
+    if (bits[0] >> 1 & 1):
+        errors.append({"type": "run", "error": "Brake Input Open Fault"})
+    if (bits[0] >> 2 & 1):
+        errors.append({"type": "run", "error": "Module A Over-temperature Fault"})
+    if (bits[0] >> 3 & 1):
+        errors.append({"type": "run", "error": "Module B Over-temperature Fault"})
+    if (bits[0] >> 4 & 1):
+        errors.append({"type": "run", "error": "Module C Over-temperature Fault"})
+    if (bits[0] >> 5 & 1):
+        errors.append({"type": "run", "error": "PCB Over-temperature"})
+    if (bits[0] >> 6 & 1):
+        errors.append({"type": "run", "error": "GDB1 Over-temperature"})
+    if (bits[0] >> 7 & 1):
+        errors.append({"type": "run", "error": "GDB2 Over-temperature"})
+
+    if (bits[1] >> 0 & 1):
+        errors.append({"type": "run", "error": "GDB3 Over-temperature"})
+    if (bits[1] >> 1 & 1):
+        errors.append({"type": "run", "error": "Current Sensor Fault"})
+    if (bits[1] >> 2 & 1):
+        errors.append({"type": "run", "error": "Gate Driver Over-voltage"})
+    # bits[1] >> 3 reserved
+    if (bits[1] >> 4 & 1):
+        errors.append({"type": "run", "error": "Hardware Over-voltage"})
+    # bits[1] >> 5 reserved
+    if (bits[1] >> 6 & 1):
+        errors.append({"type": "run", "error": "Resolver Fault"})
+    # bits[1] >> 7 reserved
+    
+    cursor.close()
     return jsonify(errors)
 
 """
