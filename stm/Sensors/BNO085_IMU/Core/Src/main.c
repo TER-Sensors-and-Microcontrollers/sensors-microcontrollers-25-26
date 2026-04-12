@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * @file           : main.c
-  * @brief          : BNO085 Gyro X/Y/Z serial print
+  * @brief          : BNO085 Gyro diagnostic — verbose I2C + packet logging
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -37,10 +37,13 @@
 
 #define RPT_GYRO               0x02
 #define RPT_SET_FEATURE        0xFD
+#define RPT_GET_FEATURE_RESP   0xFC
 #define RPT_BASE_TS            0xFB
 #define RPT_TS_REBASE          0xFA
+#define RPT_COMMAND_REQ        0xF2
+#define RPT_FLUSH_COMPLETED    0xEF
 
-#define PRINT_BUF              256
+#define PRINT_BUF              512
 
 /* USER CODE END PD */
 
@@ -59,6 +62,7 @@ static uint8_t seqOut[6] = {0};
 static char    pBuf[PRINT_BUF];
 
 static float lastX = 0, lastY = 0, lastZ = 0;
+static uint32_t readOK = 0, readFail = 0, gyroCount = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +75,7 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch);
 static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n);
 static void BNO_Boot(void);
 static void BNO_EnableGyro(void);
+static void BNO_SoftReset(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -86,6 +91,18 @@ static void CDC_Print(const char *fmt, ...)
     uint32_t t0 = HAL_GetTick();
     while (CDC_Transmit_FS((uint8_t *)pBuf, (uint16_t)n) == USBD_BUSY)
         if (HAL_GetTick() - t0 > 50) break;
+    HAL_Delay(2);
+}
+
+static const char *HalStr(HAL_StatusTypeDef s)
+{
+    switch (s) {
+        case HAL_OK:      return "OK";
+        case HAL_ERROR:   return "ERR";
+        case HAL_BUSY:    return "BUSY";
+        case HAL_TIMEOUT: return "TOUT";
+        default:          return "??";
+    }
 }
 
 static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
@@ -118,6 +135,31 @@ static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
     return HAL_I2C_Master_Transmit(&hi2c2, BNO085_ADDR, txBuf, total, I2C_TOUT);
 }
 
+/* ---- SH-2 software reset via Initialize command (0x04) ---- */
+static void BNO_SoftReset(void)
+{
+    /* Command Request (0xF2), Seq=0, Command=0x04 (Initialize)
+     * Param 0 = 0x01 (reinitialize entire system)
+     * Rest = 0
+     */
+    uint8_t cmd[12];
+    memset(cmd, 0, sizeof(cmd));
+    cmd[0] = RPT_COMMAND_REQ;  /* Report ID */
+    cmd[1] = 0;                /* Sequence   */
+    cmd[2] = 0x01;             /* Command: report errors / reset */
+    /* bytes 3-11 = 0 */
+
+    SHTP_Write(CH_CTRL, cmd, 12);
+    HAL_Delay(300);
+
+    /* Drain post-reset packets */
+    for (int i = 0; i < 20; i++) {
+        uint16_t len; uint8_t ch;
+        if (SHTP_Read(&len, &ch) != HAL_OK) HAL_Delay(30);
+        else HAL_Delay(10);
+    }
+}
+
 static void BNO_Boot(void)
 {
     HAL_Delay(300);
@@ -133,8 +175,9 @@ static void BNO_EnableGyro(void)
     uint8_t cmd[17] = {0};
     cmd[0] = RPT_SET_FEATURE;
     cmd[1] = RPT_GYRO;
-    cmd[5] = 0x20; cmd[6] = 0x4E;  /* 20000 us = 50 Hz */
-    SHTP_Write(CH_CTRL, cmd, 17);
+    cmd[5] = 0x20; cmd[6] = 0x4E;
+    HAL_StatusTypeDef st = SHTP_Write(CH_CTRL, cmd, 17);
+    CDC_Print("EnableGyro TX: %s\r\n", HalStr(st));
     HAL_Delay(50);
     for (int i = 0; i < 5; i++) {
         uint16_t len; uint8_t ch;
@@ -162,10 +205,19 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_Delay(1500);
+
+  CDC_Print("\r\n=== BNO085 Gyro Diagnostic ===\r\n");
+
+  /* Check I2C */
+  HAL_StatusTypeDef rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
+  CDC_Print("I2C device ready: %s\r\n", HalStr(rdy));
+
   BNO_Boot();
   BNO_EnableGyro();
 
   uint32_t lastPrint = 0;
+  float prevX = 0, prevY = 0, prevZ = 0;
+  uint32_t staleCount = 0;
 
   /* USER CODE END 2 */
 
@@ -175,32 +227,39 @@ int main(void)
 
     uint16_t pktLen = 0;
     uint8_t  chan   = 0;
+    HAL_StatusTypeDef st = SHTP_Read(&pktLen, &chan);
 
-    if (SHTP_Read(&pktLen, &chan) == HAL_OK && chan == CH_INPUT
-        && pktLen > SHTP_HDR)
-    {
-        uint16_t cargoLen = pktLen - SHTP_HDR;
-        const uint8_t *c  = &rxBuf[SHTP_HDR];
-        uint16_t idx = 0;
+    if (st == HAL_OK && pktLen > SHTP_HDR) {
+        readOK++;
 
-        while (idx < cargoLen) {
-            uint8_t id = c[idx];
-            if (id == RPT_BASE_TS || id == RPT_TS_REBASE) {
-                idx += 5;
-            } else if (id == RPT_GYRO && idx + 10 <= cargoLen) {
-                lastX = (float)(int16_t)   ((uint16_t)c[idx+4] | (uint16_t)c[idx+5]<<8) / 512.0f;
-                lastY = (float)(int16_t)   ((uint16_t)c[idx+6] | (uint16_t)c[idx+7]<<8) / 512.0f;
-                lastZ = (float)(int16_t)   ((uint16_t)c[idx+8] | (uint16_t)c[idx+9]<<8) / 512.0f;
-                idx += 10;
-            } else {
-                break;
+        if (chan == CH_INPUT) {
+            uint16_t cargoLen = pktLen - SHTP_HDR;
+            const uint8_t *c = &rxBuf[SHTP_HDR];
+            uint16_t idx = 0;
+
+            while (idx < cargoLen) {
+                uint8_t id = c[idx];
+                if (id == RPT_BASE_TS || id == RPT_TS_REBASE) {
+                    idx += 5;
+                } else if (id == RPT_GYRO && idx + 10 <= cargoLen) {
+                    lastX = (float)(int16_t)((uint16_t)c[idx+4] | (uint16_t)c[idx+5]<<8) / 512.0f;
+                    lastY = (float)(int16_t)((uint16_t)c[idx+6] | (uint16_t)c[idx+7]<<8) / 512.0f;
+                    lastZ = (float)(int16_t)((uint16_t)c[idx+8] | (uint16_t)c[idx+9]<<8) / 512.0f;
+                    gyroCount++;
+                    idx += 10;
+                } else {
+                    idx++;  /* skip unknown byte, keep parsing */
+                }
             }
         }
-    }
 
-    if (chan == CH_EXEC) {
-        HAL_Delay(100);
-        BNO_EnableGyro();
+        if (chan == CH_EXEC) {
+            CDC_Print("!! Sensor reset detected on EXEC channel\r\n");
+            HAL_Delay(100);
+            BNO_EnableGyro();
+        }
+    } else if (st != HAL_OK && st != HAL_TIMEOUT) {
+        readFail++;
     }
 
     /* Print once per second */
@@ -213,31 +272,42 @@ int main(void)
         PrintVal(sy, sizeof(sy), lastY);
         PrintVal(sz, sizeof(sz), lastZ);
 
-        CDC_Print("X: %s   Y: %s   Z: %s  rad/s\r\n", sx, sy, sz);
+        CDC_Print("X:%s  Y:%s  Z:%s  |  ok=%lu fail=%lu gyro=%lu  I2C=%s\r\n",
+                  sx, sy, sz,
+                  (unsigned long)readOK,
+                  (unsigned long)readFail,
+                  (unsigned long)gyroCount,
+                  hi2c2.State == HAL_I2C_STATE_READY ? "RDY" : "FLT");
+
+        /* Stale detection */
+        if (lastX == prevX && lastY == prevY && lastZ == prevZ)
+            staleCount++;
+        else
+            staleCount = 0;
+
+        prevX = lastX; prevY = lastY; prevZ = lastZ;
+
+        if (staleCount >= 5) {
+            CDC_Print("!! Stale for %lu sec — sending SH-2 soft reset\r\n",
+                      (unsigned long)staleCount);
+
+            /* Full recovery: I2C re-init + SH-2 software reset */
+            HAL_I2C_DeInit(&hi2c2);
+            HAL_Delay(50);
+            MX_I2C2_Init();
+
+            rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
+            CDC_Print("   I2C after re-init: %s\r\n", HalStr(rdy));
+
+            BNO_SoftReset();
+            CDC_Print("   Soft reset sent, re-enabling gyro\r\n");
+            BNO_EnableGyro();
+
+            /* Reset counters */
+            readOK = 0; readFail = 0; gyroCount = 0;
+            staleCount = 0;
+        }
     }
-
-    /* After the 1-second print */
-    static float prevX = 0, prevY = 0, prevZ = 0;
-    static uint32_t staleCount = 0;
-
-    if (lastX == prevX && lastY == prevY && lastZ == prevZ)
-        staleCount++;
-    else
-        staleCount = 0;
-
-    prevX = lastX; prevY = lastY; prevZ = lastZ;
-
-    if (staleCount >= 5) {  /* 5 seconds of identical values */
-        CDC_Print("** Stale data — re-initializing **\r\n");
-        HAL_I2C_DeInit(&hi2c2);
-        HAL_Delay(10);
-        MX_I2C2_Init();
-        BNO_Boot();
-        BNO_EnableGyro();
-        staleCount = 0;
-    }
-
-
 
     HAL_Delay(5);
 
