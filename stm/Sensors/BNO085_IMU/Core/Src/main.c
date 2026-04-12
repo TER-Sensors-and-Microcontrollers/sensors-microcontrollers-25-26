@@ -188,9 +188,9 @@ int main(void)
             if (id == RPT_BASE_TS || id == RPT_TS_REBASE) {
                 idx += 5;
             } else if (id == RPT_GYRO && idx + 10 <= cargoLen) {
-                lastX = (float)(int16_t)((uint16_t)c[idx+4] | (uint16_t)c[idx+5]<<8) / 512.0f;
-                lastY = (float)(int16_t)((uint16_t)c[idx+6] | (uint16_t)c[idx+7]<<8) / 512.0f;
-                lastZ = (float)(int16_t)((uint16_t)c[idx+8] | (uint16_t)c[idx+9]<<8) / 512.0f;
+                lastX = (float)(int16_t)   ((uint16_t)c[idx+4] | (uint16_t)c[idx+5]<<8) / 512.0f;
+                lastY = (float)(int16_t)   ((uint16_t)c[idx+6] | (uint16_t)c[idx+7]<<8) / 512.0f;
+                lastZ = (float)(int16_t)   ((uint16_t)c[idx+8] | (uint16_t)c[idx+9]<<8) / 512.0f;
                 idx += 10;
             } else {
                 break;
@@ -215,6 +215,29 @@ int main(void)
 
         CDC_Print("X: %s   Y: %s   Z: %s  rad/s\r\n", sx, sy, sz);
     }
+
+    /* After the 1-second print */
+    static float prevX = 0, prevY = 0, prevZ = 0;
+    static uint32_t staleCount = 0;
+
+    if (lastX == prevX && lastY == prevY && lastZ == prevZ)
+        staleCount++;
+    else
+        staleCount = 0;
+
+    prevX = lastX; prevY = lastY; prevZ = lastZ;
+
+    if (staleCount >= 5) {  /* 5 seconds of identical values */
+        CDC_Print("** Stale data — re-initializing **\r\n");
+        HAL_I2C_DeInit(&hi2c2);
+        HAL_Delay(10);
+        MX_I2C2_Init();
+        BNO_Boot();
+        BNO_EnableGyro();
+        staleCount = 0;
+    }
+
+
 
     HAL_Delay(5);
 
