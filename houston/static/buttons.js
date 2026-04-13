@@ -41,12 +41,36 @@ document.addEventListener('DOMContentLoaded', function() {
       fileInput.click();
     });
 
-    fileInput.addEventListener("change", (e) => {
+    fileInput.addEventListener("change", async (e) => {
       fileName = e.target.files[0];
       length = fileName.name.length;
       if (fileName.name[length - 3] == '.' && fileName.name[length - 2] == 'd' && fileName.name[length - 1] == 'b') {
         console.log("Success!");
+        message.textContent = "SUCCESS";
+        message.style.color = "green";
+
+        const formData = new FormData();
+        formData.append('file', fileName);
+
+        await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const arrayBuffer = await fileName.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        const SQL = await initSqlJs ({
+          locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+        })
+
+        const db = new SQL.Database(uint8Array);
+
+        const result = db.exec("SELECT * FROM sensor_readings WHERE sensor_id = 1 ORDER BY timestamp DESC LIMIT 1");
+        console.log(result[0].values[0]);
       } else {
+        message.textContent = "NOT A DB FILE";
+        message.style.color = "red";
         console.log("Not a DB File");
       }
     });

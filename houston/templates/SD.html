@@ -11,6 +11,10 @@
         </div>
         <button id = "back">Go Back</button>
         <button id = "upload">Upload .db File</button>
+        <div id="message"></div>
+        <input type = "file" id = "file-input" style = "display: none">
+        <script  src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script  src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
         <button id = "download">Download .db File</button>
         <input type = "file" id = "file-input" style = "display: none">
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
