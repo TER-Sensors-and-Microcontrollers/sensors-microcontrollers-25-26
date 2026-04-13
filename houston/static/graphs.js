@@ -56,7 +56,7 @@ async function updateGraph(sid, g)
 
         // update graphs
         // we only divide start by 1000 since timestamp is already given to us in seconds
-        g.data.labels.push(reading.timestamp - (start / 1000));
+        g.data.labels.push(reading.timestamp);
         g.data.datasets[0].data.push(reading.data);
 
         g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const all_data = await new_data.json();
 
     for (let r = 0; r < all_data.length; r++) {
-        g.data.labels.push((all_data[r].timestamp - (start / 1000)));
+        g.data.labels.push(all_data[r].timestamp );
         g.data.datasets[0].data.push(all_data[r].data);
     }
     if (g === scatter) {
@@ -401,7 +401,7 @@ setInterval(() => {
 function flushBuffer(buffer, g) {
     if (buffer.length === 0) return;
     buffer.forEach(reading => {
-        g.data.labels.push(reading.timestamp - (start / 1000));
+        g.data.labels.push(reading.timestamp);
         g.data.datasets[0].data.push(reading.data);
     });
     buffer.length = 0; // clear in place (faster than reassigning)

@@ -6,15 +6,27 @@
         
         
 document.addEventListener('DOMContentLoaded', function() {
-  const openWeb = document.getElementById('openWeb');
+  const back = document.getElementById('back');
+  const openSD = document.getElementById('openSD');
+  const openGraph = document.getElementById('openGraph');
   const uploadDB = document.getElementById('upload');
   const fileInput = document.getElementById('file-input');
   const scatterOn = document.getElementById('scatterOn');
   const scatterOff = document.getElementById('scatterOff');
 
-  if (openWeb) {
-    openWeb.onclick = () => {
+  if (back) {
+    back.onclick = () => {
+      window.location.href = "/";
+    };
+  }
+  if (openSD) {
+    openSD.onclick = () => {
       window.location.href = "/SD";
+    };
+  }
+  if (openGraph) {
+    openGraph.onclick = () => {
+      window.location.href = "/max-graph";
     };
   }
 

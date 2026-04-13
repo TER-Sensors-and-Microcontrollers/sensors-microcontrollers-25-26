@@ -16,7 +16,7 @@ parent_dir = os.path.dirname(current_dir)
 
 app = Flask(__name__)
 DATABASE = parent_dir +'/database.db'
-
+start = time.time()
 # helper func that returns 8 bytes, randomized (CAN DATA bytestring)
 def randomize_bytes():
     return os.urandom(8)
@@ -75,37 +75,38 @@ def reader(ser:serial.Serial):
             int_value = int(Data, 16)
             print(int_value)
             #print(Data)
+
             match iD:
                 case 1:
-                    message = [iD, "test_data1", int_value, "m/s", time.time()]
+                    message = [iD, "test_data1", int_value, "m/s", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 36:
-                    message = [iD, "test_data2", int_value, "psi", time.time()]
+                    message = [iD, "test_data2", int_value, "psi", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 37:
-                    message = [iD, "test_data3", int_value, "s", time.time()]
+                    message = [iD, "test_data3", int_value, "s", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 38:
-                    message = [iD, "test_data4", int_value, "celcius", time.time()]
+                    message = [iD, "test_data4", int_value, "celcius", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
                     db.commit()
                 case 39:
-                    message = [iD, "test_data5", int_value, "m/s^2", time.time()]
+                    message = [iD, "test_data5", int_value, "m/s^2", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message

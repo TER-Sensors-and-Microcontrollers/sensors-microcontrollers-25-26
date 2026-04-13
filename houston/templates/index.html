@@ -59,9 +59,6 @@
                     <select name = "links" id = "g2"><option value="" disabled selected>Select new sensor for graph 2</option></select>
                     <select name = "links" id = "g3"><option value="" disabled selected>Select new sensor for graph 3</option></select>
                 </div>
-                <button id="openWeb">Upload From SD</button>
-                <button id="scatterOn">View Scatterplot</button>
-                <button class = "hidden" id="scatterOff">View Graphs</button>
                 <div class = "hidden", id="scatterChoice">
                     <select name = "links" id = "scatterX"><option value="" disabled selected>Select new sensor for X-axis</option></select>
                     <select name = "links" id = "scatterY"><option value="" disabled selected>Select new sensor for Y-axis</option></select>
@@ -83,6 +80,10 @@
                     }
                     </script>
                 </div>
+                <button id="scatterOn">View Scatterplot</button>
+                <button class = "hidden" id="scatterOff">View Graphs</button>
+                <button id="openSD">Upload From .db File</button>
+                <button id="openGraph">View Entire Graph</button>
             </div>
         </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>

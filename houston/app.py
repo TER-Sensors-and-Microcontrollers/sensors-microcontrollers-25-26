@@ -46,6 +46,10 @@ def display_index():
 @app.route('/SD')
 def display_SD():
     return render_template("SD.html",)
+
+@app.route('/max-graph')
+def display_graph():
+    return render_template("max-graph.html",)
 """
 OTHER ROUTES / ENDPOINTS
 """
