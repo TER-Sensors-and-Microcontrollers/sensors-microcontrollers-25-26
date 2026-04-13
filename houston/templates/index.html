@@ -26,7 +26,7 @@
                     <table>
                         <tr>
                             <td>Speed</td>
-                            <td>TODO</td>
+                            <td id = "speed-display"></td>
                         </tr>
                         <tr>
                             <td>Charge</td>
@@ -84,6 +84,10 @@
                 <button class = "hidden" id="scatterOff">View Graphs</button>
                 <button id="openSD">Upload From .db File</button>
                 <button id="openGraph">View Entire Graph</button>
+                <div>
+                    <td>Errors</td>
+                    <td id = "errors"></td>
+                </div>
             </div>
         </div>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
