@@ -6,6 +6,7 @@
         
         
 document.addEventListener('DOMContentLoaded', function() {
+  const download = document.getElementById('download')
   const back = document.getElementById('back');
   const openSD = document.getElementById('openSD');
   const openGraph = document.getElementById('openGraph');
@@ -13,7 +14,12 @@ document.addEventListener('DOMContentLoaded', function() {
   const fileInput = document.getElementById('file-input');
   const scatterOn = document.getElementById('scatterOn');
   const scatterOff = document.getElementById('scatterOff');
-
+  
+  if (download) {
+    download.onclick = () => {
+      downloadDb()
+    };
+  }
   if (back) {
     back.onclick = () => {
       window.location.href = "/";

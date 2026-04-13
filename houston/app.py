@@ -5,7 +5,7 @@
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
-from flask import Flask, render_template, g, jsonify
+from flask import Flask, render_template, g, jsonify, send_file
 import sqlite3
 from flask_socketio import SocketIO, emit
 import threading
@@ -245,6 +245,11 @@ def emit_dp(app):
                 print(f"{datetime.now()} - TRANSMITTING ID: {row['sensor_id']}, DATA: {row['data']}")
                 socketio.emit("new_datapoint", reading)
             
+# download database file
+@app.route('/database.db')
+def download_db():
+    return send_file('database.db', as_attachment=True)
+
 # main driver function
 
 #############################################################################

@@ -10,8 +10,10 @@
             width="337.5" length="750"/>
         </div>
         <button id = "back">Go Back</button>
-        <button id = "upload">Upload Db File</button>
+        <button id = "upload">Upload .db File</button>
+        <button id = "download">Download .db File</button>
         <input type = "file" id = "file-input" style = "display: none">
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script src="{{ url_for('static', filename='download.js') }}"></script>
     </body>
 </html>

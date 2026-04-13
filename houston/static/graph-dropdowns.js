@@ -35,6 +35,7 @@ async function updateDropdown(d) {
         }
 }
 
+// check file running this code
 if (pageName === "index") {
     setInterval(() => {
     updateDropdown("g1");
