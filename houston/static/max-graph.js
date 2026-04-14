@@ -104,7 +104,7 @@ async function get_new_data(selectedValue, g, selectedValue2, selectedValue3) {
         
         const all_data_g2 = await new_data.json();
         for (let r = 0; r < all_data_g2.length; r++) {
-            g.data.labels.push(all_data_g2[r].timestamp);
+            // g.data.labels.push(all_data_g2[r].timestamp);
             g.data.datasets[1].data.push(all_data_g2[r].data);
         }  
         g.options.title.text = all_data[0].name + " and " + all_data_g2[0].name + " Over Time";
@@ -119,11 +119,11 @@ async function get_new_data(selectedValue, g, selectedValue2, selectedValue3) {
         
         const all_data_g3 = await new_data.json();
         for (let r = 0; r < all_data_g3.length; r++) {
-            g.data.labels.push(all_data_g3[r].timestamp);
+            // g.data.labels.push(all_data_g3[r].timestamp);
             g.data.datasets[2].data.push(all_data_g3[r].data);
         }   
 
-        if (selectedValue2 === undefined) g.options.title.text = all_data[0].name + ", " + all_data_g3[0].name + ", and " + all_data_g3[0].name + " Over Time";
+        if (selectedValue2 !== undefined) g.options.title.text = all_data[0].name + ", " + all_data_g3[0].name + ", and " + all_data_g3[0].name + " Over Time";
         else g.options.title.text = all_data[0].name + " and " + all_data_g3[0].name + " Over Time";
 
         g.data.datasets[1].label = all_data_g3[0].name;
