@@ -49,5 +49,6 @@ if (pageName === "index") {
 else if (pageName === "max-graph") {
     setInterval(() => {
     updateDropdown("g1");
+    updateDropdown("g2");
 }, 1000);    
 }
