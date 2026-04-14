@@ -41,15 +41,15 @@ class CANProcessor:
     Handles both Motor Controller (IDs 160-172) and BMS (IDs < 160) messages.
     """
     
-    def __init__(self, interface=CAN_INTERFACES, bitrate=CAN_BITRATE):
+    def __init__(self, interfaces=CAN_INTERFACES, bitrate=CAN_BITRATE):
         """
         Initialize CAN processor with shared memory.
         
         Args:
-            interface: CAN interface name (default: 'can0')
+            interfaces: List of CAN interface names (default: ['can0'])
             bitrate: CAN bus bitrate (default: 500000)
         """
-        #self.interface = interface
+        #self.interfaces = interfaces
         #self.bitrate = bitrate
         self.running = True
         # Timestamp tracker: maps CAN ID → last time we saw it (perf_counter seconds)
