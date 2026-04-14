@@ -6,6 +6,7 @@
         
         
 document.addEventListener('DOMContentLoaded', function() {
+  const clearDb = document.getElementById('clearDb')
   const download = document.getElementById('download')
   const back = document.getElementById('back');
   const openSD = document.getElementById('openSD');
@@ -14,7 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const fileInput = document.getElementById('file-input');
   const scatterOn = document.getElementById('scatterOn');
   const scatterOff = document.getElementById('scatterOff');
-  
+  if (clearDb) {
+    clearDb.onclick = async () => {
+      await fetch('/delete');
+    };
+  }
   if (download) {
     download.onclick = () => {
       downloadDb()

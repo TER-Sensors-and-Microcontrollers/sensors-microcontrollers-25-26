@@ -348,6 +348,7 @@ def get_db():
         db.row_factory = sqlite3.Row # Optional: access rows as dictionary-like objects
     return db
 
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
@@ -405,6 +406,18 @@ def upload():
         g._database = None
     
     file.save(DATABASE)  # DATABASE = 'database.db' already defined at top
+    return jsonify({"success": True})
+
+@app.route("/delete")
+def clear_table_data():
+    db = get_db() 
+    cursor = db.cursor()
+    
+    query = f"DELETE FROM sensor_readings"
+    cursor.execute(query)
+    
+    db.commit()
+    cursor.close()
     return jsonify({"success": True})
 
 # main driver function
