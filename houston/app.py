@@ -5,6 +5,9 @@
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
+from gevent import monkey
+monkey.patch_all()
+
 from flask import Flask, render_template, g, jsonify, send_file, request
 import sqlite3
 from flask_socketio import SocketIO, emit
@@ -165,17 +168,34 @@ def get_unique_sensors():
 
     return [dict(r) for r in rows]
 
-# /faults
+def emit_unique_sensors(app):
+    with app.app_context():
+        db = get_db()
+        while True:
+            try:
+                cursor = db.cursor()
+                cursor.execute("SELECT DISTINCT sensor_id,name,unit FROM sensor_readings ORDER BY sensor_id")
+                rows = cursor.fetchall()
+                unique = [dict(r) for r in rows]
+                socketio.emit("unique_sens", unique)
+                socketio.sleep(.005)
+            except Exception as e:
+                print(f"emit_unique_sensors error: {e}")
+                socketio.sleep(1)     
+            finally:
+                cursor.close()     
+
+# emit_faults
 # 
-# returns JSON response of all faults found in the Motor Controller
+# emits dictionary response of all faults found in the Motor Controller
 # based on latest database results of ids 1710 -> 1713
 def emit_faults(app):
     with app.app_context():
+        db = get_db()
         while True:
             try:
-                errors = []
-                db = get_db()
                 cursor = db.cursor()
+                errors = []
                 # Post faults low bits (2 Bytes)
                 cursor.execute(
                     "SELECT * FROM sensor_readings "
@@ -347,8 +367,10 @@ def emit_faults(app):
                 socketio.emit("mc_faults", errors)
                 socketio.sleep(2)
             except Exception as e:
-                print(f"emit_dp error: {e}")
+                print(f"emit_faults error: {e}")
                 socketio.sleep(1)
+            finally:
+                cursor.close()
 """
 DATABASE INITIALIZATION
 """
@@ -371,9 +393,9 @@ def close_connection(exception):
 def emit_dp(app):
     last_timestamp = None
     with app.app_context():
+        db = get_db()
         while True:
             try:
-                db = get_db()
                 cursor = db.cursor()
                 cursor.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 1")
                 row = cursor.fetchone()
@@ -390,11 +412,14 @@ def emit_dp(app):
                     }
                     print(f"{datetime.now()} - TRANSMITTING ID: {row['sensor_id']}, DATA: {row['data']}")
                     socketio.emit("new_datapoint", reading)
+                    socketio.sleep(.005)
                 else:
                     socketio.sleep(.05)
             except Exception as e:
                 print(f"emit_dp error: {e}")
                 socketio.sleep(1)
+            finally:
+                cursor.close()
             
 # download database file
 @app.route('/database.db')
@@ -453,7 +478,8 @@ if __name__ == '__main__':
     socketio.start_background_task(emit_dp, app)
     socketio.start_background_task(emit_faults, app)
 
-    socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
+    # socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=5000)
 
 
 
