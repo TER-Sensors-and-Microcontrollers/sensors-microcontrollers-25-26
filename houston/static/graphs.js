@@ -247,27 +247,13 @@ const scatter = new Chart("scatter", {
 });
 
 // ================================================
-async function idToName(sid) {
-    try{
-        const response = await fetch('/get_dp/' + sid);
-        if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const reading = await response.json();
-        
-
-        if (reading.error) {
-            console.log("Error: No data found");
-            return;
-        }
-        console.log(reading.name);
-        return reading.name;
+function trimDataPoints(g) {
+    // Trim oldest points if over limit
+    if (g.data.labels.length > MAX_POINTS) {
+        const excess = g.data.labels.length - MAX_POINTS;
+        g.data.labels.splice(0, excess);
+        g.data.datasets[0].data.splice(0, excess);
     }
-    catch (error) {
-        console.error("Error fetching or parsing data:", error);
-    }
-    return "ERROR";
 }
 
  document.addEventListener('DOMContentLoaded', function() {
@@ -322,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
  });
 
-//  get all up-to-date data of selected id
+//  get all up-to-date data of selected id, updates graph g
  async function get_new_data(selectedValue, g)
  {
     const new_data = await fetch('/get_all_data/' + selectedValue);
@@ -341,6 +327,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     else
         g.options.title.text = all_data[0].name + " Over Time";
+
+    trimDataPoints(g);
+
     g.update({ duration: 0, lazy: true });
     
     maybeSaveToSessionStorage(g.canvas.id, {
@@ -365,6 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // buffers to push to graphs in bulk
 const buffers = { g1: [], g2: [], g3: [], s: []};
 
+// on new dp, push only selected graph values to buffers, and scatterplot if relevant
 socket.on('new_datapoint', (reading) => {
     
     id_name_mappings[reading.sensor_id] = reading.name;
@@ -398,6 +388,8 @@ setInterval(() => {
     flushBuffer(buffers.g3, g3);
 }, 33);
 
+// Updates graph with all data in its buffer.
+// Clears out excess data points
 function flushBuffer(buffer, g) {
     if (buffer.length === 0) return;
     buffer.forEach(reading => {
@@ -406,12 +398,7 @@ function flushBuffer(buffer, g) {
     });
     buffer.length = 0; // clear in place (faster than reassigning)
 
-    // Trim oldest points if over limit
-    if (g.data.labels.length > MAX_POINTS) {
-        const excess = g.data.labels.length - MAX_POINTS;
-        g.data.labels.splice(0, excess);
-        g.data.datasets[0].data.splice(0, excess);
-    }
+    trimDataPoints(g);
 
     g.update({ duration: 0, lazy: true }); // skip animation
 
@@ -432,30 +419,4 @@ function flushBuffer(buffer, g) {
             animation: false
         }
     })
-}  
-
-
-// function updateChartFromSocket(reading, g) {
-//     g.data.labels.push(reading.timestamp - (start/1000));
-//     g.data.datasets[0].data.push(reading.data);
-    
-//     g.options.title.text = reading.name + " (" + reading.unit + ") Over Time"
-//     g.update('none');
-
-//         // save chart to client's cache so that it can be reloaded on refresh
-//         maybeSaveToSessionStorage(g.canvas.id, {
-//             labels: g.data.labels,
-//             datasets: g.data.datasets.map(ds => ({
-//                 backgroundColor: ds.backgroundColor,
-//                 borderColor: ds.borderColor,
-//                 data: ds.data
-//             })),
-//             options: {
-//                 title: {
-//                     display: true,
-//                     // text: reading1.name + " Over Time"
-//                 },
-//                 animation: false
-//             }
-//         })
-// }
+} 

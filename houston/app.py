@@ -113,42 +113,6 @@ def get_all_data_db(sensor_id:int):
 
     return jsonify(readings)
 
-# /get_dp/<sensor_id>
-# given id of sensor, returns most recent reading of that id
-
-
-@app.route('/get_dp/<sensor_id>')
-def get_datapoint(sensor_id:int):
-    db = get_db()
-    cursor = db.cursor()
-    # '?' character in the cursor query uses the value passed in from get_datapoint
-    # otherwise using sensor_id = sensor_id would query for itself
-   
-    cursor.execute(
-        "SELECT * FROM sensor_readings "
-        "WHERE sensor_id = ?"
-        "ORDER BY timestamp DESC LIMIT 1",
-        (sensor_id,)
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-
-    # return error if the query does not return any results
-    if not rows:
-        return jsonify({"error": "No up-to-date sensor data found for id " + sensor_id}), 404
-    
-    # turn reading into JSON object
-    reading = {
-        "reading_id": rows[0][0],
-        "sensor_id": rows[0][1],
-        "name": rows[0][2],
-        "data": rows[0][3],
-        "unit": rows[0][4],
-        "timestamp": rows[0][5]
-    }
-
-    return jsonify(reading)
-
 # /unique_sensors
 # 
 # returns JSON response of all unique sensor id,name,unit tuples ordered by id, ascending
@@ -173,6 +137,7 @@ def emit_unique_sensors(app):
         db = get_db()
         while True:
             try:
+                # print("emitting unique sens...")
                 cursor = db.cursor()
                 cursor.execute("SELECT DISTINCT sensor_id,name,unit FROM sensor_readings ORDER BY sensor_id")
                 rows = cursor.fetchall()

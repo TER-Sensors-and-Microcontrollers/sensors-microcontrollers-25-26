@@ -8,11 +8,15 @@ const pagePath = window.location.pathname;
 const pageName = pagePath.split("/").pop() || "index"
 
 
-async function updateDropdown(d) {
+/*
+    updateDropdown
+
+    Updates given dropdown id with given list of sensors to track
+*/
+async function updateDropdown(d, ids) {
     try {
             const dropdown = document.getElementById(d);
-            const ids = await getIdsByMode("f");
-            // console.log(ids);
+
             if (dropdown !== null) {
                 if (dropdown.length < ids.length) {
                     // reset table
@@ -37,20 +41,21 @@ async function updateDropdown(d) {
         }
 }
 
+socket.on('unique_sens', (unique) => {
 // check file running this code
 if (pageName === "index") {
-    setInterval(() => {
-    updateDropdown("g1");
-    updateDropdown("g1-1");
-    updateDropdown("g2");
-    updateDropdown("g3");
-    updateDropdown("scatterX");
-    updateDropdown("scatterY");
-}, 1000);
+    updateDropdown("g1", unique);
+    updateDropdown("g1-1", unique);
+    updateDropdown("g2", unique);
+    updateDropdown("g3", unique);
+    updateDropdown("scatterX", unique);
+    updateDropdown("scatterY", unique);
 }
 else if (pageName === "max-graph") {
-    setInterval(() => {
-    updateDropdown("g1");
-    updateDropdown("g2");
-}, 1000);    
-}
+    updateDropdown("g1", unique);
+    updateDropdown("g2", unique);
+    updateDropdown("g3", unique);
+}   
+});
+
+
