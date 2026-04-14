@@ -7,6 +7,8 @@ import os
 import random
 import serial
 import threading
+import numpy as np
+import struct
 
 from flask import Flask, render_template, g, jsonify
 import sqlite3
@@ -35,8 +37,8 @@ def get_db():
 # (randomized CAN data frames + fixed set of CAN IDs) to serial port
 # does not return anything
 def feeder(ser:serial.Serial):
-    fids = ["0001", "0036", "0037", "0038", "0039"]
-    weights = [1, 5, 2, 2, 2]
+    fids = ["0001", "0036", "0037", "0038", "0039", "1710"]
+    weights = [10, 50, 20, 20, 20, 2]
     start = time.time()
     while True:
         bytes_ = randomize_bytes()
@@ -106,12 +108,44 @@ def reader(ser:serial.Serial):
                     )
                     db.commit()
                 case 39:
-                    message = [iD, "test_data5", int_value, "m/s^2", time.time() - start]
+                    data = randomize_bytes()
+                    motor_speed = struct.unpack('<h', data[2:4])[0]
+                    message = [iD, "test_data5", motor_speed, "m/s^2", time.time() - start]
                     cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                         message
                     )
-                    db.commit()  
+                    db.commit() 
+                case 1710:
+                    data = randomize_bytes()
+                    # print("data:", struct.unpack('<H', data[0:2])[0])
+                    post_fault_lo = struct.unpack('<H', data[0:2])[0]
+                    post_fault_hi = struct.unpack('<H', data[2:4])[0]
+                    run_fault_lo = struct.unpack('<H', data[4:6])[0]
+                    run_fault_hi = struct.unpack('<H', data[6:])[0]
+                    message = [iD, "errors", post_fault_lo, "bits", time.time() - start]
+                    # message = [iD, "errors", 0, "bits", time.time() - start]
+
+                    cursor.execute(
+                        "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                        message
+                    )
+                    # message = [iD+1, "errors", post_fault_hi, "bits", time.time() - start]
+                    # cursor.execute(
+                    #     "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                    #     message
+                    # )
+                    # message = [iD+2, "errors", run_fault_lo, "bits", time.time() - start]
+                    # cursor.execute(
+                    #     "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                    #     message
+                    # )
+                    # message = [iD+3, "errors", run_fault_hi, "bits", time.time() - start]
+                    # cursor.execute(
+                    #     "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
+                    #     message
+                    # )
+                    db.commit()                      
         time.sleep(0.005)
     
 

@@ -1,15 +1,16 @@
-async function getErrors() {
-    const response = await fetch('/faults');
-    if (!response.ok) return;
-    const errors = await response.json();
-    if (errors.error) return;
+/*
 
-    document.getElementById('errors').textContent = '';
+Socket code for updating webapp with fault codes
+
+*/
+
+
+socket.on('mc_faults', (errors) => {
+    const e = document.getElementById('errors');
+    e.textContent = '';
+    // console.log(e.textContent + " - " + errors);
     for (let i = 0; i < errors.length; i++) {
-        document.getElementById('errors').textContent += (errors[i].error + '\n');
+        // console.log(errors[i].error)
+        e.textContent += (errors[i].error + '\n');
     }
-}
-
-setInterval(() => {
-    getErrors();
-}, 1000);
+});

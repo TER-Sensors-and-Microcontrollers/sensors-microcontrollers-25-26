@@ -70,6 +70,9 @@ def parse_frame(frame:bytes):
 # given open serial port object, indefinitely reads icoming CAN frame data 
 # from serial port, and stores it in Flask database. does not return anything
 # prints debug messages if debug flag set to True
+
+# caution: numpy datatypes are not stored as real numbers in db; saved as bytes instead
+# <h => little endian, signed short, <H => little endian, unsigned short
 def reader(ser:serial.Serial, debug=True):
     db = get_db()
     cursor = db.cursor()
@@ -94,20 +97,20 @@ def reader(ser:serial.Serial, debug=True):
                     case 160: # 'A0' - template value
                         pass
                     case 161: # Temp 2
-                        cb_temp = np.float32(struct.unpack('<H', data[0:2])[0])
-                        reading = [id * CONST_OFFSET, "CB Temp", float(cb_temp),"C", time.time() - start]
+                        cb_temp = struct.unpack('<h', data[0:2])[0]
+                        reading = [id * CONST_OFFSET, "CB Temp", cb_temp,"C", time.time() - start]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
                         )
                         db.commit()
                     case 162: # Temp 3
-                        cool_temp = np.float32(struct.unpack('<H', data[0:2])[0])
-                        htspt_temp = np.float32(struct.unpack('<H', data[2:4])[0])
-                        mot_temp = np.float32(struct.unpack('<H', data[4:6])[0])
-                        readingCool = [id * CONST_OFFSET, "Coolant Temp", float(cool_temp),"C", time.time() - start]
-                        readingHtspt = [id * CONST_OFFSET + 1, "Hotspot Temp", float(htspt_temp),"C", time.time() - start]
-                        readingMot = [id * CONST_OFFSET + 2, "Motor Temp", float(mot_temp),"C", time.time()- start]
+                        cool_temp = struct.unpack('<h', data[0:2])[0]
+                        htspt_temp = struct.unpack('<h', data[2:4])[0]
+                        mot_temp = struct.unpack('<h', data[4:6])[0]
+                        readingCool = [id * CONST_OFFSET, "Coolant Temp", cool_temp,"C", time.time() - start]
+                        readingHtspt = [id * CONST_OFFSET + 1, "Hotspot Temp", htspt_temp,"C", time.time() - start]
+                        readingMot = [id * CONST_OFFSET + 2, "Motor Temp", mot_temp,"C", time.time()- start]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingCool
@@ -126,10 +129,10 @@ def reader(ser:serial.Serial, debug=True):
                     case 164: # Dig. Input Status
                         pass
                     case 165: # Motor Pos.
-                        motor_angle = np.float32(struct.unpack('<H', data[0:2])[0])
-                        motor_speed = np.float32(struct.unpack('<H', data[2:4])[0])
-                        readingA = [id * CONST_OFFSET, "Motor Angle", float(motor_angle),"Degrees", time.time() - start]
-                        readingS = [id * CONST_OFFSET + 1, "Motor Speed", float(motor_speed),"RPM", time.time() - start]
+                        motor_angle = struct.unpack('<h', data[0:2])[0]
+                        motor_speed = struct.unpack('<h', data[2:4])[0]
+                        readingA = [id * CONST_OFFSET, "Motor Angle", motor_angle,"Degrees", time.time() - start]
+                        readingS = [id * CONST_OFFSET + 1, "Motor Speed", motor_speed,"RPM", time.time() - start]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             readingA
@@ -140,25 +143,25 @@ def reader(ser:serial.Serial, debug=True):
                         )
                         db.commit()
                     case 166: # Current Info
-                        dc_curr = np.float32(struct.unpack('<H', data[6:])[0])
-                        reading = [id * CONST_OFFSET, "DC Current", float(dc_curr),"Amps", time.time()- start]
+                        dc_curr = struct.unpack('<h', data[6:])[0]
+                        reading = [id * CONST_OFFSET, "DC Current", dc_curr,"Amps", time.time()- start]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
                         )
                         db.commit()
                     case 167: # Voltage Info
-                        dc_volt = np.float32(struct.unpack('<H', data[0:2])[0])
-                        reading = [id * CONST_OFFSET, "DC Voltage", float(dc_volt),"Volts", time.time() - start]
+                        dc_volt = struct.unpack('<h', data[0:2])[0]
+                        reading = [id * CONST_OFFSET, "DC Voltage", dc_volt,"Volts", time.time() - start]
                         cursor.execute(
                         "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                             reading
                         )
                         db.commit()
                     case 170: # Internal States
-                        vsm_state = np.uint8(data[0])
-                        inv_state = np.uint8(data[2])
-                        other = np.uint8(data[7])
+                        vsm_state = data[0]
+                        inv_state = data[2]
+                        other = data[7]
                         readingV = [id * CONST_OFFSET, "VSM State", vsm_state,"Bits", time.time() - start]
                         readingI = [id * CONST_OFFSET + 1, "Inverter State", inv_state,"Bits", time.time() - start]
                         readingO = [id * CONST_OFFSET + 2, "DC Voltage", other,"Bits", time.time() - start]
@@ -176,10 +179,10 @@ def reader(ser:serial.Serial, debug=True):
                         )
                         db.commit()
                     case 171: # Fault codes
-                        post_fault_lo = np.int16(struct.unpack('<H', data[0:2])[0])
-                        post_fault_hi = np.int16(struct.unpack('<H', data[2:4])[0])
-                        run_fault_lo = np.int16(struct.unpack('<H', data[4:6])[0])
-                        run_fault_hi = np.int16(struct.unpack('<H', data[6:])[0])
+                        post_fault_lo = struct.unpack('<H', data[0:2])[0]
+                        post_fault_hi = struct.unpack('<H', data[2:4])[0]
+                        run_fault_lo = struct.unpack('<H', data[4:6])[0]
+                        run_fault_hi = struct.unpack('<H', data[6:])[0]
                         readingPl= [id * CONST_OFFSET, "Low Post Faults", post_fault_lo,"Bits", time.time() - start]
                         readingPh = [id * CONST_OFFSET + 1, "High Post Faults", post_fault_hi,"Bits", time.time() - start]
                         readingRl= [id * CONST_OFFSET + 2, "Low Post Faults", run_fault_lo,"Bits", time.time() - start]
@@ -202,8 +205,8 @@ def reader(ser:serial.Serial, debug=True):
                         )
                         db.commit()
                     case 172: # Torque / Timer
-                        torque = np.float32(struct.unpack('<H', data[0:2])[0])
-                        timer = np.float32(struct.unpack('<H', data[2:4])[0])
+                        torque = struct.unpack('<h', data[0:2])[0]
+                        timer = struct.unpack('<H', data[2:4])[0]
                         readingTq = [id * CONST_OFFSET, "Torque", torque,"N.m.", time.time() - start]
                         readingTm = [id * CONST_OFFSET + 1, "Inverter State", timer * .003,"Seconds", time.time() - start]
                         cursor.execute(

@@ -104,6 +104,13 @@ body {
     display: flex;
 }
 
+.e {
+    color: maroon;
+    font-size:10px;
+    white-space: pre-line;
+    word-wrap: break-word;
+}
+
 
 /* ----------------------------------------------------------- */
 

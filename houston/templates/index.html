@@ -85,11 +85,14 @@
                 <button id="openSD">Upload From .db File</button>
                 <button id="openGraph">View Entire Graph</button>
                 <div>
-                    <td>Errors</td>
-                    <td id = "errors"></td>
+                    <table>
+                    <tr>Errors</tr>
+                    <tr><td class = "e" id = "errors"></td></tr>
+                    </table>
                 </div>
             </div>
         </div>
+        <script src="{{ url_for('static', filename='errors.js') }}"></script>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
         <script src="{{ url_for('static', filename='graphs.js') }}"></script>
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>
