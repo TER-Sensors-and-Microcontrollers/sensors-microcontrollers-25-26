@@ -10,6 +10,9 @@ const thead = document.createElement('thead');
 const headerRow = document.createElement('tr');
 const headers = ['ID', 'Name', 'Value', "Unit"];
 
+
+
+
 headers.forEach(headerText => {
     const th = document.createElement('th');
     th.textContent = headerText;
@@ -122,13 +125,9 @@ async function updateTable(mode) {
 const WHEEL_RADIUS_M = 20.5 / 2; 
 const GEAR_RATIO = 3.8;
 
-async function updateSpeed() {
-    const response = await fetch('/get_dp/1');
-    if (!response.ok) return;
-    const reading = await response.json();
-    if (reading.error) return;
+async function updateSpeed(data) {
 
-    const motorRPM = reading.data;
+    const motorRPM = data;
     const wheelRPM = motorRPM / GEAR_RATIO;
     const speedMS = wheelRPM * 2 * Math.PI * WHEEL_RADIUS_M / 60;
     const speedMPH = speedMS * 2.237;
@@ -138,10 +137,68 @@ async function updateSpeed() {
 
 
 
-setInterval(() => {
-    updateTable("f");
-    updateSpeed();
-}, 1000);
+// setInterval(() => {
+//     updateTable("f");
+//     updateSpeed();
+// }, 1000);
+
+
+socket.on('unique_sens', (unique) => {
+    try {
+        const table_qs = document.getElementById("tableContainer").querySelector("table");
+        const tbody_old = table_qs.querySelector("tbody");
+        
+        const ids = unique
+
+        // console.log(ids);
+        if (!tbody_old || tbody_old.rows.length != ids.length) {
+               
+            // reset table
+            const tbody_new = document.createElement('tbody');
+            
+            ids.forEach(async id => {
+                const row      = document.createElement('tr');
+                const cellID   = document.createElement('td');
+                const cellName = document.createElement('td');
+                const cellData = document.createElement('td');
+                const cellUnit = document.createElement('td');
+
+                cellID.textContent   = id.sensor_id;
+                cellName.textContent = id.name;
+                cellUnit.textContent = id.unit;
+
+                row.appendChild(cellID);
+                row.appendChild(cellName);
+                row.appendChild(cellData);
+                row.appendChild(cellUnit);
+                   
+                tbody_new.appendChild(row);
+               });
+
+            if (tbody_old) {
+                table_qs.replaceChild(tbody_new, tbody_old);
+            } else {
+                table_qs.appendChild(tbody_new);
+            }
+           }   
+
+    }
+    catch (error) {
+        console.error("Error fetching or parsing data:", error);
+    }
+});
+
+socket.on('new_datapoint', (reading) => {
+    const table_qs = document.getElementById("tableContainer").querySelector("table");
+    const tbody_old = table_qs.querySelector("tbody");
+    for (const row of tbody_old.rows) {
+        const cells = row.cells;
+        if (reading.sensor_id == cells[0].textContent) cells[2].textContent = reading.data;
+    }
+
+    // update speed if dp is motor speed (ID 1651)
+    if (reading.sensor_id == 1651) updateSpeed(reading.data);
+});
 
 
 // /*

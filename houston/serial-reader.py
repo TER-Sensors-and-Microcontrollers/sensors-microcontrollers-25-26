@@ -223,8 +223,8 @@ def reader(ser:serial.Serial, debug=True):
                         pass
         else:
             print("Waiting for serial data...") 
-        time.sleep(0.5)
-    
+            time.sleep(0.5)
+        time.sleep(.002)
 
 if __name__ == "__main__":
     ser = None
