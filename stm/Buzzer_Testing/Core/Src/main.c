@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,7 +56,7 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+volatile bool no_play = false;
 /* USER CODE END 0 */
 
 /**
@@ -101,18 +101,27 @@ int main(void)
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	  uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
 
-	  if (adc_val > ADC_THRESHOLD)
-	  {
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET); // LED ON
-	  }
-	  else
-	  {
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET); // LED OFF
+//	  if (adc_val > ADC_THRESHOLD)
+//	  {
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET); // BUZZER ON
+//	  }
+//	  else
+//	  {
+//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET); // BUZZER OFF
+//	  }
+
+	  if (adc_val > ADC_THRESHOLD && !no_play) {
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+		  HAL_Delay(2000);
+		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
+		  no_play = true;
+	  } else if (adc_val < ADC_THRESHOLD && no_play) {
+		  no_play = false;
 	  }
 
 	  HAL_ADC_Stop(&hadc1);
 
-	  HAL_Delay(1000);
+//	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
