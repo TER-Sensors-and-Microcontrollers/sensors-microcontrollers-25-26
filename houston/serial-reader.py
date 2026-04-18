@@ -234,14 +234,14 @@ def reader(ser:serial.Serial, debug=True):
                             # )
                             # db.commit()
                         # END MC values
-                        # START BMS values
+                        # START BMS values - Custom messages configured on OrionBMS2 Utility
                         case 192: #0xC0 : Pack data
                             pack_curr = struct.unpack('<h', data[0:2])[0]
                             pack_inst_volt = struct.unpack('<h', data[2:4])[0]
                             pack_resistance = struct.unpack('<h', data[4:6])[0]
                             SOC = data[6]
                             readingCurr = [id * CONST_OFFSET, "Pack Current", pack_curr * 10, "Amps", time.time() - start]
-                            readingVolt = [id * CONST_OFFSET + 1, "Pack Instant Voltage", pack_inst_volt * 2, "Volts", time.time() - start]
+                            readingVolt = [id * CONST_OFFSET + 1, "Pack Instant Voltage", pack_inst_volt * 10, "Volts", time.time() - start]
                             readingRes = [id * CONST_OFFSET + 2, "Pack Resistance", pack_resistance * 1000, "Ohm", time.time() - start]
                             readingSOC = [id * CONST_OFFSET + 3, "State of Charge", SOC * 2, "%", time.time() - start]
                             cursor.execute(
@@ -262,13 +262,31 @@ def reader(ser:serial.Serial, debug=True):
                             )
                             db.commit()
                         case 193: # Min/Max Cell Voltage, Min/Max Temp
-                            pass
-                            # message = [id, "Avg. Cell voltage", int(data) * .0001, "Volts", time.time() - start]
-                            # cursor.execute(
-                            #     "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                            #     message
-                            # )
-                            # db.commit()
+                            max_cell_volt = struct.unpack('<h', data[0:2])[0]
+                            min_cell_volt = struct.unpack('<h', data[2:4])[0]
+                            temp_hi = data[4]
+                            temp_lo = data[5]
+                            readingMax = [id * CONST_OFFSET, "Max Cell Voltage", max_cell_volt * 10, "Volts", time.time() - start]
+                            readingMin = [id * CONST_OFFSET + 1, "Min Cell Voltage", min_cell_volt * 10, "Volts", time.time() - start]
+                            readingH = [id * CONST_OFFSET + 2, "High Temperature", temp_hi, "C", time.time() - start]
+                            readingL = [id * CONST_OFFSET + 3, "Low Temperature", temp_lo, "C", time.time() - start]
+                            cursor.execute(
+                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                                readingMax
+                            )
+                            cursor.execute(
+                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                                readingMin
+                            )
+                            cursor.execute(
+                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                                readingH
+                            )
+                            cursor.execute(
+                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
+                                readingL
+                            )
+                            db.commit()
                         case 194: # BMS Fail Codes
                             fault_lo = struct.unpack('<H', data[0:2])[0]
                             fault_hi = struct.unpack('<H', data[2:4])[0]
