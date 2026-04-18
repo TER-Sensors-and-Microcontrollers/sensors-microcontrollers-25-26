@@ -327,6 +327,76 @@ def emit_faults(app):
                         errors.append({"type": "run", "error": "Resolver Fault"})
                 # bits[1] >> 7 reserved
                 
+                # BMS Low Faults
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1940 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Discharge Limit Enforcement Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Charger Safety Relay Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Hardware Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Heatsink Thermistor Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Software Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "Highest Cell Voltage Too High Fault"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Lowest Cell Voltage Too Low Fault"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Pack Too Hot Fault"})
+                # BMS High Faults
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1741 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Communication Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Cell Balancing Stuck Off Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Weak Cell Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "Low Cell Voltage Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Open Wiring Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "Current Sensor Fault"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Highest Cell Voltage Over 5V Fault"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Cell ASIC Fault"})
+
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Weak Pack Fault"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Fan Monitor Fault"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Thermistor Fault"})
+                    if (bits[1] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "External Communication Fault"})
+                    if (bits[1] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Redundant Power Supply Fault"})
+                    if (bits[1] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "High Voltage Isolation Fault"})
+                    if (bits[1] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Input Power Supply Fault"})
+                    if (bits[1] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Charge Limit Enforcement Fault"})
+                    
                 cursor.close()
                 # print("emitting faults")
                 socketio.emit("mc_faults", errors)
@@ -355,32 +425,46 @@ def close_connection(exception):
     if db is not None:
         db.close()
 
-
+# emits all datapoints younger than the last id emitted
 def emit_dp(app):
-    last_timestamp = None
+    last_ids = {}  # sensor_id -> last reading_id emitted
     with app.app_context():
         db = get_db()
         while True:
             try:
                 cursor = db.cursor()
-                cursor.execute("SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 1")
-                row = cursor.fetchone()
+                cursor.execute("""
+                    SELECT * FROM sensor_readings
+                    WHERE reading_id IN (
+                        SELECT MAX(reading_id) 
+                        FROM sensor_readings 
+                        GROUP BY sensor_id
+                    )
+                """)
+                rows = cursor.fetchall()
                 cursor.close()
 
-                if row and row['timestamp'] != last_timestamp:
-                    last_timestamp = row['timestamp']
-                    reading = {
-                        "sensor_id": row['sensor_id'],
-                        "name": row['name'],
-                        "data": row['data'],
-                        "unit": row['unit'],
-                        "timestamp": row['timestamp'],
-                    }
-                    print(f"{datetime.now()} - TRANSMITTING ID: {row['sensor_id']}, DATA: {row['data']}")
-                    socketio.emit("new_datapoint", reading)
-                    socketio.sleep(.005)
-                else:
+                any_new = False
+                for row in rows:
+                    sid = row['sensor_id']
+                    rid = row['reading_id']
+
+                    if last_ids.get(sid) != rid:  # this sensor has a new reading
+                        last_ids[sid] = rid
+                        any_new = True
+                        reading = {
+                            "sensor_id": sid,
+                            "name": row['name'],
+                            "data": row['data'],
+                            "unit": row['unit'],
+                            "timestamp": row['timestamp'],
+                        }
+                        socketio.emit("new_datapoint", reading)
+                        socketio.sleep(.005)
+
+                if not any_new:
                     socketio.sleep(.05)
+
             except Exception as e:
                 print(f"emit_dp error: {e}")
                 socketio.sleep(1)

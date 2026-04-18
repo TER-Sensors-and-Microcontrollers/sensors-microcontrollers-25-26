@@ -98,7 +98,7 @@ def reader(ser:serial.Serial, debug=True):
                             pass
                         case 161: # Temp 2
                             cb_temp = struct.unpack('<h', data[0:2])[0]
-                            reading = [id * CONST_OFFSET, "CB Temp", cb_temp * 10,"C", time.time() - start]
+                            reading = [id * CONST_OFFSET, "CB Temp", cb_temp * .1,"C", time.time() - start]
                             cursor.execute(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                                 reading
@@ -108,20 +108,12 @@ def reader(ser:serial.Serial, debug=True):
                             cool_temp = struct.unpack('<h', data[0:2])[0]
                             htspt_temp = struct.unpack('<h', data[2:4])[0]
                             mot_temp = struct.unpack('<h', data[4:6])[0]
-                            readingCool = [id * CONST_OFFSET, "Coolant Temp", cool_temp * 10,"C", time.time() - start]
-                            readingHtspt = [id * CONST_OFFSET + 1, "Hotspot Temp", htspt_temp * 10,"C", time.time() - start]
-                            readingMot = [id * CONST_OFFSET + 2, "Motor Temp", mot_temp * 10,"C", time.time()- start]
-                            cursor.execute(
+                            readingCool = [id * CONST_OFFSET, "Coolant Temp", cool_temp * .1,"C", time.time() - start]
+                            readingHtspt = [id * CONST_OFFSET + 1, "Hotspot Temp", htspt_temp * .1,"C", time.time() - start]
+                            readingMot = [id * CONST_OFFSET + 2, "Motor Temp", mot_temp * .1,"C", time.time()- start]
+                            cursor.executemany(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingCool
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingHtspt
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingMot
+                                [readingCool, readingHtspt, readingMot]
                             )
                             db.commit()
                         case 163: # Analog Input - Not impl. this year
@@ -131,20 +123,16 @@ def reader(ser:serial.Serial, debug=True):
                         case 165: # Motor Pos.
                             motor_angle = struct.unpack('<h', data[0:2])[0]
                             motor_speed = struct.unpack('<h', data[2:4])[0]
-                            readingA = [id * CONST_OFFSET, "Motor Angle", motor_angle * 10,"Degrees", time.time() - start]
+                            readingA = [id * CONST_OFFSET, "Motor Angle", motor_angle * .1,"Degrees", time.time() - start]
                             readingS = [id * CONST_OFFSET + 1, "Motor Speed", motor_speed,"RPM", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingA
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingS
+                                [readingA, readingS]
                             )
                             db.commit()
                         case 166: # Current Info
                             dc_curr = struct.unpack('<h', data[6:])[0]
-                            reading = [id * CONST_OFFSET, "DC Current", dc_curr * 10,"Amps", time.time()- start]
+                            reading = [id * CONST_OFFSET, "DC Current", dc_curr * .1,"Amps", time.time()- start]
                             cursor.execute(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                                 reading
@@ -152,7 +140,7 @@ def reader(ser:serial.Serial, debug=True):
                             db.commit()
                         case 167: # Voltage Info
                             dc_volt = struct.unpack('<h', data[0:2])[0]
-                            reading = [id * CONST_OFFSET, "DC Voltage", dc_volt * 10,"Volts", time.time() - start]
+                            reading = [id * CONST_OFFSET, "DC Voltage", dc_volt * .1,"Volts", time.time() - start]
                             cursor.execute(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
                                 reading
@@ -165,17 +153,9 @@ def reader(ser:serial.Serial, debug=True):
                             readingV = [id * CONST_OFFSET, "VSM State", vsm_state,"Bits", time.time() - start]
                             readingI = [id * CONST_OFFSET + 1, "Inverter State", inv_state,"Bits", time.time() - start]
                             readingO = [id * CONST_OFFSET + 2, "DC Voltage", other,"Bits", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingV
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingI
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingO
+                                [readingV, readingI, readingO]
                             )
                             db.commit()
                         case 171: # Fault codes
@@ -187,35 +167,19 @@ def reader(ser:serial.Serial, debug=True):
                             readingPh = [id * CONST_OFFSET + 1, "High Post Faults", post_fault_hi,"Bits", time.time() - start]
                             readingRl= [id * CONST_OFFSET + 2, "Low Run Faults", run_fault_lo,"Bits", time.time() - start]
                             readingRh = [id * CONST_OFFSET + 3, "High Run Faults", run_fault_hi,"Bits", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingPl
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingPh
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingRl
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingRh
+                                [readingPl, readingPh, readingRl, readingRh]
                             )
                             db.commit()
                         case 172: # Torque / Timer
                             torque = struct.unpack('<h', data[0:2])[0]
                             timer = struct.unpack('<H', data[2:4])[0]
-                            readingTq = [id * CONST_OFFSET, "Torque", torque,"N.m.", time.time() - start]
+                            readingTq = [id * CONST_OFFSET, "Torque", torque * .1,"N.m.", time.time() - start]
                             readingTm = [id * CONST_OFFSET + 1, "Inverter State", timer * .003,"Seconds", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                             "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingTq
-                            )
-                            cursor.execute(
-                            "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingTm
+                                [readingTq, readingTm]
                             )
                             db.commit()
                         case 176: # High speed Motor Speed, DC Bus Volt, use if other values are obtained too slowly
@@ -236,55 +200,31 @@ def reader(ser:serial.Serial, debug=True):
                         # END MC values
                         # START BMS values - Custom messages configured on OrionBMS2 Utility
                         case 192: #0xC0 : Pack data
-                            pack_curr = struct.unpack('<h', data[0:2])[0]
-                            pack_inst_volt = struct.unpack('<h', data[2:4])[0]
-                            pack_resistance = struct.unpack('<h', data[4:6])[0]
+                            pack_curr = struct.unpack('<H', data[0:2])[0]
+                            pack_inst_volt = struct.unpack('<H', data[2:4])[0]
+                            pack_resistance = struct.unpack('<H', data[4:6])[0]
                             SOC = data[6]
-                            readingCurr = [id * CONST_OFFSET, "Pack Current", pack_curr * 10, "Amps", time.time() - start]
-                            readingVolt = [id * CONST_OFFSET + 1, "Pack Instant Voltage", pack_inst_volt * 10, "Volts", time.time() - start]
-                            readingRes = [id * CONST_OFFSET + 2, "Pack Resistance", pack_resistance * 1000, "Ohm", time.time() - start]
-                            readingSOC = [id * CONST_OFFSET + 3, "State of Charge", SOC * 2, "%", time.time() - start]
-                            cursor.execute(
+                            readingCurr = [id * CONST_OFFSET, "Pack Current", pack_curr * .1, "Amps", time.time() - start]
+                            readingVolt = [id * CONST_OFFSET + 1, "Pack Instant Voltage", pack_inst_volt * .1, "Volts", time.time() - start]
+                            readingRes = [id * CONST_OFFSET + 2, "Pack Resistance", pack_resistance * .01, "Ohm", time.time() - start]
+                            readingSOC = [id * CONST_OFFSET + 3, "State of Charge", SOC * .5, "%", time.time() - start]
+                            cursor.executemany(
                                 "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingCurr
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingVolt
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingRes
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingSOC
+                                [readingCurr, readingVolt, readingRes, readingSOC]
                             )
                             db.commit()
                         case 193: # Min/Max Cell Voltage, Min/Max Temp
-                            max_cell_volt = struct.unpack('<h', data[0:2])[0]
-                            min_cell_volt = struct.unpack('<h', data[2:4])[0]
-                            temp_hi = data[4]
-                            temp_lo = data[5]
-                            readingMax = [id * CONST_OFFSET, "Max Cell Voltage", max_cell_volt * 10, "Volts", time.time() - start]
-                            readingMin = [id * CONST_OFFSET + 1, "Min Cell Voltage", min_cell_volt * 10, "Volts", time.time() - start]
+                            max_cell_volt = struct.unpack('<H', data[0:2])[0]
+                            min_cell_volt = struct.unpack('<H', data[2:4])[0]
+                            temp_hi = data[4] - 256 if data[4] >= 128 else data[4]
+                            temp_lo = data[5] - 256 if data[5] >= 128 else data[5]
+                            readingMax = [id * CONST_OFFSET, "Max Cell Voltage", max_cell_volt * .1, "Volts", time.time() - start]
+                            readingMin = [id * CONST_OFFSET + 1, "Min Cell Voltage", min_cell_volt * .1, "Volts", time.time() - start]
                             readingH = [id * CONST_OFFSET + 2, "High Temperature", temp_hi, "C", time.time() - start]
                             readingL = [id * CONST_OFFSET + 3, "Low Temperature", temp_lo, "C", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                                 "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingMax
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingMin
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingH
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)", 
-                                readingL
+                                [readingMax,readingMin,readingH,readingL]
                             )
                             db.commit()
                         case 194: # BMS Fail Codes
@@ -294,17 +234,9 @@ def reader(ser:serial.Serial, debug=True):
                             readingl= [id * CONST_OFFSET, "Low BMS Faults", fault_lo,"Bits", time.time() - start]
                             readingh= [id * CONST_OFFSET + 1, "High BMS Faults", fault_hi,"Bits", time.time() - start]
                             message = [id * CONST_OFFSET + 2, "The Answer to Everything", answer_to_everything, "Apples", time.time() - start]
-                            cursor.execute(
+                            cursor.executemany(
                                 "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingh
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                readingl
-                            )
-                            cursor.execute(
-                                "INSERT INTO sensor_readings (sensor_id, name, data, unit, timestamp) VALUES (?, ?, ?, ?, ?)",
-                                message
+                                [readingl, readingh, message]
                             )
                             db.commit()
                         # END BMS values

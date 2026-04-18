@@ -5,9 +5,9 @@
 */
 
 // initial starting values for the 3 graphs, subject to change
-var selectedValue1 = 1;
-var selectedValue2 = 36;
-var selectedValue3 = 37;
+var selectedValue1 = 1651;
+var selectedValue2 = 1670;
+var selectedValue3 = 1720;
 
 var id_name_mappings = {} // store locally so we don't need call from backend
 var currentX = "";

@@ -141,6 +141,10 @@ async function updateSpeed(data) {
     document.getElementById('speed-display').textContent = speedMPH.toFixed(1) + " mph";
 }
 
+async function updateBattery(data) {
+    document.getElementById('battery-display').textContent = data + " %";
+}
+
 
 socket.on('unique_sens', (unique) => {
     const table_qs = document.getElementById("tableContainer").querySelector("table");
@@ -156,4 +160,5 @@ socket.on('new_datapoint', (reading) => {
     populateTable(reading, tbody_old);
     // update speed if dp is motor speed (ID 1651)
     if (reading.sensor_id == 1651) updateSpeed(reading.data);
+    if (reading.sensor_id == 1923) updateBattery(reading.data);
 });
