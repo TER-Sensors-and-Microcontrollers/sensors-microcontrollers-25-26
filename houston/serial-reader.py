@@ -252,6 +252,8 @@ def reader(ser:serial.Serial, debug=True):
 if __name__ == "__main__":
     ser = None
     print(DATABASE)
+    print("Waiting briefly for app startup...")
+    time.sleep(3)
     try:
         # loop:// creates a virtual serial port entirely in memory
         ser = serial.Serial(PI_RADIO, baudrate=460800, timeout=1)
