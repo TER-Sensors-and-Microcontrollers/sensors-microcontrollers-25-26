@@ -128,7 +128,7 @@ static void CAN_Init(void)
     canTxHeader.Identifier          = CAN_TX_ID;
     canTxHeader.IdType              = FDCAN_STANDARD_ID;
     canTxHeader.TxFrameType         = FDCAN_DATA_FRAME;
-    canTxHeader.DataLength          = FDCAN_DLC_BYTES_1;
+    canTxHeader.DataLength          = FDCAN_DLC_BYTES_8;
     canTxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     canTxHeader.BitRateSwitch       = FDCAN_BRS_OFF;
     canTxHeader.FDFormat            = FDCAN_CLASSIC_CAN;
@@ -142,16 +142,30 @@ static void CAN_Init(void)
 
 static void CAN_SendHeartbeat(void)
 {
-    uint8_t payload = canTxSeq;
-    HAL_StatusTypeDef st = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &canTxHeader, &payload);
+    uint8_t payload[8];
+
+    /* Pack raw Q9 gyro values as int16 little-endian */
+    int16_t rawX = (int16_t)(lastX * 512.0f);
+    int16_t rawY = (int16_t)(lastY * 512.0f);
+    int16_t rawZ = (int16_t)(lastZ * 512.0f);
+
+    payload[0] = (uint8_t)( rawX       & 0xFF);
+    payload[1] = (uint8_t)((rawX >> 8)  & 0xFF);
+    payload[2] = (uint8_t)( rawY       & 0xFF);
+    payload[3] = (uint8_t)((rawY >> 8)  & 0xFF);
+    payload[4] = (uint8_t)( rawZ       & 0xFF);
+    payload[5] = (uint8_t)((rawZ >> 8)  & 0xFF);
+    payload[6] = canTxSeq;
+    payload[7] = 0x00;  /* reserved */
+
+    HAL_StatusTypeDef st = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &canTxHeader, payload);
 
     if (st == HAL_OK) {
         canTxPass++;
-        canFirstFailPrinted = 0;  /* reset so next new failure prints detail */
+        canFirstFailPrinted = 0;
     } else {
         canTxFail++;
 
-        /* On the first failure, dump the protocol status register for debugging */
         if (!canFirstFailPrinted) {
             canFirstFailPrinted = 1;
             FDCAN_ProtocolStatusTypeDef psr;
@@ -171,7 +185,7 @@ static void CAN_SendHeartbeat(void)
               (unsigned long)canTxPass,
               (unsigned long)canTxFail);
 
-    canTxSeq++;  /* wraps 0-255 naturally */
+    canTxSeq++;
 }
 
 /* ---- SHTP / BNO085 ---- */
