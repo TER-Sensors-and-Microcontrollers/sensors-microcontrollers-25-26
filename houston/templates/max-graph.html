@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title> Houston Telemetry App </title>
+        <link rel = "stylesheet" type= "text/css" href = " {{ url_for('static', filename = 'style.css') }}">
+    </head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>var socket = io();</script>
+    <body style = "background: linear-gradient(to bottom right, #19b6ff, #080502); ">
+        <div class = "title">
+            <img src="https://sites.tufts.edu/racing/files/2020/04/cropped-newlogo-2.png"
+            width="337.5" length="750"/>
+        </div>
+        <div>
+            <button id = "back">Go Back</button>
+            <select name = "links" id = "g1"><option value="" disabled selected>Select new sensor for graph</option> </select>
+            <select name = "links" id = "g2"><option value="" disabled selected>Select second sensor for graph</option> <option value="none">None</option></select>
+            <select name = "links" id = "g3"><option value="" disabled selected>Select third sensor for graph</option> <option value="none">None</option></select>
+            <canvas class="graph" id="graph1"></canvas>
+        </div>
+        <input type = "file" id = "file-input" style = "display: none">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+        <script src="{{ url_for('static', filename='buttons.js') }}"></script>
+        <script src="{{ url_for('static', filename='graph-dropdowns.js') }}"></script>
+        <script src="{{ url_for('static', filename='max-graph.js') }}"></script>
+        <script src="{{ url_for('static', filename='table.js') }}"></script>
+    </body>
+</html>

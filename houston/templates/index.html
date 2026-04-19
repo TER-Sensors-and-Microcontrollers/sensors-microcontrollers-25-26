@@ -2,27 +2,12 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title> Flask App </title>
+        <title> Houston Telemetry App </title>
         <link rel = "stylesheet" type= "text/css" href = " {{ url_for('static', filename = 'style.css') }}">
     </head>
     <body>
-    <!-- This code connects WebsocketsIO to the index.html file, so it can update the
-     display in real-time. -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-        <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
-
-        // Waits to receive 'update_data' from socket's emit function in app.py
-        // Once it receives it, it runs the function.
-        // The parseFloat and toFixed(2) ensure that the data read is a float up to 2 decimal places.
-        socket.on('update_data', function(data) {
-            
-            // Does nothing as of now
-
-            console.log("Received data", data);
-        });
-        </script>
-
+        <script> var socket = io(); </script>
         <div class = "title">
             <img src="https://sites.tufts.edu/racing/files/2020/04/cropped-newlogo-2.png"
             width="337.5" length="750"/>
@@ -41,11 +26,11 @@
                     <table>
                         <tr>
                             <td>Speed</td>
-                            <td>TODO</td>
+                            <td id = "speed-display"></td>
                         </tr>
                         <tr>
                             <td>Charge</td>
-                            <td>TODO</td>
+                            <td id = "battery-display"></td>
                         </tr>
                     </table>
                 </div>
@@ -67,21 +52,47 @@
                 </div>
             </div>
             <div class = "options"> 
+                <button id="clearDb" style="background-color: red; color: white;">New Trip !reset db!</button>
                 <div class = "changeGraphs"> 
                     <b>Change Graphs</b>
                     <select name = "links" id = "g1"><option value="" disabled selected>Select new sensor for graph 1</option></select>
                     <select name = "links" id = "g2"><option value="" disabled selected>Select new sensor for graph 2</option></select>
                     <select name = "links" id = "g3"><option value="" disabled selected>Select new sensor for graph 3</option></select>
                 </div>
-                <button id="openWeb">Upload From SD</button>
-                <button id="scatterOn">View Scatterplot</button>
-                <button class = "hidden" id="scatterOff">View Graphs</button>
                 <div class = "hidden", id="scatterChoice">
                     <select name = "links" id = "scatterX"><option value="" disabled selected>Select new sensor for X-axis</option></select>
                     <select name = "links" id = "scatterY"><option value="" disabled selected>Select new sensor for Y-axis</option></select>
                 </div>
+
+                <div>
+                    <input type="range" id="slider" min="50" max="800" value="200">
+                    <p>Max Datapoints: <span id="currentValue">200</span></p>
+
+                    <script>
+                    const slider = document.getElementById('slider');
+                    const output = document.getElementById('currentValue');
+
+                    // Update the display whenever the slider is moved
+                    slider.oninput = function() {
+                        output.textContent = this.value;
+                        MAX_POINTS = this.value;
+                        
+                    }
+                    </script>
+                </div>
+                <button id="scatterOn">View Scatterplot</button>
+                <button class = "hidden" id="scatterOff">View Graphs</button>
+                <button id="openSD">Upload From .db File</button>
+                <button id="openGraph">View Entire Graph</button>
+                <div>
+                    <table>
+                    <tr>Errors</tr>
+                    <tr><td class = "e" id = "errors"></td></tr>
+                    </table>
+                </div>
             </div>
         </div>
+        <script src="{{ url_for('static', filename='errors.js') }}"></script>
         <script src="{{ url_for('static', filename='table.js') }}"></script>
         <script src="{{ url_for('static', filename='graphs.js') }}"></script>
         <script src="{{ url_for('static', filename='buttons.js') }}"></script>

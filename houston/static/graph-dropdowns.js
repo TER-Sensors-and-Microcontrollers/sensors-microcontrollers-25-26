@@ -4,28 +4,36 @@
     real-time logic for dropdown graphs
 */
 
-async function updateDropdown(d) {
+const pagePath = window.location.pathname;
+const pageName = pagePath.split("/").pop() || "index"
+
+
+/*
+    updateDropdown
+
+    Updates given dropdown id with given list of sensors to track
+*/
+async function updateDropdown(d, ids) {
     try {
             const dropdown = document.getElementById(d);
-        
-            const ids = await getIdsByMode("f");
 
-            // console.log(ids);
-            if (dropdown.length < ids.length) {
-                
-                // reset table
-                
-                
-                ids.forEach(async id => {
-                    const option = document.createElement("option");
-
-                    option.text       = id.name;
-                    option.value      = id.sensor_id;
+            if (dropdown !== null) {
+                if (dropdown.length < ids.length) {
+                    // reset table
                     
-                    dropdown.appendChild(option);
-                });
+                    
+                    ids.forEach(async id => {
+                        const option = document.createElement("option");
 
-            }    
+                        option.text       = id.name;
+                        option.value      = id.sensor_id;
+                        
+                        dropdown.appendChild(option);
+                    });
+
+                }   
+            }
+ 
             
         }
         catch (error) {
@@ -33,10 +41,21 @@ async function updateDropdown(d) {
         }
 }
 
-setInterval(() => {
-    updateDropdown("g1");
-    updateDropdown("g2");
-    updateDropdown("g3");
-    updateDropdown("scatterX");
-    updateDropdown("scatterY");
-}, 1000);
+socket.on('unique_sens', (unique) => {
+// check file running this code
+if (pageName === "index") {
+    updateDropdown("g1", unique);
+    updateDropdown("g1-1", unique);
+    updateDropdown("g2", unique);
+    updateDropdown("g3", unique);
+    updateDropdown("scatterX", unique);
+    updateDropdown("scatterY", unique);
+}
+else if (pageName === "max-graph") {
+    updateDropdown("g1", unique);
+    updateDropdown("g2", unique);
+    updateDropdown("g3", unique);
+}   
+});
+
+

@@ -1,5 +1,6 @@
 # We don't need to track database file
 houston/database.db
+__pycache__/
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
 .DS_Store

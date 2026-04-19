@@ -3,11 +3,15 @@
     
     real-time data logic
 */
+// const socket = io();
 const container = document.getElementById('tableContainer');
 const table = document.createElement('table');
 const thead = document.createElement('thead');
 const headerRow = document.createElement('tr');
 const headers = ['ID', 'Name', 'Value', "Unit"];
+
+
+
 
 headers.forEach(headerText => {
     const th = document.createElement('th');
@@ -24,7 +28,7 @@ table.appendChild(tbody);
 container.appendChild(table);
 
 /*
-    getIdsByMode
+    getIdsByMode [deprecated]
 
     Calls the appropriate endpoint to grab the appropriate collection of unique sensors
     
@@ -49,26 +53,26 @@ async function getIdsByMode(mode) {
         throw new Error(`Error: unsupported table mode.`);
     }
 }
-/*
-    updateTable
 
-    Updates real-time table with all incoming real-time data
-    input(s): 
-        - mode (str): determines what specific sensors to include in table view
-*/  
-async function updateTable(mode) {
+
+/*
+    updateTableState
+
+    Updates length of real-time table given sensors to track,
+    table body to update, table object.
+    
+    Formats table as |ID|NAME|DATA[currently blank]|UNIT|
+*/
+
+function updateTableState(sens, tbody, table_qs) {
     try {
-        const table = document.getElementById("tableContainer").querySelector("table");
-        const tbody_old = table.querySelector("tbody");
-        
-        const ids = await getIdsByMode(mode);
+        const ids = sens;
 
         // console.log(ids);
-        if (!tbody_old || tbody_old.rows.length != ids.length) {
+        if (!tbody || tbody.rows.length != ids.length) {
                
             // reset table
             const tbody_new = document.createElement('tbody');
-            
             
             ids.forEach(async id => {
                 const row      = document.createElement('tr');
@@ -89,35 +93,72 @@ async function updateTable(mode) {
                 tbody_new.appendChild(row);
                });
 
-            if (tbody_old) {
-                table.replaceChild(tbody_new, tbody_old);
+            if (tbody) {
+                table_qs.replaceChild(tbody_new, tbody);
             } else {
-                table.appendChild(tbody_new);
+                table_qs.appendChild(tbody_new);
             }
-           }    
-        
+           }   
 
-        for (const row of tbody_old.rows) {
-            const cells = row.cells;
-
-            const response_data = await fetch('/get_dp/' + cells[0].textContent);
-            if (!response_data.ok) {
-                throw new Error(`HTTP error! status: ${response_data.status}`);
-            }
-            const reading = await response_data.json();
-
-            if (reading.error) {
-                continue;
-            }
-
-            cells[2].textContent = reading.data;
-        }
     }
     catch (error) {
         console.error("Error fetching or parsing data:", error);
     }
 }
 
-setInterval(() => {
-    updateTable("f");
-}, 1000);
+/*
+    populateTable
+
+    Populates tbody data section with reading if that
+    sensor reading is tracked by the table.
+    
+    Assumes first col is ID and third col is data
+*/
+function populateTable(reading, tbody) {
+    for (const row of tbody.rows) {
+        const cells = row.cells;
+        if (reading.sensor_id == cells[0].textContent) cells[2].textContent = reading.data;
+    }
+}
+
+
+
+const WHEEL_RADIUS_M = 20.5 / 2; 
+const GEAR_RATIO = 3.8;
+/*
+    updateSpeed
+
+    given motor speed data, updates real-time speed display with
+    calculated speed
+*/
+async function updateSpeed(data) {
+
+    const motorRPM = data;
+    const wheelRPM = motorRPM / GEAR_RATIO;
+    const speedMS = wheelRPM * 2 * Math.PI * WHEEL_RADIUS_M / 60;
+    const speedMPH = speedMS * 2.237;
+
+    document.getElementById('speed-display').textContent = speedMPH.toFixed(1) + " mph";
+}
+
+async function updateBattery(data) {
+    document.getElementById('battery-display').textContent = data + " %";
+}
+
+
+socket.on('unique_sens', (unique) => {
+    const table_qs = document.getElementById("tableContainer").querySelector("table");
+    const tbody_old = table_qs.querySelector("tbody");
+
+    updateTableState(unique, tbody_old, table_qs);
+});
+
+socket.on('new_datapoint', (reading) => {
+    const table_qs = document.getElementById("tableContainer").querySelector("table");
+    const tbody_old = table_qs.querySelector("tbody");
+
+    populateTable(reading, tbody_old);
+    // update speed if dp is motor speed (ID 1651)
+    if (reading.sensor_id == 1651) updateSpeed(reading.data);
+    if (reading.sensor_id == 1923) updateBattery(reading.data);
+});

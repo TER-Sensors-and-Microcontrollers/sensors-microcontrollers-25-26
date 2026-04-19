@@ -5,13 +5,19 @@
 
 # Importing flask module in the project is mandatory
 # An object of Flask class is our WSGI application.
-from flask import Flask, render_template, g, jsonify
+from gevent import monkey
+monkey.patch_all()
+
+from flask import Flask, render_template, g, jsonify, send_file, request
 import sqlite3
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, emit
 import threading
 from multiprocessing import shared_memory
 import time
 import atexit
+from datetime import datetime
+import struct
+
 # import serial
 #from ER-sensors-microcontrollers.pi.globals import *
 import numpy as np
@@ -22,7 +28,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 DATABASE = 'database.db'
 
-
+start = time.time()
 """
 HOME SCREEN ROUTE
 """
@@ -45,6 +51,10 @@ def display_index():
 @app.route('/SD')
 def display_SD():
     return render_template("SD.html",)
+
+@app.route('/max-graph')
+def display_graph():
+    return render_template("max-graph.html",)
 """
 OTHER ROUTES / ENDPOINTS
 """
@@ -103,42 +113,6 @@ def get_all_data_db(sensor_id:int):
 
     return jsonify(readings)
 
-# /get_dp/<sensor_id>
-# given id of sensor, returns most recent reading of that id
-
-
-@app.route('/get_dp/<sensor_id>')
-def get_datapoint(sensor_id:int):
-    db = get_db()
-    cursor = db.cursor()
-    # '?' character in the cursor query uses the value passed in from get_datapoint
-    # otherwise using sensor_id = sensor_id would query for itself
-   
-    cursor.execute(
-        "SELECT * FROM sensor_readings "
-        "WHERE sensor_id = ?"
-        "ORDER BY timestamp DESC LIMIT 1",
-        (sensor_id,)
-    )
-    rows = cursor.fetchall()
-    cursor.close()
-
-    # return error if the query does not return any results
-    if not rows:
-        return jsonify({"error": "No up-to-date sensor data found for id " + sensor_id}), 404
-    
-    # turn reading into JSON object
-    reading = {
-        "reading_id": rows[0][0],
-        "sensor_id": rows[0][1],
-        "name": rows[0][2],
-        "data": rows[0][3],
-        "unit": rows[0][4],
-        "timestamp": rows[0][5]
-    }
-
-    return jsonify(reading)
-
 # /unique_sensors
 # 
 # returns JSON response of all unique sensor id,name,unit tuples ordered by id, ascending
@@ -158,6 +132,280 @@ def get_unique_sensors():
 
     return [dict(r) for r in rows]
 
+def emit_unique_sensors(app):
+    with app.app_context():
+        db = get_db()
+        while True:
+            try:
+                # print("emitting unique sens...")
+                cursor = db.cursor()
+                cursor.execute("SELECT DISTINCT sensor_id,name,unit FROM sensor_readings ORDER BY sensor_id")
+                rows = cursor.fetchall()
+                unique = [dict(r) for r in rows]
+                socketio.emit("unique_sens", unique)
+                socketio.sleep(.005)
+            except Exception as e:
+                print(f"emit_unique_sensors error: {e}")
+                socketio.sleep(1)     
+            finally:
+                cursor.close()     
+
+# emit_faults
+# 
+# emits dictionary response of all faults found in the Motor Controller
+# based on latest database results of ids 1710 -> 1713
+def emit_faults(app):
+    with app.app_context():
+        db = get_db()
+        while True:
+            try:
+                cursor = db.cursor()
+                errors = []
+                # Post faults low bits (2 Bytes)
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1710 "
+                    "ORDER BY timestamp DESC LIMIT 1",
+                )
+                
+                # row[0] is first result, row[0][3] is data portion of reading
+                row = cursor.fetchall()
+                if row:
+                    # print("row found!", row[0][3])
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+                    # print("error bits: ", bits)
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "post", "error": "HW de-saturation fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "post", "error": "HW Over-current fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "post", "error": "Accelerator Shorted"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "post", "error": "Accelerator Open"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "post", "error": "Current Sensor Low"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "post", "error": "Current Sensor High"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "post", "error": "Module Temperature Low"})
+                    if (bits[0] >> 7 & 1):
+                        # print("bit 7 is high")
+                        errors.append({"type": "post", "error": "Module Temperature High"})
+                    
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "post", "error": "Control PCB Temperature Low"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "post", "error": "Control PCB Temperature High"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "post", "error": "Gate Drive PCB Temperature Low"})
+                    if (bits[1] >> 3 & 1):
+                        errors.append({"type": "post", "error": "Gate Drive PCB Temperature High"})
+                    if (bits[1] >> 4 & 1):
+                        errors.append({"type": "post", "error": "5V Sense Voltage Low"})
+                    if (bits[1] >> 5 & 1):
+                        errors.append({"type": "post", "error": "5V Sense Voltage High"})
+                    if (bits[1] >> 6 & 1):
+                        errors.append({"type": "post", "error": "12V Sense Voltage Low"})
+                    if (bits[1] >> 7 & 1):
+                        errors.append({"type": "post", "error": "12V Sense Voltage High"})
+                # Post faults high bits (2 Bytes)
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1711 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "post", "error": "2.5V Sense Voltage Low"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "post", "error": "2.5V Sense Voltage High"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "post", "error": "1.5V Sense Voltage Low"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "post", "error": "1.5V Sense Voltage High"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "post", "error": "DC Bus Voltage High"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "post", "error": "DC Bus Voltage Low"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "post", "error": "Pre-charge Timeout"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "post", "error": "Pre-charge Voltage Failure"})
+
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "post", "error": "EEPROM Checksum Invalid"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "post", "error": "EEPROM Data Out of Range"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "post", "error": "EEPROM Update Required"})
+                    # bits[1] >> 3, 4, 5 are reserved 
+                    if (bits[1] >> 6 & 1):
+                        errors.append({"type": "post", "error": "Brake Shorted"})
+                    if (bits[1] >> 7 & 1):
+                        errors.append({"type": "post", "error": "Brake Open"})
+
+                # Run faults low bits (2 Bytes)
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1712 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "run", "error": "Motor Over-speed Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "run", "error": "Over-current Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "run", "error": "Over-voltage Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "run", "error": "Inverter Over-temperature Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "run", "error": "Accelerator Input Shorted Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "run", "error": "Accelerator Input Open Fault"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "run", "error": "Direction Command Fault"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "run", "error": "Inverter Response Time-out Fault"})
+
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "run", "error": "Hardware Gate/Desaturation Fault"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "run", "error": "Hardware Over-current Fault"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "run", "error": "Under-voltage Fault"})
+                    if (bits[1] >> 3 & 1):
+                        errors.append({"type": "run", "error": "CAN Command Message Lost Fault"})
+                    if (bits[1] >> 4 & 1):
+                        errors.append({"type": "run", "error": "Motor Over-temperature Fault"})
+                # bits[1] >> 5, 6, 7 are reserved
+
+                # Post faults high bits (2 Bytes)
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1713 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "run", "error": "Brake Input Shorted Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "run", "error": "Brake Input Open Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "run", "error": "Module A Over-temperature Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "run", "error": "Module B Over-temperature Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "run", "error": "Module C Over-temperature Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "run", "error": "PCB Over-temperature"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "run", "error": "GDB1 Over-temperature"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "run", "error": "GDB2 Over-temperature"})
+
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "run", "error": "GDB3 Over-temperature"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "run", "error": "Current Sensor Fault"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "run", "error": "Gate Driver Over-voltage"})
+                    # bits[1] >> 3 reserved
+                    if (bits[1] >> 4 & 1):
+                        errors.append({"type": "run", "error": "Hardware Over-voltage"})
+                    # bits[1] >> 5 reserved
+                    if (bits[1] >> 6 & 1):
+                        errors.append({"type": "run", "error": "Resolver Fault"})
+                # bits[1] >> 7 reserved
+                
+                # BMS Low Faults
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1940 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Discharge Limit Enforcement Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Charger Safety Relay Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Hardware Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Heatsink Thermistor Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Software Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "Highest Cell Voltage Too High Fault"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Lowest Cell Voltage Too Low Fault"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Pack Too Hot Fault"})
+                # BMS High Faults
+                cursor.execute(
+                    "SELECT * FROM sensor_readings "
+                    "WHERE sensor_id = 1741 "
+                    "ORDER BY timestamp DESC LIMIT 1"
+                )
+                row = cursor.fetchall()
+                if row:
+                    bits = int(row[0][3]).to_bytes(2, 'little')
+
+                    if (bits[0] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Internal Communication Fault"})
+                    if (bits[0] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Cell Balancing Stuck Off Fault"})
+                    if (bits[0] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Weak Cell Fault"})
+                    if (bits[0] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "Low Cell Voltage Fault"})
+                    if (bits[0] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Open Wiring Fault"})
+                    if (bits[0] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "Current Sensor Fault"})
+                    if (bits[0] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Highest Cell Voltage Over 5V Fault"})
+                    if (bits[0] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Cell ASIC Fault"})
+
+                    if (bits[1] >> 0 & 1):
+                        errors.append({"type": "BMS", "error": "Weak Pack Fault"})
+                    if (bits[1] >> 1 & 1):
+                        errors.append({"type": "BMS", "error": "Fan Monitor Fault"})
+                    if (bits[1] >> 2 & 1):
+                        errors.append({"type": "BMS", "error": "Thermistor Fault"})
+                    if (bits[1] >> 3 & 1):
+                        errors.append({"type": "BMS", "error": "External Communication Fault"})
+                    if (bits[1] >> 4 & 1):
+                        errors.append({"type": "BMS", "error": "Redundant Power Supply Fault"})
+                    if (bits[1] >> 5 & 1):
+                        errors.append({"type": "BMS", "error": "High Voltage Isolation Fault"})
+                    if (bits[1] >> 6 & 1):
+                        errors.append({"type": "BMS", "error": "Input Power Supply Fault"})
+                    if (bits[1] >> 7 & 1):
+                        errors.append({"type": "BMS", "error": "Charge Limit Enforcement Fault"})
+                    
+                cursor.close()
+                # print("emitting faults")
+                socketio.emit("mc_faults", errors)
+                socketio.sleep(2)
+            except Exception as e:
+                print(f"emit_faults error: {e}")
+                socketio.sleep(1)
+            finally:
+                cursor.close()
 """
 DATABASE INITIALIZATION
 """
@@ -170,14 +418,98 @@ def get_db():
         db.row_factory = sqlite3.Row # Optional: access rows as dictionary-like objects
     return db
 
+
 @app.teardown_appcontext
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
-# main driver function
+# emits all datapoints younger than the last id emitted
+def emit_dp(app):
+    last_ids = {}  # sensor_id -> last reading_id emitted
+    with app.app_context():
+        db = get_db()
+        while True:
+            try:
+                cursor = db.cursor()
+                cursor.execute("""
+                    SELECT * FROM sensor_readings
+                    WHERE reading_id IN (
+                        SELECT MAX(reading_id) 
+                        FROM sensor_readings 
+                        GROUP BY sensor_id
+                    )
+                """)
+                rows = cursor.fetchall()
+                cursor.close()
 
+                any_new = False
+                for row in rows:
+                    sid = row['sensor_id']
+                    rid = row['reading_id']
+
+                    if last_ids.get(sid) != rid:  # this sensor has a new reading
+                        last_ids[sid] = rid
+                        any_new = True
+                        reading = {
+                            "sensor_id": sid,
+                            "name": row['name'],
+                            "data": row['data'],
+                            "unit": row['unit'],
+                            "timestamp": row['timestamp'],
+                        }
+                        socketio.emit("new_datapoint", reading)
+                        socketio.sleep(.005)
+
+                if not any_new:
+                    socketio.sleep(.05)
+
+            except Exception as e:
+                print(f"emit_dp error: {e}")
+                socketio.sleep(1)
+            finally:
+                cursor.close()
+            
+# download database file
+@app.route('/database.db')
+def download_db():
+    return send_file('database.db', as_attachment=True)
+
+# upload database file
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+
+    if not file.filename.endswith('.db'):
+        return jsonify({"error": "Invalid file type"}), 400
+
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+        g._database = None
+    
+    file.save(DATABASE)  # DATABASE = 'database.db' already defined at top
+    return jsonify({"success": True})
+
+@app.route("/delete")
+def clear_table_data():
+    db = get_db() 
+    cursor = db.cursor()
+    
+    query = f"DELETE FROM sensor_readings"
+    cursor.execute(query)
+    
+    db.commit()
+    cursor.close()
+    return jsonify({"success": True})
+
+# main driver function
+# def test_task(app):
+#     with app.app_context():
+#         while True:
+#             print("Test")
+#             socketio.sleep(1)
 #############################################################################
 # TODO: get latest sensor readings from db, write it into index.html        #
 #############################################################################
@@ -201,11 +533,16 @@ if __name__ == '__main__':
         "timestamp DATETIME" \
         ")")
         db.commit()
+        print("database created!")
         cursor.close()
     # Runs the app using socketio for real-time data updates from the
     # shared memory.
-    socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
+    socketio.start_background_task(emit_dp, app)
+    socketio.start_background_task(emit_faults, app)
+    socketio.start_background_task(emit_unique_sensors, app)
 
+    # socketio.run(app, host="0.0.0.0", port=5000, debug = True, allow_unsafe_werkzeug=True)
+    socketio.run(app, host="0.0.0.0", port=5000)
 
 
 
