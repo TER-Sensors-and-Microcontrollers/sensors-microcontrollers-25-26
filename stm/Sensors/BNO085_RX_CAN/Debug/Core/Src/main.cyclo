@@ -1,0 +1,10 @@
+../Core/Src/main.c:83:13:CDC_Print	4
+../Core/Src/main.c:96:20:HalStr	5
+../Core/Src/main.c:108:13:PrintVal	2
+../Core/Src/main.c:116:13:CAN_FilterAndStart	1
+../Core/Src/main.c:148:6:HAL_FDCAN_RxFifo0Callback	4
+../Core/Src/main.c:180:5:main	9
+../Core/Src/main.c:295:6:SystemClock_Config	3
+../Core/Src/main.c:342:13:MX_FDCAN2_Init	2
+../Core/Src/main.c:385:13:MX_GPIO_Init	1
+../Core/Src/main.c:408:6:Error_Handler	1
