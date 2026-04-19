@@ -313,11 +313,11 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE BEGIN USART1_Init 1 */
   /*
-  If you regenerate the code remember to change UART baud rate to 230400
+  If you regenerate the code remember to change UART baud rate to 460800
   */
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 230400;
+  huart1.Init.BaudRate = 460800;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
