@@ -1,267 +1,293 @@
-#!/usr/bin/env python3
-# qml_display.py
-# Purpose: QML-based display backend for electric racing car
-# usage: python3 display/qml_display.py
+import QtQuick 2.15
+import QtQuick.Window 2.15
+import QtQuick.Layouts 1.15
+import QtQuick.Controls 2.15
 
-import sys
-import os
-import time
-from PyQt5.QtCore import QObject, pyqtSignal, pyqtProperty, QTimer, QUrl
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtQml import QQmlApplicationEngine
+Window {
+    visible: true
+    width: 800
+    height: 480
+    color: '#ee1c1c'
+    title: "Tufts Electric Racing"
 
-# Add core paths to find can_getter
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'core'))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'config'))
+    // Rotated container for landscape orientation
+    Item {
+        width: parent.height
+        height: parent.width
+        anchors.centerIn: parent
+        rotation: -90
+        transformOrigin: Item.Center
 
-# Try to import CANGetter
-try:
-    from can_getter import CANGetter
-    CAN_AVAILABLE = True
-except ImportError:
-    print("Warning: can_getter module not found. Running in UI-only mode.")
-    CAN_AVAILABLE = False
+        // Background gradient
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "#1a1a1a" }
+                GradientStop { position: 1.0; color: "#000000" }
+            }
+        }
 
-class DashboardBackend(QObject):
-    """
-    Bridges Python CAN data to QML.
-    QML will bind to these properties and update automatically.
-    """
-    # Define Signals (notify QML when data changes)
-    speedChanged = pyqtSignal(float)
-    rpmChanged = pyqtSignal(float)
-    tempChanged = pyqtSignal(float)
-    voltageChanged = pyqtSignal(float)
-    powerChanged = pyqtSignal(float)
-    batteryPercentChanged = pyqtSignal(float)
-    mileageChanged = pyqtSignal(float)
-    motorStateChanged = pyqtSignal(str)
-    directionChanged = pyqtSignal(str)
-    statusChanged = pyqtSignal(str)
-    connectionStatusChanged = pyqtSignal(bool)
-    faultActiveChanged = pyqtSignal(bool)
-    faultCodeChanged = pyqtSignal(str)
+        // Main layout
+        Item {
+            anchors.fill: parent
+            anchors.margins: 0
 
-    def __init__(self):
-        super().__init__()
-        # Initial values
-        self._speed = 0.0
-        self._rpm = 0.0
-        self._temp = 0.0
-        self._voltage = 0.0
-        self._power = 0.0
-        self._battery_percent = 0.0
-        self._mileage = 0.0
-        self._motor_state = "IDLE"
-        self._direction = "FWD"
-        self._status = "Initializing..."
-        self._connected = False
-        
-        # Mileage tracking
-        self._last_update_time = time.time()
-        
-        # Battery voltage range (adjust for your system)
-        self.VOLTAGE_MIN = 300.0  # 0% battery
-        self.VOLTAGE_MAX = 400.0  # 100% battery
-        # falt tracking
-        self._fault_active = False
-        self._fault_code = ""
-        
-        # Connect to Shared Memory
-        self.connect_shared_memory()
+            // ── Fault Banner ─────────────────────────────────────────
+            Rectangle {
+                id: faultBanner
+                visible: backend.faultActive
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.topMargin: 8
+                width: parent.width * 0.7
+                height: 40
+                color: "#e74c3c"
+                radius: 6
+                z: 10
 
-        # Timer to read data (30fps = 33ms)
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_data)
-        self.timer.start(33)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 10
+                    Text {
+                        text: "⚠ FAULT"
+                        color: "white"
+                        font.pixelSize: 16
+                        font.bold: true
+                    }
+                    Text {
+                        text: backend.faultCode
+                        color: "white"
+                        font.pixelSize: 13
+                    }
+                }
+            }
 
-    def connect_shared_memory(self):
-        if not CAN_AVAILABLE:
-            self._status = "Missing libraries"
-            self.statusChanged.emit(self._status)
-            return
+            // ── Top: Battery SOC Gauge ────────────────────────────────
+            CircularGauge {
+                id: batteryGauge
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: 40
+                width: 190
+                height: 190
 
-        try:
-            self.can = CANGetter()
-            self._connected = True
-            self._status = "System Online"
-            self.connectionStatusChanged.emit(True)
-            self.statusChanged.emit(self._status)
-            print("✓ Connected to shared memory")
-        except FileNotFoundError:
-            self._connected = False
-            self._status = "Waiting for CAN..."
-            self.connectionStatusChanged.emit(False)
-            self.statusChanged.emit(self._status)
-        except Exception as e:
-            print(f"Error connecting: {e}")
-            self._connected = False
+                minValue: 0
+                maxValue: 100
+                value: backend.batteryPercent
+                unit: "%"
+                label: "BATTERY"
+                gaugeColor: backend.batteryPercent > 20 ? "#2ecc71" : "#e74c3c"
+            }
 
-    def update_data(self):
-        # Try to reconnect if lost
-        if not self._connected:
-            if CAN_AVAILABLE:
-                try:
-                    self.can = CANGetter()
-                    self._connected = True
-                    self.connectionStatusChanged.emit(True)
-                    self._status = "System Online"
-                    self.statusChanged.emit(self._status)
-                except:
-                    return
-            else:
-                # Simulate data for UI testing if libraries missing
-                import math
-                self._speed = abs(30 * math.sin(time.time() / 2))
-                self._rpm = abs(3000 * math.sin(time.time() / 2))
-                self._temp = 50.0 + 20.0 * math.sin(time.time() / 3)
-                self._voltage = 90.0 + 5.0 * math.cos(time.time() / 2)
-                self._battery_percent = 50.0 + 30.0 * math.sin(time.time() / 5)
-                self.speedChanged.emit(self._speed)
-                self.rpmChanged.emit(self._rpm)
-                self.tempChanged.emit(self._temp)
-                self.voltageChanged.emit(self._voltage)
-                self.batteryPercentChanged.emit(self._battery_percent)
-                return
+            // ── Left: Speed Gauge ─────────────────────────────────────
+            CircularGauge {
+                id: speedGauge
+                anchors.left: parent.left
+                anchors.leftMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                width: 190
+                height: 190
 
-        try:
-            current_time = time.time()
-            dt = current_time - self._last_update_time
-            self._last_update_time = current_time
+                minValue: 0
+                maxValue: 60
+                value: backend.speed
+                unit: "MPH"
+                label: "SPEED"
+                gaugeColor: backend.speed > 50 ? "#e74c3c" : "#3498db"
+            }
 
-            # Read from Shared Memory
-            new_speed = self.can.get_speed_mph()
-            new_rpm = self.can.get_motor_speed()
-            new_temp = self.can.get_bms_max_temp()
-            new_volt = self.can.get_pack_voltage()
-            new_power = self.can.get_power() / 1000.0  # Convert W to kW
-            
-            # Calculate battery percentage from voltage
-            new_battery_percent = ((new_volt - self.VOLTAGE_MIN) / 
-                                  (self.VOLTAGE_MAX - self.VOLTAGE_MIN)) * 100.0
-            new_battery_percent = max(0.0, min(100.0, new_battery_percent))
-            
-            # Update mileage (integrate speed over time)
-            # Speed is in MPH, dt is in seconds
-            # miles = mph * (hours) = mph * (seconds / 3600)
-            self._mileage += new_speed * (dt / 3600.0)
-            
-            # Get motor state
-            vsm_state = self.can.get_vsm_state()
-            state_names = {0: "IDLE", 1: "INIT", 2: "READY", 3: "RUNNING", 
-                          4: "ERROR", 5: "ACTIVE"}
-            new_motor_state = state_names.get(int(vsm_state), "UNKNOWN")
-            
-            # Get direction
-            new_direction = self.can.get_direction_text()
+            // ── Right: RPM Gauge ──────────────────────────────────────
+            CircularGauge {
+                id: rpmGauge
+                anchors.right: parent.right
+                anchors.rightMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                width: 190
+                height: 190
 
-            # Update and emit all changes
-            if self._speed != new_speed:
-                self._speed = new_speed
-                self.speedChanged.emit(self._speed)
-            
-            if self._rpm != new_rpm:
-                self._rpm = new_rpm
-                self.rpmChanged.emit(self._rpm)
+                minValue: 0
+                maxValue: 6000
+                value: backend.rpm
+                unit: "RPM"
+                label: "MOTOR"
+                gaugeColor: backend.rpm > 5000 ? "#e74c3c" : "#f39c12"
+            }
 
-            if self._temp != new_temp:
-                self._temp = new_temp
-                self.tempChanged.emit(self._temp)
+            // ── Middle row: Mileage + Pack Voltage ───────────────────
+            Row {
+                id: bottomStats
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: bottomButtons.top
+                anchors.bottomMargin: 15
+                spacing: 20
 
-            if self._voltage != new_volt:
-                self._voltage = new_volt
-                self.voltageChanged.emit(self._voltage)
+                Rectangle {
+                    width: 180; height: 80
+                    color: "#2c3e50"; radius: 10
+                    border.color: '#f0f2f0'; border.width: 2
+                    Column {
+                        anchors.centerIn: parent; spacing: 5
+                        Text {
+                            text: "MILEAGE"
+                            color: "#ecf0f1"; font.pixelSize: 14; font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        Text {
+                            text: backend.mileage.toFixed(2) + " mi"
+                            color: "#ecf0f1"; font.pixelSize: 28; font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
 
-            if self._power != new_power:
-                self._power = new_power
-                self.powerChanged.emit(self._power)
-            
-            if self._battery_percent != new_battery_percent:
-                self._battery_percent = new_battery_percent
-                self.batteryPercentChanged.emit(self._battery_percent)
-            
-            self.mileageChanged.emit(self._mileage)
-            
-            if self._motor_state != new_motor_state:
-                self._motor_state = new_motor_state
-                self.motorStateChanged.emit(self._motor_state)
-            
-            if self._direction != new_direction:
-                self._direction = new_direction
-                self.directionChanged.emit(self._direction)
-            # Fault tracking
-            run_lo, run_hi = self.can.get_fault_codes()
-            fault_active = run_lo != 0 or run_hi != 0
-            fault_str = f"RUN: 0x{run_lo:04X} / 0x{run_hi:04X}" if fault_active else ""
+                Rectangle {
+                    width: 180; height: 80
+                    color: "#2c3e50"; radius: 10
+                    border.color: "#f0f2f0"; border.width: 2
+                    Column {
+                        anchors.centerIn: parent; spacing: 5
+                        Text {
+                            text: "PACK VOLTAGE"
+                            color: "#ecf0f1"; font.pixelSize: 14; font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                        Text {
+                            text: backend.voltage.toFixed(1) + " V"
+                            color: "#ecf0f1"; font.pixelSize: 28; font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
+            }
 
-            if self._fault_active != fault_active:
-                self._fault_active = fault_active
-                self.faultActiveChanged.emit(self._fault_active)
-            if self._fault_code != fault_str:
-                self._fault_code = fault_str
-                self.faultCodeChanged.emit(self._fault_code)
+            // ── Bottom row: BATT TEMP + MOTOR TEMP ────────────────────
+            Row {
+                id: bottomButtons
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 20
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 20
 
-        except Exception as e:
-            print(f"Error reading data: {e}")
-            self._connected = False
-            self.connectionStatusChanged.emit(False)
+                // ── Left button: Battery (cell) temperature from 0xC1 ──
+                InfoButton {
+                    width: 180
+                    height: 80
+                    title: "BATT TEMP"
+                    value: backend.batteryTemp.toFixed(1) + "°C"
+                    subtext: backend.batteryTemp > 45 ? "⚠ HOT" : "OK"
+                    buttonColor: backend.batteryTemp > 45 ? "#e74c3c" : "#27ae60"
+                }
 
-    # --- Properties accessible from QML ---
-    
-    @pyqtProperty(float, notify=speedChanged)
-    def speed(self): return self._speed
-    
-    @pyqtProperty(float, notify=rpmChanged)
-    def rpm(self): return self._rpm
+                // ── Right button: Motor controller temperature ──────────
+                InfoButton {
+                    width: 180
+                    height: 80
+                    title: "MOTOR TEMP"
+                    value: backend.temp.toFixed(1) + "°C"
+                    subtext: backend.temp > 85 ? "⚠ HOT" : "OK"
+                    buttonColor: backend.temp > 85 ? "#e74c3c" : "#0d89ef"
+                }
+            }
 
-    @pyqtProperty(float, notify=tempChanged)
-    def temp(self): return self._temp
+            // ── Status indicator (top-right corner) ──────────────────
+            Text {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 10
+                text: backend.status
+                color: backend.connected ? "#2ecc71" : "#f39c12"
+                font.pixelSize: 12
+                font.bold: true
+            }
+        }
+    }
 
-    @pyqtProperty(float, notify=voltageChanged)
-    def voltage(self): return self._voltage
+    // ── Reusable Components ────────────────────────────────────────────
 
-    @pyqtProperty(float, notify=powerChanged)
-    def power(self): return self._power
-    
-    @pyqtProperty(float, notify=batteryPercentChanged)
-    def batteryPercent(self): return self._battery_percent
-    
-    @pyqtProperty(float, notify=mileageChanged)
-    def mileage(self): return self._mileage
-    
-    @pyqtProperty(str, notify=motorStateChanged)
-    def motorState(self): return self._motor_state
-    
-    @pyqtProperty(str, notify=directionChanged)
-    def direction(self): return self._direction
-        
-    @pyqtProperty(str, notify=statusChanged)
-    def status(self): return self._status
+    component CircularGauge: Item {
+        property real  minValue:   0
+        property real  maxValue:   100
+        property real  value:      0
+        property string unit:      ""
+        property string label:     ""
+        property color gaugeColor: '#0d89ef'
 
-    @pyqtProperty(bool, notify=connectionStatusChanged)
-    def connected(self): return self._connected
-    # Fault properties
-    @pyqtProperty(bool, notify=faultActiveChanged)
-    def faultActive(self): return self._fault_active
+        Rectangle {
+            anchors.fill: parent
+            color: "#1a1a1a"
+            radius: width / 2
+            border.color: gaugeColor
+            border.width: 6
 
-    @pyqtProperty(str, notify=faultCodeChanged)
-    def faultCode(self): return self._fault_code
+            Column {
+                anchors.centerIn: parent
+                spacing: 5
 
-def main():
-    app = QApplication(sys.argv)
-    engine = QQmlApplicationEngine()
+                Text {
+                    text: label
+                    color: '#e8f4f5'; font.pixelSize: 14; font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Text {
+                    text: Math.round(value)
+                    color: "#ecf0f1"
+                    font.pixelSize: parent.parent.width > 150 ? 48 : 32
+                    font.bold: true
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                Text {
+                    text: unit
+                    color: '#f1f5f5'; font.pixelSize: 16
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+            }
 
-    backend = DashboardBackend()
-    engine.rootContext().setContextProperty("backend", backend)
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                radius: width / 2
+                border.color: Qt.lighter(gaugeColor, 1.3)
+                border.width: 3
+                opacity: 0.3
+            }
+        }
+    }
 
-    # Load QML file
-    qml_file = os.path.join(os.path.dirname(__file__), 'dashboard.qml')
-    engine.load(QUrl.fromLocalFile(qml_file))
+    component InfoButton: Rectangle {
+        property string title:       ""
+        property string value:       ""
+        property string subtext:     ""
+        property color  buttonColor: "#3498db"
 
-    if not engine.rootObjects():
-        sys.exit(-1)
+        color: buttonColor
+        radius: 8
+        border.color: Qt.lighter(buttonColor, 1.2)
+        border.width: 2
 
-    sys.exit(app.exec_())
+        Column {
+            anchors.centerIn: parent
+            spacing: 3
 
-if __name__ == "__main__":
-    main()
+            Text {
+                text: title
+                color: "#ecf0f1"; font.pixelSize: 12; font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            Text {
+                text: value
+                color: "white"; font.pixelSize: 18; font.bold: true
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+            Text {
+                text: subtext
+                color: "#bdc3c7"; font.pixelSize: 10
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: console.log(title + " clicked")
+        }
+    }
+}
