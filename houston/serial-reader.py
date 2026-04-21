@@ -218,8 +218,8 @@ def reader(ser:serial.Serial, debug=True):
                             min_cell_volt = struct.unpack('<H', data[2:4])[0]
                             temp_hi = data[4] - 256 if data[4] >= 128 else data[4]
                             temp_lo = data[5] - 256 if data[5] >= 128 else data[5]
-                            readingMax = [id * CONST_OFFSET, "Max Cell Voltage", max_cell_volt * .1, "Volts", time.time() - start]
-                            readingMin = [id * CONST_OFFSET + 1, "Min Cell Voltage", min_cell_volt * .1, "Volts", time.time() - start]
+                            readingMax = [id * CONST_OFFSET, "Max Cell Voltage", max_cell_volt * 0.0001, "Volts", time.time() - start]
+                            readingMin = [id * CONST_OFFSET + 1, "Min Cell Voltage", min_cell_volt * 0.0001, "Volts", time.time() - start]
                             readingH = [id * CONST_OFFSET + 2, "High Temperature", temp_hi, "C", time.time() - start]
                             readingL = [id * CONST_OFFSET + 3, "Low Temperature", temp_lo, "C", time.time() - start]
                             cursor.executemany(
