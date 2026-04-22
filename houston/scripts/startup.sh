@@ -7,5 +7,7 @@ done
 echo "My wlan0 ip address is: "
 ip addr show wlan0 | awk '/inet / {print $2}' | cut -d/ -f1
 echo "Starting processes..."
-python3 ~/sensors-microcontrollers/houston/app.py &
-python3 ~/sensors-microcontrollers/houston/serial-reader.py & 
+python3 /home/racing/sensors-microcontrollers-25-26/houston/app.py &
+python3 /home/racing/sensors-microcontrollers-25-26/houston/serial-reader.py & 
+
+wait
