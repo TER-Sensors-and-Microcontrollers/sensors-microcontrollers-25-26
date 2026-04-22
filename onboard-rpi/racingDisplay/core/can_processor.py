@@ -234,6 +234,10 @@ class CANProcessor:
         elif can_id in (0xC0, 0xC1, 0xC2):
             # Orion BMS 2 pack-level messages
             self.parse_orion_bms(msg)
+            if can_id == 0xC2:
+                print(f"RAW BMS FAULT MSG: ID=0x{can_id:03X} Data={data.hex()}")
+    
+            self._log_latency(can_id)
 
         elif 0 <= can_id <= 100:
             # STM32 test range — log raw bytes, do not store

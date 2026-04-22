@@ -77,6 +77,7 @@ class OrionBMSDecoder:
 
             # Fault indicator: byte 5 must equal 0x2A (42) for fault active.
             # When this byte equals 42 the BMS has flagged a fault condition.
+            print(f"DEBUG: ID 0xC2 | Byte 5 raw value: {d[5]} | Fault condition (== 42): {d[5] == 42}")
             self.data["fault_active"] = (d[5] == 0x2A)
 
         return self.data
