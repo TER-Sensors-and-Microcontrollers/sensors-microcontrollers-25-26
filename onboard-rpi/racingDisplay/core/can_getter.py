@@ -8,10 +8,10 @@
 #
 # Usage:
 #   from can_getter import CANGetter
-#   
+#
 #   can = CANGetter()
 #   speed = can.get_motor_speed()
-#   temp = can.get_motor_temp()
+#   temp  = can.get_motor_temp()
 #   all_data = can.get_all_values()
 #   can.close()
 #
@@ -33,7 +33,7 @@ class CANGetter:
     Thread-safe reader for CAN sensor data from shared memory.
     Provides convenient methods to access specific sensor values.
     """
-    
+
     def __init__(self):
         """
         Connect to existing shared memory created by can_processor.
@@ -42,264 +42,211 @@ class CANGetter:
         try:
             self.shm = shared_memory.SharedMemory(name=SHMEM_NAME)
             self.data = np.ndarray(
-                shape=(SHMEM_NMEM,), 
-                dtype=SHMEM_DTYPE, 
+                shape=(SHMEM_NMEM,),
+                dtype=SHMEM_DTYPE,
                 buffer=self.shm.buf
-        )
+            )
         except FileNotFoundError:
             raise FileNotFoundError(
                 f"Shared memory '{SHMEM_NAME}' not found. "
                 "Make sure can_processor.py is running first."
             )
-    
+
     # ==================== MOTOR CONTROLLER GETTERS ====================
-    
+
     def get_motor_cb_temp(self):
         """Get motor control board temperature in Celsius"""
         return float(self.data[MOTOR_START_IDX + 1])
-    
+
     def get_motor_coolant_temp(self):
         """Get motor coolant temperature in Celsius"""
         return float(self.data[MOTOR_START_IDX + 2])
-    
+
     def get_motor_heatsink_temp(self):
         """Get motor heatsink temperature in Celsius"""
         return float(self.data[MOTOR_START_IDX + 3])
-    
+
     def get_motor_temp(self):
         """Get motor temperature in Celsius"""
         return float(self.data[MOTOR_START_IDX + 4])
-    
+
     def get_pedal1_position(self):
         """Get pedal 1 position (0.0 - 1.0)"""
         return float(self.data[MOTOR_START_IDX + 5])
-    
+
     def get_pedal2_position(self):
         """Get pedal 2 position (0.0 - 1.0)"""
         return float(self.data[MOTOR_START_IDX + 6])
-    
+
     def get_motor_angle(self):
         """Get motor angle in degrees"""
         return float(self.data[MOTOR_START_IDX + 7])
-    
+
     def get_motor_speed(self):
         """Get motor speed in RPM"""
         return float(self.data[MOTOR_START_IDX + 8])
-    
+
     def get_dc_current(self):
         """Get DC bus current in Amps"""
         return float(self.data[MOTOR_START_IDX + 9])
-    
+
     def get_dc_voltage(self):
         """Get DC bus voltage in Volts"""
         return float(self.data[MOTOR_START_IDX + 10])
-    
+
     def get_vsm_state(self):
         """Get Vehicle State Machine state"""
         return int(self.data[MOTOR_START_IDX + 11])
-    
+
     def get_inverter_state(self):
         """Get inverter state"""
         return int(self.data[MOTOR_START_IDX + 12])
-    
+
     def get_direction(self):
         """Get vehicle direction (0=reverse, 1=forward)"""
         return int(self.data[MOTOR_START_IDX + 13])
-    
+
     def get_torque(self):
         """Get motor torque in Nm"""
         return float(self.data[MOTOR_START_IDX + 14])
-    
+
     def get_timer(self):
         """Get internal timer value"""
         return int(self.data[MOTOR_START_IDX + 15])
-    
-    # ==================== BMS GETTERS ====================
-    
-    def get_bms_avg_resistance(self):
-        """Get average BMS cell resistance"""
-        return float(self.data[BMS_START_IDX + 6])
-    
-    def get_bms_avg_voltage(self):
-        """Get average BMS cell open voltage"""
-        return float(self.data[BMS_START_IDX + 7])
-    
-    def get_fault_codes(self):
-        """Returns (run_lo, run_hi) as ints — the active fault word"""
+
+    # ==================== BMS GETTERS (Orion BMS 2) ====================
+
+    def get_pack_voltage(self):
+        """Get BMS pack instantaneous voltage in Volts (from 0xC0)"""
+        return float(self.data[BMS_START_IDX + 0])
+
+    def get_bms_soc(self):
+        """
+        Get battery State of Charge in percent (0.0 – 100.0).
+        Source: 0xC0 byte 6, scaled 0.5 %/bit, clamped at 100 %.
+        """
+        return float(self.data[BMS_START_IDX + 2])
+
+    def get_bms_high_temp(self):
+        """
+        Get highest cell temperature in Celsius (from 0xC1 byte 1).
+        Range: −40 °C to +80 °C.
+        """
+        return float(self.data[BMS_START_IDX + 3])
+
+    def get_bms_low_temp(self):
+        """
+        Get lowest cell temperature in Celsius (from 0xC1 byte 0).
+        Range: −40 °C to +80 °C.
+        """
+        return float(self.data[BMS_START_IDX + 4])
+
+    def get_bms_fault_active(self):
+        """
+        Returns True if the BMS has signalled a fault via 0xC2 (byte 5 == 0x2A).
+        Returns False when no fault is present.
+        """
+        return bool(self.data[BMS_START_IDX + 5])
+
+    def get_mc_fault_codes(self):
+        """
+        Returns (run_fault_lo, run_fault_hi) for motor controller run-time faults.
+        Both are 0 when no fault is active.
+        Source: MC CAN message 0xAB bytes 4-7.
+        """
         return (
-                int(self.data[BMS_START_IDX + 6]),
-                int(self.data[BMS_START_IDX + 7]),
+            int(self.data[BMS_START_IDX + 6]),   # MCFaultRunLo
+            int(self.data[BMS_START_IDX + 7]),   # MCFaultRunHi
         )
 
-    def has_fault(self):
-        """True if any run-time fault bit is set"""
-        _, _, run_lo, run_hi = self.get_fault_codes()
-        return run_lo != 0 or run_hi != 0
-    
+    def has_any_fault(self):
+        """
+        Returns True if either the BMS or the motor controller reports a fault.
+        Convenience wrapper used by test scripts.
+        """
+        bms_fault = self.get_bms_fault_active()
+        mc_lo, mc_hi = self.get_mc_fault_codes()
+        return bms_fault or mc_lo != 0 or mc_hi != 0
+
     # ==================== IMU GETTERS ====================
-    
+
     def get_imu_accel_x(self):
-        """Get IMU X-axis acceleration"""
         return float(self.data[1])
-    
+
     def get_imu_accel_y(self):
-        """Get IMU Y-axis acceleration"""
         return float(self.data[2])
-    
+
     def get_imu_accel_z(self):
-        """Get IMU Z-axis acceleration"""
         return float(self.data[3])
-    
+
     def get_imu_gyro_x(self):
-        """Get IMU X-axis gyro"""
         return float(self.data[4])
-    
+
     def get_imu_gyro_y(self):
-        """Get IMU Y-axis gyro"""
         return float(self.data[5])
-    
+
     def get_imu_gyro_z(self):
-        """Get IMU Z-axis gyro"""
         return float(self.data[6])
-    
+
     # ==================== GENERAL GETTERS ====================
-    
+
     def get_steering_wheel(self):
         """Get steering wheel angle"""
         return float(self.data[0])
-    
+
     def get_value_by_index(self, index):
-        """
-        Get sensor value by index.
-        
-        Args:
-            index: Index in shared memory (0-37)
-            
-        Returns:
-            float: Sensor value
-        """
         if 0 <= index < SHMEM_NMEM:
             return float(self.data[index])
-        else:
-            raise IndexError(f"Index {index} out of range (0-{SHMEM_NMEM-1})")
-    
+        raise IndexError(f"Index {index} out of range (0-{SHMEM_NMEM-1})")
+
     def get_value_by_name(self, name):
-        """
-        Get sensor value by name.
-        
-        Args:
-            name: Sensor name from SENS_NAMES
-            
-        Returns:
-            float: Sensor value
-        """
         if name in SENS_NAMES:
-            index = SENS_NAMES.index(name)
-            return float(self.data[index])
-        else:
-            raise ValueError(f"Unknown sensor name: {name}")
-    
+            return float(self.data[SENS_NAMES.index(name)])
+        raise ValueError(f"Unknown sensor name: {name}")
+
     def get_all_values(self):
-        """
-        Get all sensor values as a dictionary.
-        
-        Returns:
-            dict: {sensor_name: value} for all sensors
-        """
         return {name: float(self.data[i]) for i, name in enumerate(SENS_NAMES)}
-    
+
     def get_all_motor_values(self):
-        """
-        Get all motor-related values.
-        
-        Returns:
-            dict: Motor sensor values only
-        """
-        motor_values = {}
-        for i in range(MOTOR_START_IDX, BMS_START_IDX):
-            motor_values[SENS_NAMES[i]] = float(self.data[i])
-        return motor_values
-    
+        return {
+            SENS_NAMES[i]: float(self.data[i])
+            for i in range(MOTOR_START_IDX, BMS_START_IDX)
+        }
+
     def get_all_bms_values(self):
-        """
-        Get all BMS-related values.
-        
-        Returns:
-            dict: BMS sensor values only
-        """
-        bms_values = {}
-        for i in range(BMS_START_IDX, SHMEM_NMEM):
-            bms_values[SENS_NAMES[i]] = float(self.data[i])
-        return bms_values
-    
+        return {
+            SENS_NAMES[i]: float(self.data[i])
+            for i in range(BMS_START_IDX, SHMEM_NMEM)
+        }
+
     # ==================== CALCULATED VALUES ====================
-    
+
     def get_power(self):
-        """
-        Calculate electrical power (Voltage × Current).
-        
-        Returns:
-            float: Power in Watts
-        """
-        voltage = self.get_dc_voltage()
-        current = self.get_dc_current()
-        return voltage * current
-    
+        """Electrical power = DC Voltage × DC Current (Watts)"""
+        return self.get_dc_voltage() * self.get_dc_current()
+
     def get_speed_mph(self, wheel_diameter_inches=20, gear_ratio=10.5):
         """
-        Calculate vehicle speed in MPH from motor RPM.
-        
-        Args:
-            wheel_diameter_inches: Wheel diameter (default: 20")
-            gear_ratio: Motor to wheel gear ratio (default: 10.5)
-            
-        Returns:
-            float: Speed in MPH
+        Vehicle speed in MPH from motor RPM.
+        Defaults: 20-inch wheel, 10.5:1 gear ratio.
         """
         rpm = self.get_motor_speed()
         wheel_rpm = rpm / gear_ratio
         wheel_circumference_ft = (wheel_diameter_inches * 3.14159) / 12
         speed_fpm = wheel_rpm * wheel_circumference_ft
-        speed_mph = speed_fpm * 60 / 5280
-        return speed_mph
-    
+        return speed_fpm * 60 / 5280
+
     def get_direction_text(self):
-        """
-        Get human-readable direction.
-        
-        Returns:
-            str: 'Forward' or 'Reverse'
-        """
-        direction = self.get_direction()
-        return 'Forward' if direction == 1 else 'Reverse'
-    # =================== BMS values ====================
-    def get_bms_max_temp(self):
-        return float(self.data[BMS_START_IDX + 3])
-    def get_pack_voltage(self):
-        return float(self.data[BMS_START_IDX + 0])
-    
+        return 'Forward' if self.get_direction() == 1 else 'Reverse'
+
     # ==================== UTILITY METHODS ====================
-    
-    def is_data_valid(self, max_age_seconds=1.0):
-        """
-        Check if data appears to be updating (simple validation).
-        Checks if motor speed has changed recently.
-        
-        Args:
-            max_age_seconds: Not implemented yet (for future timestamp checking)
-            
-        Returns:
-            bool: True if data seems valid
-        """
-        # Simple check: if motor values are non-zero, assume valid
-        speed = self.get_motor_speed()
-        voltage = self.get_dc_voltage()
-        # old
-        #return speed != 0 or voltage != 0
-        #new
-        print(f"Motor Speed: {speed}, DC Voltage: {voltage}")
+
+    def is_data_valid(self):
+        """Returns True if pack voltage is positive (basic sanity check)."""
+        voltage = self.get_pack_voltage()
+        print(f"Pack Voltage: {voltage:.1f} V")
         return voltage > 0
-    
+
     def print_summary(self):
         """Print a summary of key sensor values (useful for debugging)"""
         print("=" * 60)
@@ -313,9 +260,15 @@ class CANGetter:
         print(f"Torque:           {self.get_torque():.1f} Nm")
         print(f"Pedal Position:   {self.get_pedal1_position():.1%}")
         print(f"Direction:        {self.get_direction_text()}")
-        print(f"BMS Avg Voltage:  {self.get_bms_avg_voltage():.2f}")
+        print(f"Pack Voltage:     {self.get_pack_voltage():.1f} V")
+        print(f"SOC:              {self.get_bms_soc():.1f} %")
+        print(f"Batt High Temp:   {self.get_bms_high_temp():.1f} °C")
+        print(f"Batt Low  Temp:   {self.get_bms_low_temp():.1f} °C")
+        print(f"BMS Fault:        {'ACTIVE' if self.get_bms_fault_active() else 'none'}")
+        mc_lo, mc_hi = self.get_mc_fault_codes()
+        print(f"MC Run Fault:     0x{mc_lo:04X} / 0x{mc_hi:04X}")
         print("=" * 60)
-    
+
     def close(self):
         """Close shared memory connection"""
         if hasattr(self, 'shm'):
@@ -324,17 +277,13 @@ class CANGetter:
 
 # ==================== EXAMPLE USAGE ====================
 def main():
-    """Example usage of CANGetter"""
     try:
         can = CANGetter()
         print("✓ Connected to shared memory")
-        
-        # Print summary every 0.5 seconds
         import time
         while True:
             can.print_summary()
             time.sleep(0.5)
-            
     except FileNotFoundError as e:
         print(f"✗ Error: {e}")
         print("  Start can_processor.py first!")

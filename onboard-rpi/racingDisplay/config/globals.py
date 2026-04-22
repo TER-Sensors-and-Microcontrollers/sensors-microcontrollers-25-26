@@ -13,7 +13,9 @@ SHMEM_DTYPE = np.float32        # Data type for all sensor values
 SHMEM_MEMB_SIZE = np.dtype(SHMEM_DTYPE).itemsize  # 4 bytes per float32
 
 # ==================== SENSOR DEFINITIONS ====================
-# Order matters! Index in this list = index in shared memory
+# Order matters! Index in this list = index in shared memory.
+# BMS section (30-37) reflects the actual Orion BMS 2 messages
+# confirmed on hardware: 0xC0 (voltage/SOC), 0xC1 (temps), 0xC2 (faults).
 SENS_NAMES = [
     # Steering & IMU (indices 0-9)
     "SteeringWheel",     # 0
@@ -26,13 +28,13 @@ SENS_NAMES = [
     "IMUMagnetX",        # 7
     "IMUMagnetY",        # 8
     "IMUMagnetZ",        # 9
-    
+
     # Wheel Speeds (indices 10-13) - Reserved for future
     "WSFrontLeft",       # 10
     "WSFrontRight",      # 11
     "WSBackLeft",        # 12
     "WSBackRight",       # 13
-    
+
     # Motor Controller Data (indices 14-29)
     "MotorPlaceholder",  # 14 - Reserved
     "MotorCBTemp",       # 15 - Control Board Temperature
@@ -50,16 +52,17 @@ SENS_NAMES = [
     "Direction",         # 27 - Forward/Reverse
     "Torque",            # 28 - Motor Torque
     "Timer",             # 29 - Internal Timer
-    
-    # BMS Data (indices 30-37)
-    "BMSPackVoltage",    # 30 - Total pack voltage (V)
-    "BMSPackCurrent",    # 31 - Pack current (A)
-    "BMSSOC",           # 32 - State of charge (%)
-    "BMSMaxTemp",        # 33 - Max cell temperature (°C)
-    "FaultPostLo",       # 34 - POST fault code low word
-    "FaultPostHi",       # 35 - POST fault code high word
-    "FaultRunLo",        # 36 - Run fault code low word
-    "FaultRunHi",        # 37 - Run fault code high word
+
+    # BMS Data (indices 30-37) — Orion BMS 2, CAN1, 250 kbps
+    # Source messages: 0xC0, 0xC1, 0xC2
+    "BMSPackVoltage",    # 30 - Pack instantaneous voltage (V)           ← 0xC0
+    "BMSPackCurrent",    # 31 - Pack current (A) [placeholder, not decoded yet]
+    "BMSSOC",            # 32 - State of charge (%)  0.0–100.0           ← 0xC0 byte 6
+    "BMSHighTemp",       # 33 - Highest cell temperature (°C)            ← 0xC1 byte 1
+    "BMSLowTemp",        # 34 - Lowest cell temperature (°C)             ← 0xC1 byte 0
+    "BMSFaultActive",    # 35 - 1.0 = BMS fault present, 0.0 = ok        ← 0xC2 byte 5
+    "MCFaultRunLo",      # 36 - Motor controller run-fault low word       ← MC 0xAB
+    "MCFaultRunHi",      # 37 - Motor controller run-fault high word      ← MC 0xAB
 ]
 
 SHMEM_NMEM = len(SENS_NAMES)
@@ -67,22 +70,22 @@ SHMEM_TOTAL_SIZE = SHMEM_NMEM * SHMEM_MEMB_SIZE  # Total bytes needed
 
 # ==================== INDEX HELPERS ====================
 MOTOR_START_IDX = SENS_NAMES.index("MotorPlaceholder")  # 14
-BMS_START_IDX = SENS_NAMES.index("BMSPackVoltage")       # 30
+BMS_START_IDX   = SENS_NAMES.index("BMSPackVoltage")    # 30
 
 # ==================== CAN BUS CONFIG ====================
-CAN_INTERFACES = ["can0", "can1"]          # SocketCAN interface name
-CAN_INTERFACE = CAN_INTERFACES[0]          # Default CAN interface to use
-CAN_BITRATE = 250000            # 500 kbps
-CAN_CHANNEL = "canusb_data"     # Legacy - not used without Redis
+CAN_INTERFACES = ["can0", "can1"]          # Both SocketCAN interfaces
+CAN_INTERFACE  = CAN_INTERFACES[0]         # Default (single-bus callers)
+CAN_BITRATE    = 250000                    # 250 kbps
+CAN_CHANNEL    = "canusb_data"             # Legacy — not used without Redis
 
 # ==================== DISPLAY CONFIG ====================
 DISPLAY_UPDATE_RATE_MS = 100    # Update display every 100ms
-DISPLAY_WIDTH = 800             # Display resolution
+DISPLAY_WIDTH  = 800
 DISPLAY_HEIGHT = 480
 
 # ==================== LOGGING CONFIG ====================
-LOG_PATH = "/media/sd_card/logs/"  # SD card mount point
-LOG_RATE_HZ = 10                   # Log 10 samples per second
+LOG_PATH    = "/media/sd_card/logs/"  # SD card mount point
+LOG_RATE_HZ = 10                       # Log 10 samples per second
 
 # ==================== USB PORTS (Legacy - for Arduino) ====================
 PI_USB0 = "/dev/ttyACM0"
