@@ -79,8 +79,12 @@ class DashboardBackend(QObject):
             self._status = "Missing libraries"
             self.statusChanged.emit(self._status)
             return
+        print("DEBUG: Attempting to connect to shared memory...")
+        print(f"attempting to connect to shared message")
         try:
             self.can = CANGetter()
+            print("Can_getter passed")
+            print(f"made it so can_getter")
             self._connected = True
             self._status = "System Online"
             self.connectionStatusChanged.emit(True)
