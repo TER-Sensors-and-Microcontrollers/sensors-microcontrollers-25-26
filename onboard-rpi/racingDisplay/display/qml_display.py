@@ -95,8 +95,9 @@ class DashboardBackend(QObject):
             self._status = "Waiting for CAN..."
             self.connectionStatusChanged.emit(False)
             self.statusChanged.emit(self._status)
+            print("Waiting for CAN... (shared memory file not found)", flush=True)
         except Exception as e:
-            print(f"Error connecting: {e}")
+            print(f"Error connecting: {e}", flush=True)
             self._connected = False
 
     # ------------------------------------------------------------------
