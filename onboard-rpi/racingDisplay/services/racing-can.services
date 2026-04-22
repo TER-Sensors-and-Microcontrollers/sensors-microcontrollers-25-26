@@ -1,25 +1,33 @@
+[Unit]
+Description=Electric Racing CAN Bus Processor
+After=network.target
+
 [Service]
 Type=simple
 User=root
 Group=root
-
+UMask=000
 WorkingDirectory=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay
-
+Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
+# Clean up old memory and setup CAN interfaces
 ExecStartPre=-/bin/rm -f /dev/shm/mem123
 ExecStartPre=-/bin/bash /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can0 250000
 ExecStartPre=-/bin/bash /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/scripts/setup_can.sh can1 250000
 ExecStartPre=/bin/sleep 3
 
-ExecStart=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/venv/bin/python3 \
-    /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
+# Start the processor
+ExecStart=/usr/bin/python3 /home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core/can_processor.py
 
-Environment=PYTHONPATH=/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/core:/home/racing/sensors-microcontrollers-25-26/onboard-rpi/racingDisplay/config
+# Fix permissions so the display (racing user) can read the memory
+ExecStartPost=/usr/bin/sleep 1
+# Then, change the permissions
+ExecStartPost=/bin/chmod 666 /dev/shm/mem123
 
-UMask=000
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=3
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=racing-can
+
+[Install]
+WantedBy=multi-user.target

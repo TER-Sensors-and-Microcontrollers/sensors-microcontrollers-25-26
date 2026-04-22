@@ -99,6 +99,8 @@ class DashboardBackend(QObject):
         except Exception as e:
             print(f"Error connecting: {e}", flush=True)
             self._connected = False
+            self._status = "Permission Denied"
+            self.statusChanged.emit(self._status)
 
     # ------------------------------------------------------------------
     def update_data(self):
