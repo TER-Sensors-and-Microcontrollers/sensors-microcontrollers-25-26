@@ -27,9 +27,9 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0000c1d4  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00015d5b  00000000  00000000  0000c204  2**0
+ 12 .debug_info   00015d5f  00000000  00000000  0000c204  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 000037a4  00000000  00000000  00021f5f  2**0
+ 13 .debug_abbrev 000037a4  00000000  00000000  00021f63  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  14 .debug_aranges 00001260  00000000  00000000  00025708  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
@@ -37,15 +37,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  000282ff  00000000  00000000  0002773a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0001669a  00000000  00000000  0004fa39  2**0
+ 17 .debug_line   00016685  00000000  00000000  0004fa39  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000f0801  00000000  00000000  000660d3  2**0
+ 18 .debug_str    000f0801  00000000  00000000  000660be  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  001568d4  2**0
+ 19 .comment      00000043  00000000  00000000  001568bf  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004cd0  00000000  00000000  00156918  2**2
+ 20 .debug_frame  00004cd0  00000000  00000000  00156904  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000007e  00000000  00000000  0015b5e8  2**0
+ 21 .debug_line_str 0000007e  00000000  00000000  0015b5d4  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -139,45 +139,46 @@ Disassembly of section .text:
  80002be:	bf00      	nop
 
 080002c0 <CDC_Print>:
+/* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void CDC_Print(const char *fmt, ...)
-{
+static void CDC_Print(const char *fmt, ...) {
  80002c0:	b40f      	push	{r0, r1, r2, r3}
  80002c2:	b580      	push	{r7, lr}
  80002c4:	b084      	sub	sp, #16
  80002c6:	af00      	add	r7, sp, #0
-    va_list a;
-    va_start(a, fmt);
+	va_list a;
+	va_start(a, fmt);
  80002c8:	f107 031c 	add.w	r3, r7, #28
  80002cc:	607b      	str	r3, [r7, #4]
-    int n = vsnprintf(pBuf, PRINT_BUF, fmt, a);
+	int n = vsnprintf(pBuf, PRINT_BUF, fmt, a);
  80002ce:	687b      	ldr	r3, [r7, #4]
  80002d0:	69ba      	ldr	r2, [r7, #24]
  80002d2:	f44f 7100 	mov.w	r1, #512	@ 0x200
  80002d6:	4814      	ldr	r0, [pc, #80]	@ (8000328 <CDC_Print+0x68>)
  80002d8:	f009 fcbe 	bl	8009c58 <vsniprintf>
  80002dc:	60f8      	str	r0, [r7, #12]
-    va_end(a);
-    if (n <= 0) return;
+	va_end(a);
+	if (n <= 0)
  80002de:	68fb      	ldr	r3, [r7, #12]
  80002e0:	2b00      	cmp	r3, #0
  80002e2:	dd19      	ble.n	8000318 <CDC_Print+0x58>
-    uint32_t t0 = HAL_GetTick();
+		return;
+	uint32_t t0 = HAL_GetTick();
  80002e4:	f000 ffd0 	bl	8001288 <HAL_GetTick>
  80002e8:	60b8      	str	r0, [r7, #8]
-    while (CDC_Transmit_FS((uint8_t *)pBuf, (uint16_t)n) == USBD_BUSY)
+	while (CDC_Transmit_FS((uint8_t*) pBuf, (uint16_t) n) == USBD_BUSY)
  80002ea:	e006      	b.n	80002fa <CDC_Print+0x3a>
-        if (HAL_GetTick() - t0 > 50) break;
+		if (HAL_GetTick() - t0 > 50)
  80002ec:	f000 ffcc 	bl	8001288 <HAL_GetTick>
  80002f0:	4602      	mov	r2, r0
  80002f2:	68bb      	ldr	r3, [r7, #8]
  80002f4:	1ad3      	subs	r3, r2, r3
  80002f6:	2b32      	cmp	r3, #50	@ 0x32
  80002f8:	d809      	bhi.n	800030e <CDC_Print+0x4e>
-    while (CDC_Transmit_FS((uint8_t *)pBuf, (uint16_t)n) == USBD_BUSY)
+	while (CDC_Transmit_FS((uint8_t*) pBuf, (uint16_t) n) == USBD_BUSY)
  80002fa:	68fb      	ldr	r3, [r7, #12]
  80002fc:	b29b      	uxth	r3, r3
  80002fe:	4619      	mov	r1, r3
@@ -187,13 +188,13 @@ static void CDC_Print(const char *fmt, ...)
  8000308:	2b01      	cmp	r3, #1
  800030a:	d0ef      	beq.n	80002ec <CDC_Print+0x2c>
  800030c:	e000      	b.n	8000310 <CDC_Print+0x50>
-        if (HAL_GetTick() - t0 > 50) break;
+			break;
  800030e:	bf00      	nop
-    HAL_Delay(2);
+	HAL_Delay(2);
  8000310:	2002      	movs	r0, #2
  8000312:	f000 ffc5 	bl	80012a0 <HAL_Delay>
  8000316:	e000      	b.n	800031a <CDC_Print+0x5a>
-    if (n <= 0) return;
+		return;
  8000318:	bf00      	nop
 }
  800031a:	3710      	adds	r7, #16
@@ -206,14 +207,13 @@ static void CDC_Print(const char *fmt, ...)
 
 0800032c <HalStr>:
 
-static const char *HalStr(HAL_StatusTypeDef s)
-{
+static const char* HalStr(HAL_StatusTypeDef s) {
  800032c:	b480      	push	{r7}
  800032e:	b083      	sub	sp, #12
  8000330:	af00      	add	r7, sp, #0
  8000332:	4603      	mov	r3, r0
  8000334:	71fb      	strb	r3, [r7, #7]
-    switch (s) {
+	switch (s) {
  8000336:	79fb      	ldrb	r3, [r7, #7]
  8000338:	2b03      	cmp	r3, #3
  800033a:	d813      	bhi.n	8000364 <HalStr+0x38>
@@ -224,21 +224,26 @@ static const char *HalStr(HAL_StatusTypeDef s)
  8000348:	08000359 	.word	0x08000359
  800034c:	0800035d 	.word	0x0800035d
  8000350:	08000361 	.word	0x08000361
-        case HAL_OK:      return "OK";
+	case HAL_OK:
+		return "OK";
  8000354:	4b07      	ldr	r3, [pc, #28]	@ (8000374 <HalStr+0x48>)
  8000356:	e006      	b.n	8000366 <HalStr+0x3a>
-        case HAL_ERROR:   return "ERR";
+	case HAL_ERROR:
+		return "ERR";
  8000358:	4b07      	ldr	r3, [pc, #28]	@ (8000378 <HalStr+0x4c>)
  800035a:	e004      	b.n	8000366 <HalStr+0x3a>
-        case HAL_BUSY:    return "BUSY";
+	case HAL_BUSY:
+		return "BUSY";
  800035c:	4b07      	ldr	r3, [pc, #28]	@ (800037c <HalStr+0x50>)
  800035e:	e002      	b.n	8000366 <HalStr+0x3a>
-        case HAL_TIMEOUT: return "TOUT";
+	case HAL_TIMEOUT:
+		return "TOUT";
  8000360:	4b07      	ldr	r3, [pc, #28]	@ (8000380 <HalStr+0x54>)
  8000362:	e000      	b.n	8000366 <HalStr+0x3a>
-        default:          return "??";
+	default:
+		return "??";
  8000364:	4b07      	ldr	r3, [pc, #28]	@ (8000384 <HalStr+0x58>)
-    }
+	}
 }
  8000366:	4618      	mov	r0, r3
  8000368:	370c      	adds	r7, #12
@@ -256,56 +261,55 @@ static const char *HalStr(HAL_StatusTypeDef s)
 
 /* ---- CAN helpers ---- */
 
-static void CAN_Init(void)
-{
+static void CAN_Init(void) {
  8000388:	b580      	push	{r7, lr}
  800038a:	b082      	sub	sp, #8
  800038c:	af00      	add	r7, sp, #0
-    /* Configure TX header — reused for every send */
-    canTxHeader.Identifier          = CAN_TX_ID;
+	/* Configure TX header — reused for every send */
+	canTxHeader.Identifier = CAN_TX_ID;
  800038e:	4b17      	ldr	r3, [pc, #92]	@ (80003ec <CAN_Init+0x64>)
  8000390:	f44f 6284 	mov.w	r2, #1056	@ 0x420
  8000394:	601a      	str	r2, [r3, #0]
-    canTxHeader.IdType              = FDCAN_STANDARD_ID;
+	canTxHeader.IdType = FDCAN_STANDARD_ID;
  8000396:	4b15      	ldr	r3, [pc, #84]	@ (80003ec <CAN_Init+0x64>)
  8000398:	2200      	movs	r2, #0
  800039a:	605a      	str	r2, [r3, #4]
-    canTxHeader.TxFrameType         = FDCAN_DATA_FRAME;
+	canTxHeader.TxFrameType = FDCAN_DATA_FRAME;
  800039c:	4b13      	ldr	r3, [pc, #76]	@ (80003ec <CAN_Init+0x64>)
  800039e:	2200      	movs	r2, #0
  80003a0:	609a      	str	r2, [r3, #8]
-    canTxHeader.DataLength          = FDCAN_DLC_BYTES_8;
+	canTxHeader.DataLength = FDCAN_DLC_BYTES_8;
  80003a2:	4b12      	ldr	r3, [pc, #72]	@ (80003ec <CAN_Init+0x64>)
  80003a4:	2208      	movs	r2, #8
  80003a6:	60da      	str	r2, [r3, #12]
-    canTxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	canTxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
  80003a8:	4b10      	ldr	r3, [pc, #64]	@ (80003ec <CAN_Init+0x64>)
  80003aa:	2200      	movs	r2, #0
  80003ac:	611a      	str	r2, [r3, #16]
-    canTxHeader.BitRateSwitch       = FDCAN_BRS_OFF;
+	canTxHeader.BitRateSwitch = FDCAN_BRS_OFF;
  80003ae:	4b0f      	ldr	r3, [pc, #60]	@ (80003ec <CAN_Init+0x64>)
  80003b0:	2200      	movs	r2, #0
  80003b2:	615a      	str	r2, [r3, #20]
-    canTxHeader.FDFormat            = FDCAN_CLASSIC_CAN;
+	canTxHeader.FDFormat = FDCAN_CLASSIC_CAN;
  80003b4:	4b0d      	ldr	r3, [pc, #52]	@ (80003ec <CAN_Init+0x64>)
  80003b6:	2200      	movs	r2, #0
  80003b8:	619a      	str	r2, [r3, #24]
-    canTxHeader.TxEventFifoControl  = FDCAN_NO_TX_EVENTS;
+	canTxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
  80003ba:	4b0c      	ldr	r3, [pc, #48]	@ (80003ec <CAN_Init+0x64>)
  80003bc:	2200      	movs	r2, #0
  80003be:	61da      	str	r2, [r3, #28]
-    canTxHeader.MessageMarker       = 0;
+	canTxHeader.MessageMarker = 0;
  80003c0:	4b0a      	ldr	r3, [pc, #40]	@ (80003ec <CAN_Init+0x64>)
  80003c2:	2200      	movs	r2, #0
  80003c4:	621a      	str	r2, [r3, #32]
 
-    /* Start the FDCAN peripheral — moves from Init to Normal mode */
-    HAL_StatusTypeDef st = HAL_FDCAN_Start(&hfdcan2);
+	/* Start the FDCAN peripheral — moves from Init to Normal mode */
+	HAL_StatusTypeDef st = HAL_FDCAN_Start(&hfdcan2);
  80003c6:	480a      	ldr	r0, [pc, #40]	@ (80003f0 <CAN_Init+0x68>)
  80003c8:	f001 f9f6 	bl	80017b8 <HAL_FDCAN_Start>
  80003cc:	4603      	mov	r3, r0
  80003ce:	71fb      	strb	r3, [r7, #7]
-    CDC_Print("FDCAN2 Start: %s\r\n", HalStr(st));
+	CDC_Print("FDCAN2 Start: %s\r\n", HalStr(st));
  80003d0:	79fb      	ldrb	r3, [r7, #7]
  80003d2:	4618      	mov	r0, r3
  80003d4:	f7ff ffaa 	bl	800032c <HalStr>
@@ -325,15 +329,14 @@ static void CAN_Init(void)
 
 080003f8 <CAN_SendHeartbeat>:
 
-static void CAN_SendHeartbeat(void)
-{
+static void CAN_SendHeartbeat(void) {
  80003f8:	b5b0      	push	{r4, r5, r7, lr}
  80003fa:	b094      	sub	sp, #80	@ 0x50
  80003fc:	af04      	add	r7, sp, #16
-    uint8_t payload[8];
+	uint8_t payload[8];
 
-    /* Pack raw Q9 gyro values as int16 little-endian */
-    int16_t rawX = (int16_t)(lastX * 512.0f);
+	/* Pack raw Q9 gyro values as int16 little-endian */
+	int16_t rawX = (int16_t) (lastX * 512.0f);
  80003fe:	4b50      	ldr	r3, [pc, #320]	@ (8000540 <CAN_SendHeartbeat+0x148>)
  8000400:	edd3 7a00 	vldr	s15, [r3]
  8000404:	ed9f 7a4f 	vldr	s14, [pc, #316]	@ 8000544 <CAN_SendHeartbeat+0x14c>
@@ -341,7 +344,7 @@ static void CAN_SendHeartbeat(void)
  800040c:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000410:	ee17 3a90 	vmov	r3, s15
  8000414:	87fb      	strh	r3, [r7, #62]	@ 0x3e
-    int16_t rawY = (int16_t)(lastY * 512.0f);
+	int16_t rawY = (int16_t) (lastY * 512.0f);
  8000416:	4b4c      	ldr	r3, [pc, #304]	@ (8000548 <CAN_SendHeartbeat+0x150>)
  8000418:	edd3 7a00 	vldr	s15, [r3]
  800041c:	ed9f 7a49 	vldr	s14, [pc, #292]	@ 8000544 <CAN_SendHeartbeat+0x14c>
@@ -349,7 +352,7 @@ static void CAN_SendHeartbeat(void)
  8000424:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  8000428:	ee17 3a90 	vmov	r3, s15
  800042c:	87bb      	strh	r3, [r7, #60]	@ 0x3c
-    int16_t rawZ = (int16_t)(lastZ * 512.0f);
+	int16_t rawZ = (int16_t) (lastZ * 512.0f);
  800042e:	4b47      	ldr	r3, [pc, #284]	@ (800054c <CAN_SendHeartbeat+0x154>)
  8000430:	edd3 7a00 	vldr	s15, [r3]
  8000434:	ed9f 7a43 	vldr	s14, [pc, #268]	@ 8000544 <CAN_SendHeartbeat+0x14c>
@@ -358,45 +361,45 @@ static void CAN_SendHeartbeat(void)
  8000440:	ee17 3a90 	vmov	r3, s15
  8000444:	877b      	strh	r3, [r7, #58]	@ 0x3a
 
-    payload[0] = (uint8_t)( rawX       & 0xFF);
+	payload[0] = (uint8_t) (rawX & 0xFF);
  8000446:	8ffb      	ldrh	r3, [r7, #62]	@ 0x3e
  8000448:	b2db      	uxtb	r3, r3
  800044a:	f887 3030 	strb.w	r3, [r7, #48]	@ 0x30
-    payload[1] = (uint8_t)((rawX >> 8)  & 0xFF);
+	payload[1] = (uint8_t) ((rawX >> 8) & 0xFF);
  800044e:	f9b7 303e 	ldrsh.w	r3, [r7, #62]	@ 0x3e
  8000452:	121b      	asrs	r3, r3, #8
  8000454:	b21b      	sxth	r3, r3
  8000456:	b2db      	uxtb	r3, r3
  8000458:	f887 3031 	strb.w	r3, [r7, #49]	@ 0x31
-    payload[2] = (uint8_t)( rawY       & 0xFF);
+	payload[2] = (uint8_t) (rawY & 0xFF);
  800045c:	8fbb      	ldrh	r3, [r7, #60]	@ 0x3c
  800045e:	b2db      	uxtb	r3, r3
  8000460:	f887 3032 	strb.w	r3, [r7, #50]	@ 0x32
-    payload[3] = (uint8_t)((rawY >> 8)  & 0xFF);
+	payload[3] = (uint8_t) ((rawY >> 8) & 0xFF);
  8000464:	f9b7 303c 	ldrsh.w	r3, [r7, #60]	@ 0x3c
  8000468:	121b      	asrs	r3, r3, #8
  800046a:	b21b      	sxth	r3, r3
  800046c:	b2db      	uxtb	r3, r3
  800046e:	f887 3033 	strb.w	r3, [r7, #51]	@ 0x33
-    payload[4] = (uint8_t)( rawZ       & 0xFF);
+	payload[4] = (uint8_t) (rawZ & 0xFF);
  8000472:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000474:	b2db      	uxtb	r3, r3
  8000476:	f887 3034 	strb.w	r3, [r7, #52]	@ 0x34
-    payload[5] = (uint8_t)((rawZ >> 8)  & 0xFF);
+	payload[5] = (uint8_t) ((rawZ >> 8) & 0xFF);
  800047a:	f9b7 303a 	ldrsh.w	r3, [r7, #58]	@ 0x3a
  800047e:	121b      	asrs	r3, r3, #8
  8000480:	b21b      	sxth	r3, r3
  8000482:	b2db      	uxtb	r3, r3
  8000484:	f887 3035 	strb.w	r3, [r7, #53]	@ 0x35
-    payload[6] = canTxSeq;
+	payload[6] = canTxSeq;
  8000488:	4b31      	ldr	r3, [pc, #196]	@ (8000550 <CAN_SendHeartbeat+0x158>)
  800048a:	781b      	ldrb	r3, [r3, #0]
  800048c:	f887 3036 	strb.w	r3, [r7, #54]	@ 0x36
-    payload[7] = 0x00;  /* reserved */
+	payload[7] = 0x00; /* reserved */
  8000490:	2300      	movs	r3, #0
  8000492:	f887 3037 	strb.w	r3, [r7, #55]	@ 0x37
 
-    HAL_StatusTypeDef st = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &canTxHeader, payload);
+	HAL_StatusTypeDef st = HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &canTxHeader,
  8000496:	f107 0330 	add.w	r3, r7, #48	@ 0x30
  800049a:	461a      	mov	r2, r3
  800049c:	492d      	ldr	r1, [pc, #180]	@ (8000554 <CAN_SendHeartbeat+0x15c>)
@@ -404,59 +407,60 @@ static void CAN_SendHeartbeat(void)
  80004a0:	f001 f9b2 	bl	8001808 <HAL_FDCAN_AddMessageToTxFifoQ>
  80004a4:	4603      	mov	r3, r0
  80004a6:	f887 3039 	strb.w	r3, [r7, #57]	@ 0x39
+			payload);
 
-    if (st == HAL_OK) {
+	if (st == HAL_OK) {
  80004aa:	f897 3039 	ldrb.w	r3, [r7, #57]	@ 0x39
  80004ae:	2b00      	cmp	r3, #0
  80004b0:	d108      	bne.n	80004c4 <CAN_SendHeartbeat+0xcc>
-        canTxPass++;
+		canTxPass++;
  80004b2:	4b2a      	ldr	r3, [pc, #168]	@ (800055c <CAN_SendHeartbeat+0x164>)
  80004b4:	681b      	ldr	r3, [r3, #0]
  80004b6:	3301      	adds	r3, #1
  80004b8:	4a28      	ldr	r2, [pc, #160]	@ (800055c <CAN_SendHeartbeat+0x164>)
  80004ba:	6013      	str	r3, [r2, #0]
-        canFirstFailPrinted = 0;
+		canFirstFailPrinted = 0;
  80004bc:	4b28      	ldr	r3, [pc, #160]	@ (8000560 <CAN_SendHeartbeat+0x168>)
  80004be:	2200      	movs	r2, #0
  80004c0:	701a      	strb	r2, [r3, #0]
  80004c2:	e01f      	b.n	8000504 <CAN_SendHeartbeat+0x10c>
-    } else {
-        canTxFail++;
+	} else {
+		canTxFail++;
  80004c4:	4b27      	ldr	r3, [pc, #156]	@ (8000564 <CAN_SendHeartbeat+0x16c>)
  80004c6:	681b      	ldr	r3, [r3, #0]
  80004c8:	3301      	adds	r3, #1
  80004ca:	4a26      	ldr	r2, [pc, #152]	@ (8000564 <CAN_SendHeartbeat+0x16c>)
  80004cc:	6013      	str	r3, [r2, #0]
 
-        if (!canFirstFailPrinted) {
+		if (!canFirstFailPrinted) {
  80004ce:	4b24      	ldr	r3, [pc, #144]	@ (8000560 <CAN_SendHeartbeat+0x168>)
  80004d0:	781b      	ldrb	r3, [r3, #0]
  80004d2:	2b00      	cmp	r3, #0
  80004d4:	d116      	bne.n	8000504 <CAN_SendHeartbeat+0x10c>
-            canFirstFailPrinted = 1;
+			canFirstFailPrinted = 1;
  80004d6:	4b22      	ldr	r3, [pc, #136]	@ (8000560 <CAN_SendHeartbeat+0x168>)
  80004d8:	2201      	movs	r2, #1
  80004da:	701a      	strb	r2, [r3, #0]
-            FDCAN_ProtocolStatusTypeDef psr;
-            HAL_FDCAN_GetProtocolStatus(&hfdcan2, &psr);
+			FDCAN_ProtocolStatusTypeDef psr;
+			HAL_FDCAN_GetProtocolStatus(&hfdcan2, &psr);
  80004dc:	1d3b      	adds	r3, r7, #4
  80004de:	4619      	mov	r1, r3
  80004e0:	481d      	ldr	r0, [pc, #116]	@ (8000558 <CAN_SendHeartbeat+0x160>)
  80004e2:	f001 f9d5 	bl	8001890 <HAL_FDCAN_GetProtocolStatus>
-            CDC_Print("  CAN PSR: LEC=%lu DLEC=%lu ACT=%lu EP=%lu EW=%lu BO=%lu\r\n",
-                      (unsigned long)psr.LastErrorCode,
+			CDC_Print(
+					"  CAN PSR: LEC=%lu DLEC=%lu ACT=%lu EP=%lu EW=%lu BO=%lu\r\n",
+					(unsigned long) psr.LastErrorCode,
  80004e6:	6878      	ldr	r0, [r7, #4]
-                      (unsigned long)psr.DataLastErrorCode,
+					(unsigned long) psr.DataLastErrorCode,
  80004e8:	68bc      	ldr	r4, [r7, #8]
-                      (unsigned long)psr.Activity,
+					(unsigned long) psr.Activity,
  80004ea:	68fd      	ldr	r5, [r7, #12]
-                      (unsigned long)psr.ErrorPassive,
+					(unsigned long) psr.ErrorPassive,
  80004ec:	693b      	ldr	r3, [r7, #16]
-                      (unsigned long)psr.Warning,
+					(unsigned long) psr.Warning, (unsigned long) psr.BusOff);
  80004ee:	697a      	ldr	r2, [r7, #20]
-                      (unsigned long)psr.BusOff);
  80004f0:	69b9      	ldr	r1, [r7, #24]
-            CDC_Print("  CAN PSR: LEC=%lu DLEC=%lu ACT=%lu EP=%lu EW=%lu BO=%lu\r\n",
+			CDC_Print(
  80004f2:	9102      	str	r1, [sp, #8]
  80004f4:	9201      	str	r2, [sp, #4]
  80004f6:	9300      	str	r3, [sp, #0]
@@ -465,10 +469,10 @@ static void CAN_SendHeartbeat(void)
  80004fc:	4601      	mov	r1, r0
  80004fe:	481a      	ldr	r0, [pc, #104]	@ (8000568 <CAN_SendHeartbeat+0x170>)
  8000500:	f7ff fede 	bl	80002c0 <CDC_Print>
-        }
-    }
+		}
+	}
 
-    CDC_Print("CAN TX #%u: %s  (pass=%lu fail=%lu)\r\n",
+	CDC_Print("CAN TX #%u: %s  (pass=%lu fail=%lu)\r\n", (unsigned) canTxSeq,
  8000504:	4b12      	ldr	r3, [pc, #72]	@ (8000550 <CAN_SendHeartbeat+0x158>)
  8000506:	781b      	ldrb	r3, [r3, #0]
  8000508:	461c      	mov	r4, r3
@@ -486,11 +490,9 @@ static void CAN_SendHeartbeat(void)
  8000524:	4621      	mov	r1, r4
  8000526:	4811      	ldr	r0, [pc, #68]	@ (800056c <CAN_SendHeartbeat+0x174>)
  8000528:	f7ff feca 	bl	80002c0 <CDC_Print>
-              (unsigned)canTxSeq, HalStr(st),
-              (unsigned long)canTxPass,
-              (unsigned long)canTxFail);
+			HalStr(st), (unsigned long) canTxPass, (unsigned long) canTxFail);
 
-    canTxSeq++;
+	canTxSeq++;
  800052c:	4b08      	ldr	r3, [pc, #32]	@ (8000550 <CAN_SendHeartbeat+0x158>)
  800052e:	781b      	ldrb	r3, [r3, #0]
  8000530:	3301      	adds	r3, #1
@@ -519,22 +521,22 @@ static void CAN_SendHeartbeat(void)
 
 /* ---- SHTP / BNO085 ---- */
 
-static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
-{
+static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch) {
  8000570:	b580      	push	{r7, lr}
  8000572:	b086      	sub	sp, #24
  8000574:	af02      	add	r7, sp, #8
  8000576:	6078      	str	r0, [r7, #4]
  8000578:	6039      	str	r1, [r7, #0]
-    *len = 0; *ch = 0;
+	*len = 0;
  800057a:	687b      	ldr	r3, [r7, #4]
  800057c:	2200      	movs	r2, #0
  800057e:	801a      	strh	r2, [r3, #0]
+	*ch = 0;
  8000580:	683b      	ldr	r3, [r7, #0]
  8000582:	2200      	movs	r2, #0
  8000584:	701a      	strb	r2, [r3, #0]
-    HAL_StatusTypeDef st;
-    st = HAL_I2C_Master_Receive(&hi2c2, BNO085_ADDR, rxBuf, 4, I2C_TOUT);
+	HAL_StatusTypeDef st;
+	st = HAL_I2C_Master_Receive(&hi2c2, BNO085_ADDR, rxBuf, 4, I2C_TOUT);
  8000586:	2396      	movs	r3, #150	@ 0x96
  8000588:	9300      	str	r3, [sp, #0]
  800058a:	2304      	movs	r3, #4
@@ -544,14 +546,15 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
  8000592:	f002 f8ad 	bl	80026f0 <HAL_I2C_Master_Receive>
  8000596:	4603      	mov	r3, r0
  8000598:	737b      	strb	r3, [r7, #13]
-    if (st != HAL_OK) return st;
+	if (st != HAL_OK)
  800059a:	7b7b      	ldrb	r3, [r7, #13]
  800059c:	2b00      	cmp	r3, #0
  800059e:	d001      	beq.n	80005a4 <SHTP_Read+0x34>
+		return st;
  80005a0:	7b7b      	ldrb	r3, [r7, #13]
  80005a2:	e042      	b.n	800062a <SHTP_Read+0xba>
 
-    uint16_t pktLen = (uint16_t)rxBuf[0] | ((uint16_t)(rxBuf[1] & 0x7F) << 8);
+	uint16_t pktLen = (uint16_t) rxBuf[0] | ((uint16_t) (rxBuf[1] & 0x7F) << 8);
  80005a4:	4b23      	ldr	r3, [pc, #140]	@ (8000634 <SHTP_Read+0xc4>)
  80005a6:	781b      	ldrb	r3, [r3, #0]
  80005a8:	b21a      	sxth	r2, r3
@@ -565,7 +568,7 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
  80005ba:	4313      	orrs	r3, r2
  80005bc:	b21b      	sxth	r3, r3
  80005be:	81fb      	strh	r3, [r7, #14]
-    if (pktLen == 0 || pktLen == 0x7FFF) return HAL_TIMEOUT;
+	if (pktLen == 0 || pktLen == 0x7FFF)
  80005c0:	89fb      	ldrh	r3, [r7, #14]
  80005c2:	2b00      	cmp	r3, #0
  80005c4:	d004      	beq.n	80005d0 <SHTP_Read+0x60>
@@ -573,16 +576,18 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
  80005c8:	f647 72ff 	movw	r2, #32767	@ 0x7fff
  80005cc:	4293      	cmp	r3, r2
  80005ce:	d101      	bne.n	80005d4 <SHTP_Read+0x64>
+		return HAL_TIMEOUT;
  80005d0:	2303      	movs	r3, #3
  80005d2:	e02a      	b.n	800062a <SHTP_Read+0xba>
-    if (pktLen > SHTP_MAX) pktLen = SHTP_MAX;
+	if (pktLen > SHTP_MAX)
  80005d4:	89fb      	ldrh	r3, [r7, #14]
  80005d6:	f5b3 7f96 	cmp.w	r3, #300	@ 0x12c
  80005da:	d902      	bls.n	80005e2 <SHTP_Read+0x72>
+		pktLen = SHTP_MAX;
  80005dc:	f44f 7396 	mov.w	r3, #300	@ 0x12c
  80005e0:	81fb      	strh	r3, [r7, #14]
 
-    st = HAL_I2C_Master_Receive(&hi2c2, BNO085_ADDR, rxBuf, pktLen, I2C_TOUT);
+	st = HAL_I2C_Master_Receive(&hi2c2, BNO085_ADDR, rxBuf, pktLen, I2C_TOUT);
  80005e2:	89fb      	ldrh	r3, [r7, #14]
  80005e4:	2296      	movs	r2, #150	@ 0x96
  80005e6:	9200      	str	r2, [sp, #0]
@@ -592,14 +597,15 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
  80005ee:	f002 f87f 	bl	80026f0 <HAL_I2C_Master_Receive>
  80005f2:	4603      	mov	r3, r0
  80005f4:	737b      	strb	r3, [r7, #13]
-    if (st != HAL_OK) return st;
+	if (st != HAL_OK)
  80005f6:	7b7b      	ldrb	r3, [r7, #13]
  80005f8:	2b00      	cmp	r3, #0
  80005fa:	d001      	beq.n	8000600 <SHTP_Read+0x90>
+		return st;
  80005fc:	7b7b      	ldrb	r3, [r7, #13]
  80005fe:	e014      	b.n	800062a <SHTP_Read+0xba>
 
-    *len = (uint16_t)rxBuf[0] | ((uint16_t)(rxBuf[1] & 0x7F) << 8);
+	*len = (uint16_t) rxBuf[0] | ((uint16_t) (rxBuf[1] & 0x7F) << 8);
  8000600:	4b0c      	ldr	r3, [pc, #48]	@ (8000634 <SHTP_Read+0xc4>)
  8000602:	781b      	ldrb	r3, [r3, #0]
  8000604:	b21a      	sxth	r2, r3
@@ -615,12 +621,12 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
  800061a:	b29a      	uxth	r2, r3
  800061c:	687b      	ldr	r3, [r7, #4]
  800061e:	801a      	strh	r2, [r3, #0]
-    *ch  = rxBuf[2];
+	*ch = rxBuf[2];
  8000620:	4b04      	ldr	r3, [pc, #16]	@ (8000634 <SHTP_Read+0xc4>)
  8000622:	789a      	ldrb	r2, [r3, #2]
  8000624:	683b      	ldr	r3, [r7, #0]
  8000626:	701a      	strb	r2, [r3, #0]
-    return HAL_OK;
+	return HAL_OK;
  8000628:	2300      	movs	r3, #0
 }
  800062a:	4618      	mov	r0, r3
@@ -633,8 +639,7 @@ static HAL_StatusTypeDef SHTP_Read(uint16_t *len, uint8_t *ch)
 
 0800063c <SHTP_Write>:
 
-static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
-{
+static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n) {
  800063c:	b580      	push	{r7, lr}
  800063e:	b086      	sub	sp, #24
  8000640:	af02      	add	r7, sp, #8
@@ -643,16 +648,16 @@ static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
  8000646:	71fb      	strb	r3, [r7, #7]
  8000648:	4613      	mov	r3, r2
  800064a:	80bb      	strh	r3, [r7, #4]
-    uint16_t total = SHTP_HDR + n;
+	uint16_t total = SHTP_HDR + n;
  800064c:	88bb      	ldrh	r3, [r7, #4]
  800064e:	3304      	adds	r3, #4
  8000650:	81fb      	strh	r3, [r7, #14]
-    txBuf[0] = (uint8_t)(total & 0xFF);
+	txBuf[0] = (uint8_t) (total & 0xFF);
  8000652:	89fb      	ldrh	r3, [r7, #14]
  8000654:	b2da      	uxtb	r2, r3
  8000656:	4b16      	ldr	r3, [pc, #88]	@ (80006b0 <SHTP_Write+0x74>)
  8000658:	701a      	strb	r2, [r3, #0]
-    txBuf[1] = (uint8_t)((total >> 8) & 0x7F);
+	txBuf[1] = (uint8_t) ((total >> 8) & 0x7F);
  800065a:	89fb      	ldrh	r3, [r7, #14]
  800065c:	0a1b      	lsrs	r3, r3, #8
  800065e:	b29b      	uxth	r3, r3
@@ -661,11 +666,11 @@ static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
  8000666:	b2da      	uxtb	r2, r3
  8000668:	4b11      	ldr	r3, [pc, #68]	@ (80006b0 <SHTP_Write+0x74>)
  800066a:	705a      	strb	r2, [r3, #1]
-    txBuf[2] = ch;
+	txBuf[2] = ch;
  800066c:	4a10      	ldr	r2, [pc, #64]	@ (80006b0 <SHTP_Write+0x74>)
  800066e:	79fb      	ldrb	r3, [r7, #7]
  8000670:	7093      	strb	r3, [r2, #2]
-    txBuf[3] = seqOut[ch]++;
+	txBuf[3] = seqOut[ch]++;
  8000672:	79fb      	ldrb	r3, [r7, #7]
  8000674:	4a0f      	ldr	r2, [pc, #60]	@ (80006b4 <SHTP_Write+0x78>)
  8000676:	5cd2      	ldrb	r2, [r2, r3]
@@ -675,16 +680,17 @@ static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
  800067e:	54c8      	strb	r0, [r1, r3]
  8000680:	4b0b      	ldr	r3, [pc, #44]	@ (80006b0 <SHTP_Write+0x74>)
  8000682:	70da      	strb	r2, [r3, #3]
-    if (n > 0) memcpy(&txBuf[4], d, n);
+	if (n > 0)
  8000684:	88bb      	ldrh	r3, [r7, #4]
  8000686:	2b00      	cmp	r3, #0
  8000688:	d005      	beq.n	8000696 <SHTP_Write+0x5a>
+		memcpy(&txBuf[4], d, n);
  800068a:	88bb      	ldrh	r3, [r7, #4]
  800068c:	461a      	mov	r2, r3
  800068e:	6839      	ldr	r1, [r7, #0]
  8000690:	4809      	ldr	r0, [pc, #36]	@ (80006b8 <SHTP_Write+0x7c>)
  8000692:	f009 fb23 	bl	8009cdc <memcpy>
-    return HAL_I2C_Master_Transmit(&hi2c2, BNO085_ADDR, txBuf, total, I2C_TOUT);
+	return HAL_I2C_Master_Transmit(&hi2c2, BNO085_ADDR, txBuf, total, I2C_TOUT);
  8000696:	89fb      	ldrh	r3, [r7, #14]
  8000698:	2296      	movs	r2, #150	@ 0x96
  800069a:	9200      	str	r2, [sp, #0]
@@ -706,50 +712,50 @@ static HAL_StatusTypeDef SHTP_Write(uint8_t ch, const uint8_t *d, uint16_t n)
 080006c0 <BNO_SoftReset>:
 
 /* ---- SH-2 software reset via Initialize command (0x04) ---- */
-static void BNO_SoftReset(void)
-{
+static void BNO_SoftReset(void) {
  80006c0:	b580      	push	{r7, lr}
  80006c2:	b086      	sub	sp, #24
  80006c4:	af00      	add	r7, sp, #0
-    /* Command Request (0xF2), Seq=0, Command=0x04 (Initialize)
-     * Param 0 = 0x01 (reinitialize entire system)
-     * Rest = 0
-     */
-    uint8_t cmd[12];
-    memset(cmd, 0, sizeof(cmd));
+	/* Command Request (0xF2), Seq=0, Command=0x04 (Initialize)
+	 * Param 0 = 0x01 (reinitialize entire system)
+	 * Rest = 0
+	 */
+	uint8_t cmd[12];
+	memset(cmd, 0, sizeof(cmd));
  80006c6:	f107 0308 	add.w	r3, r7, #8
  80006ca:	220c      	movs	r2, #12
  80006cc:	2100      	movs	r1, #0
  80006ce:	4618      	mov	r0, r3
  80006d0:	f009 fad0 	bl	8009c74 <memset>
-    cmd[0] = RPT_COMMAND_REQ;  /* Report ID */
+	cmd[0] = RPT_COMMAND_REQ; /* Report ID */
  80006d4:	23f2      	movs	r3, #242	@ 0xf2
  80006d6:	723b      	strb	r3, [r7, #8]
-    cmd[1] = 0;                /* Sequence   */
+	cmd[1] = 0; /* Sequence   */
  80006d8:	2300      	movs	r3, #0
  80006da:	727b      	strb	r3, [r7, #9]
-    cmd[2] = 0x01;             /* Command: report errors / reset */
+	cmd[2] = 0x01; /* Command: report errors / reset */
  80006dc:	2301      	movs	r3, #1
  80006de:	72bb      	strb	r3, [r7, #10]
-    /* bytes 3-11 = 0 */
+	/* bytes 3-11 = 0 */
 
-    SHTP_Write(CH_CTRL, cmd, 12);
+	SHTP_Write(CH_CTRL, cmd, 12);
  80006e0:	f107 0308 	add.w	r3, r7, #8
  80006e4:	220c      	movs	r2, #12
  80006e6:	4619      	mov	r1, r3
  80006e8:	2002      	movs	r0, #2
  80006ea:	f7ff ffa7 	bl	800063c <SHTP_Write>
-    HAL_Delay(300);
+	HAL_Delay(300);
  80006ee:	f44f 7096 	mov.w	r0, #300	@ 0x12c
  80006f2:	f000 fdd5 	bl	80012a0 <HAL_Delay>
 
-    /* Drain post-reset packets */
-    for (int i = 0; i < 20; i++) {
+	/* Drain post-reset packets */
+	for (int i = 0; i < 20; i++) {
  80006f6:	2300      	movs	r3, #0
  80006f8:	617b      	str	r3, [r7, #20]
  80006fa:	e012      	b.n	8000722 <BNO_SoftReset+0x62>
-        uint16_t len; uint8_t ch;
-        if (SHTP_Read(&len, &ch) != HAL_OK) HAL_Delay(30);
+		uint16_t len;
+		uint8_t ch;
+		if (SHTP_Read(&len, &ch) != HAL_OK)
  80006fc:	1d7a      	adds	r2, r7, #5
  80006fe:	1dbb      	adds	r3, r7, #6
  8000700:	4611      	mov	r1, r2
@@ -758,20 +764,22 @@ static void BNO_SoftReset(void)
  8000708:	4603      	mov	r3, r0
  800070a:	2b00      	cmp	r3, #0
  800070c:	d003      	beq.n	8000716 <BNO_SoftReset+0x56>
+			HAL_Delay(30);
  800070e:	201e      	movs	r0, #30
  8000710:	f000 fdc6 	bl	80012a0 <HAL_Delay>
  8000714:	e002      	b.n	800071c <BNO_SoftReset+0x5c>
-        else HAL_Delay(10);
+		else
+			HAL_Delay(10);
  8000716:	200a      	movs	r0, #10
  8000718:	f000 fdc2 	bl	80012a0 <HAL_Delay>
-    for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 20; i++) {
  800071c:	697b      	ldr	r3, [r7, #20]
  800071e:	3301      	adds	r3, #1
  8000720:	617b      	str	r3, [r7, #20]
  8000722:	697b      	ldr	r3, [r7, #20]
  8000724:	2b13      	cmp	r3, #19
  8000726:	dde9      	ble.n	80006fc <BNO_SoftReset+0x3c>
-    }
+	}
 }
  8000728:	bf00      	nop
  800072a:	bf00      	nop
@@ -781,20 +789,20 @@ static void BNO_SoftReset(void)
 
 08000732 <BNO_Boot>:
 
-static void BNO_Boot(void)
-{
+static void BNO_Boot(void) {
  8000732:	b580      	push	{r7, lr}
  8000734:	b082      	sub	sp, #8
  8000736:	af00      	add	r7, sp, #0
-    HAL_Delay(300);
+	HAL_Delay(300);
  8000738:	f44f 7096 	mov.w	r0, #300	@ 0x12c
  800073c:	f000 fdb0 	bl	80012a0 <HAL_Delay>
-    for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 15; i++) {
  8000740:	2300      	movs	r3, #0
  8000742:	607b      	str	r3, [r7, #4]
  8000744:	e012      	b.n	800076c <BNO_Boot+0x3a>
-        uint16_t len; uint8_t ch;
-        if (SHTP_Read(&len, &ch) != HAL_OK) HAL_Delay(50);
+		uint16_t len;
+		uint8_t ch;
+		if (SHTP_Read(&len, &ch) != HAL_OK)
  8000746:	1c7a      	adds	r2, r7, #1
  8000748:	1cbb      	adds	r3, r7, #2
  800074a:	4611      	mov	r1, r2
@@ -803,20 +811,22 @@ static void BNO_Boot(void)
  8000752:	4603      	mov	r3, r0
  8000754:	2b00      	cmp	r3, #0
  8000756:	d003      	beq.n	8000760 <BNO_Boot+0x2e>
+			HAL_Delay(50);
  8000758:	2032      	movs	r0, #50	@ 0x32
  800075a:	f000 fda1 	bl	80012a0 <HAL_Delay>
  800075e:	e002      	b.n	8000766 <BNO_Boot+0x34>
-        else HAL_Delay(20);
+		else
+			HAL_Delay(20);
  8000760:	2014      	movs	r0, #20
  8000762:	f000 fd9d 	bl	80012a0 <HAL_Delay>
-    for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 15; i++) {
  8000766:	687b      	ldr	r3, [r7, #4]
  8000768:	3301      	adds	r3, #1
  800076a:	607b      	str	r3, [r7, #4]
  800076c:	687b      	ldr	r3, [r7, #4]
  800076e:	2b0e      	cmp	r3, #14
  8000770:	dde9      	ble.n	8000746 <BNO_Boot+0x14>
-    }
+	}
 }
  8000772:	bf00      	nop
  8000774:	bf00      	nop
@@ -826,12 +836,11 @@ static void BNO_Boot(void)
 
 0800077c <BNO_EnableGyro>:
 
-static void BNO_EnableGyro(void)
-{
+static void BNO_EnableGyro(void) {
  800077c:	b580      	push	{r7, lr}
  800077e:	b088      	sub	sp, #32
  8000780:	af00      	add	r7, sp, #0
-    uint8_t cmd[17] = {0};
+	uint8_t cmd[17] = { 0 };
  8000782:	f107 0308 	add.w	r3, r7, #8
  8000786:	2200      	movs	r2, #0
  8000788:	601a      	str	r2, [r3, #0]
@@ -839,18 +848,19 @@ static void BNO_EnableGyro(void)
  800078c:	609a      	str	r2, [r3, #8]
  800078e:	60da      	str	r2, [r3, #12]
  8000790:	741a      	strb	r2, [r3, #16]
-    cmd[0] = RPT_SET_FEATURE;
+	cmd[0] = RPT_SET_FEATURE;
  8000792:	23fd      	movs	r3, #253	@ 0xfd
  8000794:	723b      	strb	r3, [r7, #8]
-    cmd[1] = RPT_GYRO;
+	cmd[1] = RPT_GYRO;
  8000796:	2302      	movs	r3, #2
  8000798:	727b      	strb	r3, [r7, #9]
-    cmd[5] = 0x20; cmd[6] = 0x4E;
+	cmd[5] = 0x20;
  800079a:	2320      	movs	r3, #32
  800079c:	737b      	strb	r3, [r7, #13]
+	cmd[6] = 0x4E;
  800079e:	234e      	movs	r3, #78	@ 0x4e
  80007a0:	73bb      	strb	r3, [r7, #14]
-    HAL_StatusTypeDef st = SHTP_Write(CH_CTRL, cmd, 17);
+	HAL_StatusTypeDef st = SHTP_Write(CH_CTRL, cmd, 17);
  80007a2:	f107 0308 	add.w	r3, r7, #8
  80007a6:	2211      	movs	r2, #17
  80007a8:	4619      	mov	r1, r3
@@ -858,7 +868,7 @@ static void BNO_EnableGyro(void)
  80007ac:	f7ff ff46 	bl	800063c <SHTP_Write>
  80007b0:	4603      	mov	r3, r0
  80007b2:	76fb      	strb	r3, [r7, #27]
-    CDC_Print("EnableGyro TX: %s\r\n", HalStr(st));
+	CDC_Print("EnableGyro TX: %s\r\n", HalStr(st));
  80007b4:	7efb      	ldrb	r3, [r7, #27]
  80007b6:	4618      	mov	r0, r3
  80007b8:	f7ff fdb8 	bl	800032c <HalStr>
@@ -866,31 +876,32 @@ static void BNO_EnableGyro(void)
  80007be:	4619      	mov	r1, r3
  80007c0:	480e      	ldr	r0, [pc, #56]	@ (80007fc <BNO_EnableGyro+0x80>)
  80007c2:	f7ff fd7d 	bl	80002c0 <CDC_Print>
-    HAL_Delay(50);
+	HAL_Delay(50);
  80007c6:	2032      	movs	r0, #50	@ 0x32
  80007c8:	f000 fd6a 	bl	80012a0 <HAL_Delay>
-    for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++) {
  80007cc:	2300      	movs	r3, #0
  80007ce:	61fb      	str	r3, [r7, #28]
  80007d0:	e00b      	b.n	80007ea <BNO_EnableGyro+0x6e>
-        uint16_t len; uint8_t ch;
-        SHTP_Read(&len, &ch);
+		uint16_t len;
+		uint8_t ch;
+		SHTP_Read(&len, &ch);
  80007d2:	1d7a      	adds	r2, r7, #5
  80007d4:	1dbb      	adds	r3, r7, #6
  80007d6:	4611      	mov	r1, r2
  80007d8:	4618      	mov	r0, r3
  80007da:	f7ff fec9 	bl	8000570 <SHTP_Read>
-        HAL_Delay(10);
+		HAL_Delay(10);
  80007de:	200a      	movs	r0, #10
  80007e0:	f000 fd5e 	bl	80012a0 <HAL_Delay>
-    for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++) {
  80007e4:	69fb      	ldr	r3, [r7, #28]
  80007e6:	3301      	adds	r3, #1
  80007e8:	61fb      	str	r3, [r7, #28]
  80007ea:	69fb      	ldr	r3, [r7, #28]
  80007ec:	2b04      	cmp	r3, #4
  80007ee:	ddf0      	ble.n	80007d2 <BNO_EnableGyro+0x56>
-    }
+	}
 }
  80007f0:	bf00      	nop
  80007f2:	bf00      	nop
@@ -902,28 +913,27 @@ static void BNO_EnableGyro(void)
 
 08000800 <PrintVal>:
 
-static void PrintVal(char *dest, int maxLen, float v)
-{
+static void PrintVal(char *dest, int maxLen, float v) {
  8000800:	b5b0      	push	{r4, r5, r7, lr}
  8000802:	b088      	sub	sp, #32
  8000804:	af02      	add	r7, sp, #8
  8000806:	60f8      	str	r0, [r7, #12]
  8000808:	60b9      	str	r1, [r7, #8]
  800080a:	ed87 0a01 	vstr	s0, [r7, #4]
-    int vi = (int)(v * 1000);
+	int vi = (int) (v * 1000);
  800080e:	edd7 7a01 	vldr	s15, [r7, #4]
  8000812:	ed9f 7a1c 	vldr	s14, [pc, #112]	@ 8000884 <PrintVal+0x84>
  8000816:	ee67 7a87 	vmul.f32	s15, s15, s14
  800081a:	eefd 7ae7 	vcvt.s32.f32	s15, s15
  800081e:	ee17 3a90 	vmov	r3, s15
  8000822:	617b      	str	r3, [r7, #20]
-    int va = vi < 0 ? -vi : vi;
+	int va = vi < 0 ? -vi : vi;
  8000824:	697b      	ldr	r3, [r7, #20]
  8000826:	2b00      	cmp	r3, #0
  8000828:	bfb8      	it	lt
  800082a:	425b      	neglt	r3, r3
  800082c:	613b      	str	r3, [r7, #16]
-    snprintf(dest, maxLen, "%c%d.%03d", v < 0 ? '-' : '+', va / 1000, va % 1000);
+	snprintf(dest, maxLen, "%c%d.%03d", v < 0 ? '-' : '+', va / 1000,
  800082e:	68bc      	ldr	r4, [r7, #8]
  8000830:	edd7 7a01 	vldr	s15, [r7, #4]
  8000834:	eef5 7ac0 	vcmpe.f32	s15, #0.0
@@ -954,6 +964,7 @@ static void PrintVal(char *dest, int maxLen, float v)
  8000872:	4621      	mov	r1, r4
  8000874:	68f8      	ldr	r0, [r7, #12]
  8000876:	f009 f98b 	bl	8009b90 <sniprintf>
+			va % 1000);
 }
  800087a:	bf00      	nop
  800087c:	3718      	adds	r7, #24
@@ -965,58 +976,58 @@ static void PrintVal(char *dest, int maxLen, float v)
  800088c:	0800a640 	.word	0x0800a640
 
 08000890 <main>:
+
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
  8000890:	b5f0      	push	{r4, r5, r6, r7, lr}
  8000892:	b099      	sub	sp, #100	@ 0x64
  8000894:	af04      	add	r7, sp, #16
-  /* USER CODE END 1 */
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
  8000896:	f000 fc92 	bl	80011be <HAL_Init>
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
  800089a:	f000 f9db 	bl	8000c54 <SystemClock_Config>
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
  800089e:	f000 faab 	bl	8000df8 <MX_GPIO_Init>
-  MX_I2C2_Init();
+	MX_I2C2_Init();
  80008a2:	f000 fa69 	bl	8000d78 <MX_I2C2_Init>
-  MX_USB_Device_Init();
+	MX_USB_Device_Init();
  80008a6:	f008 fc69 	bl	800917c <MX_USB_Device_Init>
-  MX_FDCAN2_Init();
+	MX_FDCAN2_Init();
  80008aa:	f000 fa1f 	bl	8000cec <MX_FDCAN2_Init>
-  /* USER CODE BEGIN 2 */
+	/* USER CODE BEGIN 2 */
 
-  HAL_Delay(1500);
+	HAL_Delay(1500);
  80008ae:	f240 50dc 	movw	r0, #1500	@ 0x5dc
  80008b2:	f000 fcf5 	bl	80012a0 <HAL_Delay>
 
-  CDC_Print("\r\n=== BNO085 Gyro Diagnostic + CAN TX ===\r\n");
+	CDC_Print("\r\n=== BNO085 Gyro Diagnostic + CAN TX ===\r\n");
  80008b6:	48ac      	ldr	r0, [pc, #688]	@ (8000b68 <main+0x2d8>)
  80008b8:	f7ff fd02 	bl	80002c0 <CDC_Print>
 
-  /* Start FDCAN and configure TX header */
-  CAN_Init();
+	/* Start FDCAN and configure TX header */
+	CAN_Init();
  80008bc:	f7ff fd64 	bl	8000388 <CAN_Init>
 
-  /* Check I2C */
-  HAL_StatusTypeDef rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
+	/* Check I2C */
+	HAL_StatusTypeDef rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
  80008c0:	2364      	movs	r3, #100	@ 0x64
  80008c2:	2203      	movs	r2, #3
  80008c4:	2194      	movs	r1, #148	@ 0x94
@@ -1024,7 +1035,7 @@ int main(void)
  80008c8:	f002 f808 	bl	80028dc <HAL_I2C_IsDeviceReady>
  80008cc:	4603      	mov	r3, r0
  80008ce:	f887 3039 	strb.w	r3, [r7, #57]	@ 0x39
-  CDC_Print("I2C device ready: %s\r\n", HalStr(rdy));
+	CDC_Print("I2C device ready: %s\r\n", HalStr(rdy));
  80008d2:	f897 3039 	ldrb.w	r3, [r7, #57]	@ 0x39
  80008d6:	4618      	mov	r0, r3
  80008d8:	f7ff fd28 	bl	800032c <HalStr>
@@ -1033,36 +1044,36 @@ int main(void)
  80008e0:	48a3      	ldr	r0, [pc, #652]	@ (8000b70 <main+0x2e0>)
  80008e2:	f7ff fced 	bl	80002c0 <CDC_Print>
 
-  BNO_Boot();
+	BNO_Boot();
  80008e6:	f7ff ff24 	bl	8000732 <BNO_Boot>
-  BNO_EnableGyro();
+	BNO_EnableGyro();
  80008ea:	f7ff ff47 	bl	800077c <BNO_EnableGyro>
 
-  uint32_t lastPrint = 0;
+	uint32_t lastPrint = 0;
  80008ee:	2300      	movs	r3, #0
  80008f0:	64fb      	str	r3, [r7, #76]	@ 0x4c
-  float prevX = 0, prevY = 0, prevZ = 0;
+	float prevX = 0, prevY = 0, prevZ = 0;
  80008f2:	f04f 0300 	mov.w	r3, #0
  80008f6:	64bb      	str	r3, [r7, #72]	@ 0x48
  80008f8:	f04f 0300 	mov.w	r3, #0
  80008fc:	647b      	str	r3, [r7, #68]	@ 0x44
  80008fe:	f04f 0300 	mov.w	r3, #0
  8000902:	643b      	str	r3, [r7, #64]	@ 0x40
-  uint32_t staleCount = 0;
+	uint32_t staleCount = 0;
  8000904:	2300      	movs	r3, #0
  8000906:	63fb      	str	r3, [r7, #60]	@ 0x3c
-  {
-    /* USER CODE END WHILE */
+	while (1) {
+		/* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+		/* USER CODE BEGIN 3 */
 
-    uint16_t pktLen = 0;
+		uint16_t pktLen = 0;
  8000908:	2300      	movs	r3, #0
  800090a:	84fb      	strh	r3, [r7, #38]	@ 0x26
-    uint8_t  chan   = 0;
+		uint8_t chan = 0;
  800090c:	2300      	movs	r3, #0
  800090e:	f887 3025 	strb.w	r3, [r7, #37]	@ 0x25
-    HAL_StatusTypeDef st = SHTP_Read(&pktLen, &chan);
+		HAL_StatusTypeDef st = SHTP_Read(&pktLen, &chan);
  8000912:	f107 0225 	add.w	r2, r7, #37	@ 0x25
  8000916:	f107 0326 	add.w	r3, r7, #38	@ 0x26
  800091a:	4611      	mov	r1, r2
@@ -1071,56 +1082,56 @@ int main(void)
  8000922:	4603      	mov	r3, r0
  8000924:	f887 3038 	strb.w	r3, [r7, #56]	@ 0x38
 
-    if (st == HAL_OK && pktLen > SHTP_HDR) {
+		if (st == HAL_OK && pktLen > SHTP_HDR) {
  8000928:	f897 3038 	ldrb.w	r3, [r7, #56]	@ 0x38
  800092c:	2b00      	cmp	r3, #0
  800092e:	f040 80a0 	bne.w	8000a72 <main+0x1e2>
  8000932:	8cfb      	ldrh	r3, [r7, #38]	@ 0x26
  8000934:	2b04      	cmp	r3, #4
  8000936:	f240 809c 	bls.w	8000a72 <main+0x1e2>
-        readOK++;
+			readOK++;
  800093a:	4b8e      	ldr	r3, [pc, #568]	@ (8000b74 <main+0x2e4>)
  800093c:	681b      	ldr	r3, [r3, #0]
  800093e:	3301      	adds	r3, #1
  8000940:	4a8c      	ldr	r2, [pc, #560]	@ (8000b74 <main+0x2e4>)
  8000942:	6013      	str	r3, [r2, #0]
 
-        if (chan == CH_INPUT) {
+			if (chan == CH_INPUT) {
  8000944:	f897 3025 	ldrb.w	r3, [r7, #37]	@ 0x25
  8000948:	2b03      	cmp	r3, #3
  800094a:	f040 8085 	bne.w	8000a58 <main+0x1c8>
-            uint16_t cargoLen = pktLen - SHTP_HDR;
+				uint16_t cargoLen = pktLen - SHTP_HDR;
  800094e:	8cfb      	ldrh	r3, [r7, #38]	@ 0x26
  8000950:	3b04      	subs	r3, #4
  8000952:	86fb      	strh	r3, [r7, #54]	@ 0x36
-            const uint8_t *c = &rxBuf[SHTP_HDR];
+				const uint8_t *c = &rxBuf[SHTP_HDR];
  8000954:	4b88      	ldr	r3, [pc, #544]	@ (8000b78 <main+0x2e8>)
  8000956:	633b      	str	r3, [r7, #48]	@ 0x30
-            uint16_t idx = 0;
+				uint16_t idx = 0;
  8000958:	2300      	movs	r3, #0
  800095a:	877b      	strh	r3, [r7, #58]	@ 0x3a
 
-            while (idx < cargoLen) {
+				while (idx < cargoLen) {
  800095c:	e078      	b.n	8000a50 <main+0x1c0>
-                uint8_t id = c[idx];
+					uint8_t id = c[idx];
  800095e:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000960:	6b3a      	ldr	r2, [r7, #48]	@ 0x30
  8000962:	4413      	add	r3, r2
  8000964:	781b      	ldrb	r3, [r3, #0]
  8000966:	f887 302f 	strb.w	r3, [r7, #47]	@ 0x2f
-                if (id == RPT_BASE_TS || id == RPT_TS_REBASE) {
+					if (id == RPT_BASE_TS || id == RPT_TS_REBASE) {
  800096a:	f897 302f 	ldrb.w	r3, [r7, #47]	@ 0x2f
  800096e:	2bfb      	cmp	r3, #251	@ 0xfb
  8000970:	d003      	beq.n	800097a <main+0xea>
  8000972:	f897 302f 	ldrb.w	r3, [r7, #47]	@ 0x2f
  8000976:	2bfa      	cmp	r3, #250	@ 0xfa
  8000978:	d103      	bne.n	8000982 <main+0xf2>
-                    idx += 5;
+						idx += 5;
  800097a:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  800097c:	3305      	adds	r3, #5
  800097e:	877b      	strh	r3, [r7, #58]	@ 0x3a
  8000980:	e066      	b.n	8000a50 <main+0x1c0>
-                } else if (id == RPT_GYRO && idx + 10 <= cargoLen) {
+					} else if (id == RPT_GYRO && idx + 10 <= cargoLen) {
  8000982:	f897 302f 	ldrb.w	r3, [r7, #47]	@ 0x2f
  8000986:	2b02      	cmp	r3, #2
  8000988:	d15f      	bne.n	8000a4a <main+0x1ba>
@@ -1129,18 +1140,20 @@ int main(void)
  8000990:	8efb      	ldrh	r3, [r7, #54]	@ 0x36
  8000992:	429a      	cmp	r2, r3
  8000994:	da59      	bge.n	8000a4a <main+0x1ba>
-                    lastX = (float)(int16_t)((uint16_t)c[idx+4] | (uint16_t)c[idx+5]<<8) / 512.0f;
+						lastX = (float) (int16_t) ((uint16_t) c[idx + 4]
  8000996:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000998:	3304      	adds	r3, #4
  800099a:	6b3a      	ldr	r2, [r7, #48]	@ 0x30
  800099c:	4413      	add	r3, r2
  800099e:	781b      	ldrb	r3, [r3, #0]
  80009a0:	b21a      	sxth	r2, r3
+								| (uint16_t) c[idx + 5] << 8) / 512.0f;
  80009a2:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  80009a4:	3305      	adds	r3, #5
  80009a6:	6b39      	ldr	r1, [r7, #48]	@ 0x30
  80009a8:	440b      	add	r3, r1
  80009aa:	781b      	ldrb	r3, [r3, #0]
+						lastX = (float) (int16_t) ((uint16_t) c[idx + 4]
  80009ac:	b21b      	sxth	r3, r3
  80009ae:	021b      	lsls	r3, r3, #8
  80009b0:	b21b      	sxth	r3, r3
@@ -1148,22 +1161,26 @@ int main(void)
  80009b4:	b21b      	sxth	r3, r3
  80009b6:	ee07 3a90 	vmov	s15, r3
  80009ba:	eeb8 7ae7 	vcvt.f32.s32	s14, s15
+								| (uint16_t) c[idx + 5] << 8) / 512.0f;
  80009be:	eddf 6a6f 	vldr	s13, [pc, #444]	@ 8000b7c <main+0x2ec>
  80009c2:	eec7 7a26 	vdiv.f32	s15, s14, s13
+						lastX = (float) (int16_t) ((uint16_t) c[idx + 4]
  80009c6:	4b6e      	ldr	r3, [pc, #440]	@ (8000b80 <main+0x2f0>)
  80009c8:	edc3 7a00 	vstr	s15, [r3]
-                    lastY = (float)(int16_t)((uint16_t)c[idx+6] | (uint16_t)c[idx+7]<<8) / 512.0f;
+						lastY = (float) (int16_t) ((uint16_t) c[idx + 6]
  80009cc:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  80009ce:	3306      	adds	r3, #6
  80009d0:	6b3a      	ldr	r2, [r7, #48]	@ 0x30
  80009d2:	4413      	add	r3, r2
  80009d4:	781b      	ldrb	r3, [r3, #0]
  80009d6:	b21a      	sxth	r2, r3
+								| (uint16_t) c[idx + 7] << 8) / 512.0f;
  80009d8:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  80009da:	3307      	adds	r3, #7
  80009dc:	6b39      	ldr	r1, [r7, #48]	@ 0x30
  80009de:	440b      	add	r3, r1
  80009e0:	781b      	ldrb	r3, [r3, #0]
+						lastY = (float) (int16_t) ((uint16_t) c[idx + 6]
  80009e2:	b21b      	sxth	r3, r3
  80009e4:	021b      	lsls	r3, r3, #8
  80009e6:	b21b      	sxth	r3, r3
@@ -1171,22 +1188,26 @@ int main(void)
  80009ea:	b21b      	sxth	r3, r3
  80009ec:	ee07 3a90 	vmov	s15, r3
  80009f0:	eeb8 7ae7 	vcvt.f32.s32	s14, s15
+								| (uint16_t) c[idx + 7] << 8) / 512.0f;
  80009f4:	eddf 6a61 	vldr	s13, [pc, #388]	@ 8000b7c <main+0x2ec>
  80009f8:	eec7 7a26 	vdiv.f32	s15, s14, s13
+						lastY = (float) (int16_t) ((uint16_t) c[idx + 6]
  80009fc:	4b61      	ldr	r3, [pc, #388]	@ (8000b84 <main+0x2f4>)
  80009fe:	edc3 7a00 	vstr	s15, [r3]
-                    lastZ = (float)(int16_t)((uint16_t)c[idx+8] | (uint16_t)c[idx+9]<<8) / 512.0f;
+						lastZ = (float) (int16_t) ((uint16_t) c[idx + 8]
  8000a02:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000a04:	3308      	adds	r3, #8
  8000a06:	6b3a      	ldr	r2, [r7, #48]	@ 0x30
  8000a08:	4413      	add	r3, r2
  8000a0a:	781b      	ldrb	r3, [r3, #0]
  8000a0c:	b21a      	sxth	r2, r3
+								| (uint16_t) c[idx + 9] << 8) / 512.0f;
  8000a0e:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000a10:	3309      	adds	r3, #9
  8000a12:	6b39      	ldr	r1, [r7, #48]	@ 0x30
  8000a14:	440b      	add	r3, r1
  8000a16:	781b      	ldrb	r3, [r3, #0]
+						lastZ = (float) (int16_t) ((uint16_t) c[idx + 8]
  8000a18:	b21b      	sxth	r3, r3
  8000a1a:	021b      	lsls	r3, r3, #8
  8000a1c:	b21b      	sxth	r3, r3
@@ -1194,81 +1215,83 @@ int main(void)
  8000a20:	b21b      	sxth	r3, r3
  8000a22:	ee07 3a90 	vmov	s15, r3
  8000a26:	eeb8 7ae7 	vcvt.f32.s32	s14, s15
+								| (uint16_t) c[idx + 9] << 8) / 512.0f;
  8000a2a:	eddf 6a54 	vldr	s13, [pc, #336]	@ 8000b7c <main+0x2ec>
  8000a2e:	eec7 7a26 	vdiv.f32	s15, s14, s13
+						lastZ = (float) (int16_t) ((uint16_t) c[idx + 8]
  8000a32:	4b55      	ldr	r3, [pc, #340]	@ (8000b88 <main+0x2f8>)
  8000a34:	edc3 7a00 	vstr	s15, [r3]
-                    gyroCount++;
+						gyroCount++;
  8000a38:	4b54      	ldr	r3, [pc, #336]	@ (8000b8c <main+0x2fc>)
  8000a3a:	681b      	ldr	r3, [r3, #0]
  8000a3c:	3301      	adds	r3, #1
  8000a3e:	4a53      	ldr	r2, [pc, #332]	@ (8000b8c <main+0x2fc>)
  8000a40:	6013      	str	r3, [r2, #0]
-                    idx += 10;
+						idx += 10;
  8000a42:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000a44:	330a      	adds	r3, #10
  8000a46:	877b      	strh	r3, [r7, #58]	@ 0x3a
  8000a48:	e002      	b.n	8000a50 <main+0x1c0>
-                } else {
-                    idx++;  /* skip unknown byte, keep parsing */
+					} else {
+						idx++; /* skip unknown byte, keep parsing */
  8000a4a:	8f7b      	ldrh	r3, [r7, #58]	@ 0x3a
  8000a4c:	3301      	adds	r3, #1
  8000a4e:	877b      	strh	r3, [r7, #58]	@ 0x3a
-            while (idx < cargoLen) {
+				while (idx < cargoLen) {
  8000a50:	8f7a      	ldrh	r2, [r7, #58]	@ 0x3a
  8000a52:	8efb      	ldrh	r3, [r7, #54]	@ 0x36
  8000a54:	429a      	cmp	r2, r3
  8000a56:	d382      	bcc.n	800095e <main+0xce>
-                }
-            }
-        }
+					}
+				}
+			}
 
-        if (chan == CH_EXEC) {
+			if (chan == CH_EXEC) {
  8000a58:	f897 3025 	ldrb.w	r3, [r7, #37]	@ 0x25
  8000a5c:	2b01      	cmp	r3, #1
  8000a5e:	d115      	bne.n	8000a8c <main+0x1fc>
-            CDC_Print("!! Sensor reset detected on EXEC channel\r\n");
+				CDC_Print("!! Sensor reset detected on EXEC channel\r\n");
  8000a60:	484b      	ldr	r0, [pc, #300]	@ (8000b90 <main+0x300>)
  8000a62:	f7ff fc2d 	bl	80002c0 <CDC_Print>
-            HAL_Delay(100);
+				HAL_Delay(100);
  8000a66:	2064      	movs	r0, #100	@ 0x64
  8000a68:	f000 fc1a 	bl	80012a0 <HAL_Delay>
-            BNO_EnableGyro();
+				BNO_EnableGyro();
  8000a6c:	f7ff fe86 	bl	800077c <BNO_EnableGyro>
-        if (chan == CH_EXEC) {
+			if (chan == CH_EXEC) {
  8000a70:	e00c      	b.n	8000a8c <main+0x1fc>
-        }
-    } else if (st != HAL_OK && st != HAL_TIMEOUT) {
+			}
+		} else if (st != HAL_OK && st != HAL_TIMEOUT) {
  8000a72:	f897 3038 	ldrb.w	r3, [r7, #56]	@ 0x38
  8000a76:	2b00      	cmp	r3, #0
  8000a78:	d008      	beq.n	8000a8c <main+0x1fc>
  8000a7a:	f897 3038 	ldrb.w	r3, [r7, #56]	@ 0x38
  8000a7e:	2b03      	cmp	r3, #3
  8000a80:	d004      	beq.n	8000a8c <main+0x1fc>
-        readFail++;
+			readFail++;
  8000a82:	4b44      	ldr	r3, [pc, #272]	@ (8000b94 <main+0x304>)
  8000a84:	681b      	ldr	r3, [r3, #0]
  8000a86:	3301      	adds	r3, #1
  8000a88:	4a42      	ldr	r2, [pc, #264]	@ (8000b94 <main+0x304>)
  8000a8a:	6013      	str	r3, [r2, #0]
-    }
+		}
 
-    /* Print once per second */
-    uint32_t now = HAL_GetTick();
+		/* Print once per second */
+		uint32_t now = HAL_GetTick();
  8000a8c:	f000 fbfc 	bl	8001288 <HAL_GetTick>
  8000a90:	62b8      	str	r0, [r7, #40]	@ 0x28
-    if (now - lastPrint >= 1000) {
+		if (now - lastPrint >= 1000) {
  8000a92:	6aba      	ldr	r2, [r7, #40]	@ 0x28
  8000a94:	6cfb      	ldr	r3, [r7, #76]	@ 0x4c
  8000a96:	1ad3      	subs	r3, r2, r3
  8000a98:	f5b3 7f7a 	cmp.w	r3, #1000	@ 0x3e8
  8000a9c:	f0c0 80c1 	bcc.w	8000c22 <main+0x392>
-        lastPrint = now;
+			lastPrint = now;
  8000aa0:	6abb      	ldr	r3, [r7, #40]	@ 0x28
  8000aa2:	64fb      	str	r3, [r7, #76]	@ 0x4c
 
-        char sx[12], sy[12], sz[12];
-        PrintVal(sx, sizeof(sx), lastX);
+			char sx[12], sy[12], sz[12];
+			PrintVal(sx, sizeof(sx), lastX);
  8000aa4:	4b36      	ldr	r3, [pc, #216]	@ (8000b80 <main+0x2f0>)
  8000aa6:	edd3 7a00 	vldr	s15, [r3]
  8000aaa:	f107 0318 	add.w	r3, r7, #24
@@ -1276,7 +1299,7 @@ int main(void)
  8000ab2:	210c      	movs	r1, #12
  8000ab4:	4618      	mov	r0, r3
  8000ab6:	f7ff fea3 	bl	8000800 <PrintVal>
-        PrintVal(sy, sizeof(sy), lastY);
+			PrintVal(sy, sizeof(sy), lastY);
  8000aba:	4b32      	ldr	r3, [pc, #200]	@ (8000b84 <main+0x2f4>)
  8000abc:	edd3 7a00 	vldr	s15, [r3]
  8000ac0:	f107 030c 	add.w	r3, r7, #12
@@ -1284,7 +1307,7 @@ int main(void)
  8000ac8:	210c      	movs	r1, #12
  8000aca:	4618      	mov	r0, r3
  8000acc:	f7ff fe98 	bl	8000800 <PrintVal>
-        PrintVal(sz, sizeof(sz), lastZ);
+			PrintVal(sz, sizeof(sz), lastZ);
  8000ad0:	4b2d      	ldr	r3, [pc, #180]	@ (8000b88 <main+0x2f8>)
  8000ad2:	edd3 7a00 	vldr	s15, [r3]
  8000ad6:	463b      	mov	r3, r7
@@ -1293,22 +1316,21 @@ int main(void)
  8000ade:	4618      	mov	r0, r3
  8000ae0:	f7ff fe8e 	bl	8000800 <PrintVal>
 
-        CDC_Print("X:%s  Y:%s  Z:%s  |  ok=%lu fail=%lu gyro=%lu  I2C=%s\r\n",
+			CDC_Print(
  8000ae4:	4b23      	ldr	r3, [pc, #140]	@ (8000b74 <main+0x2e4>)
  8000ae6:	681b      	ldr	r3, [r3, #0]
  8000ae8:	4a2a      	ldr	r2, [pc, #168]	@ (8000b94 <main+0x304>)
  8000aea:	6812      	ldr	r2, [r2, #0]
  8000aec:	4927      	ldr	r1, [pc, #156]	@ (8000b8c <main+0x2fc>)
  8000aee:	6809      	ldr	r1, [r1, #0]
-                  sx, sy, sz,
-                  (unsigned long)readOK,
-                  (unsigned long)readFail,
-                  (unsigned long)gyroCount,
-                  hi2c2.State == HAL_I2C_STATE_READY ? "RDY" : "FLT");
+					"X:%s  Y:%s  Z:%s  |  ok=%lu fail=%lu gyro=%lu  I2C=%s\r\n",
+					sx, sy, sz, (unsigned long) readOK,
+					(unsigned long) readFail, (unsigned long) gyroCount,
+					hi2c2.State == HAL_I2C_STATE_READY ? "RDY" : "FLT");
  8000af0:	481e      	ldr	r0, [pc, #120]	@ (8000b6c <main+0x2dc>)
  8000af2:	f890 0041 	ldrb.w	r0, [r0, #65]	@ 0x41
  8000af6:	b2c0      	uxtb	r0, r0
-        CDC_Print("X:%s  Y:%s  Z:%s  |  ok=%lu fail=%lu gyro=%lu  I2C=%s\r\n",
+			CDC_Print(
  8000af8:	2820      	cmp	r0, #32
  8000afa:	d101      	bne.n	8000b00 <main+0x270>
  8000afc:	4826      	ldr	r0, [pc, #152]	@ (8000b98 <main+0x308>)
@@ -1327,12 +1349,12 @@ int main(void)
  8000b1a:	4821      	ldr	r0, [pc, #132]	@ (8000ba0 <main+0x310>)
  8000b1c:	f7ff fbd0 	bl	80002c0 <CDC_Print>
 
-        /* Send CAN heartbeat right after gyro line */
-        CAN_SendHeartbeat();
+			/* Send CAN heartbeat right after gyro line */
+			CAN_SendHeartbeat();
  8000b20:	f7ff fc6a 	bl	80003f8 <CAN_SendHeartbeat>
 
-        /* Stale detection */
-        if (lastX == prevX && lastY == prevY && lastZ == prevZ)
+			/* Stale detection */
+			if (lastX == prevX && lastY == prevY && lastZ == prevZ)
  8000b24:	4b16      	ldr	r3, [pc, #88]	@ (8000b80 <main+0x2f0>)
  8000b26:	edd3 7a00 	vldr	s15, [r3]
  8000b2a:	ed97 7a12 	vldr	s14, [r7, #72]	@ 0x48
@@ -1351,7 +1373,7 @@ int main(void)
  8000b56:	eeb4 7a67 	vcmp.f32	s14, s15
  8000b5a:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8000b5e:	d121      	bne.n	8000ba4 <main+0x314>
-            staleCount++;
+				staleCount++;
  8000b60:	6bfb      	ldr	r3, [r7, #60]	@ 0x3c
  8000b62:	3301      	adds	r3, #1
  8000b64:	63fb      	str	r3, [r7, #60]	@ 0x3c
@@ -1371,43 +1393,45 @@ int main(void)
  8000b98:	0800a6bc 	.word	0x0800a6bc
  8000b9c:	0800a6c0 	.word	0x0800a6c0
  8000ba0:	0800a6c4 	.word	0x0800a6c4
-        else
-            staleCount = 0;
+			else
+				staleCount = 0;
  8000ba4:	2300      	movs	r3, #0
  8000ba6:	63fb      	str	r3, [r7, #60]	@ 0x3c
 
-        prevX = lastX; prevY = lastY; prevZ = lastZ;
+			prevX = lastX;
  8000ba8:	4b20      	ldr	r3, [pc, #128]	@ (8000c2c <main+0x39c>)
  8000baa:	681b      	ldr	r3, [r3, #0]
  8000bac:	64bb      	str	r3, [r7, #72]	@ 0x48
+			prevY = lastY;
  8000bae:	4b20      	ldr	r3, [pc, #128]	@ (8000c30 <main+0x3a0>)
  8000bb0:	681b      	ldr	r3, [r3, #0]
  8000bb2:	647b      	str	r3, [r7, #68]	@ 0x44
+			prevZ = lastZ;
  8000bb4:	4b1f      	ldr	r3, [pc, #124]	@ (8000c34 <main+0x3a4>)
  8000bb6:	681b      	ldr	r3, [r3, #0]
  8000bb8:	643b      	str	r3, [r7, #64]	@ 0x40
 
-        if (staleCount >= 5) {
+			if (staleCount >= 5) {
  8000bba:	6bfb      	ldr	r3, [r7, #60]	@ 0x3c
  8000bbc:	2b04      	cmp	r3, #4
  8000bbe:	d930      	bls.n	8000c22 <main+0x392>
-            CDC_Print("!! Stale for %lu sec — sending SH-2 soft reset\r\n",
+				CDC_Print("!! Stale for %lu sec — sending SH-2 soft reset\r\n",
  8000bc0:	6bf9      	ldr	r1, [r7, #60]	@ 0x3c
  8000bc2:	481d      	ldr	r0, [pc, #116]	@ (8000c38 <main+0x3a8>)
  8000bc4:	f7ff fb7c 	bl	80002c0 <CDC_Print>
-                      (unsigned long)staleCount);
+						(unsigned long) staleCount);
 
-            /* Full recovery: I2C re-init + SH-2 software reset */
-            HAL_I2C_DeInit(&hi2c2);
+				/* Full recovery: I2C re-init + SH-2 software reset */
+				HAL_I2C_DeInit(&hi2c2);
  8000bc8:	481c      	ldr	r0, [pc, #112]	@ (8000c3c <main+0x3ac>)
  8000bca:	f001 fc4a 	bl	8002462 <HAL_I2C_DeInit>
-            HAL_Delay(50);
+				HAL_Delay(50);
  8000bce:	2032      	movs	r0, #50	@ 0x32
  8000bd0:	f000 fb66 	bl	80012a0 <HAL_Delay>
-            MX_I2C2_Init();
+				MX_I2C2_Init();
  8000bd4:	f000 f8d0 	bl	8000d78 <MX_I2C2_Init>
 
-            rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
+				rdy = HAL_I2C_IsDeviceReady(&hi2c2, BNO085_ADDR, 3, 100);
  8000bd8:	2364      	movs	r3, #100	@ 0x64
  8000bda:	2203      	movs	r2, #3
  8000bdc:	2194      	movs	r1, #148	@ 0x94
@@ -1415,7 +1439,7 @@ int main(void)
  8000be0:	f001 fe7c 	bl	80028dc <HAL_I2C_IsDeviceReady>
  8000be4:	4603      	mov	r3, r0
  8000be6:	f887 3039 	strb.w	r3, [r7, #57]	@ 0x39
-            CDC_Print("   I2C after re-init: %s\r\n", HalStr(rdy));
+				CDC_Print("   I2C after re-init: %s\r\n", HalStr(rdy));
  8000bea:	f897 3039 	ldrb.w	r3, [r7, #57]	@ 0x39
  8000bee:	4618      	mov	r0, r3
  8000bf0:	f7ff fb9c 	bl	800032c <HalStr>
@@ -1424,35 +1448,37 @@ int main(void)
  8000bf8:	4811      	ldr	r0, [pc, #68]	@ (8000c40 <main+0x3b0>)
  8000bfa:	f7ff fb61 	bl	80002c0 <CDC_Print>
 
-            BNO_SoftReset();
+				BNO_SoftReset();
  8000bfe:	f7ff fd5f 	bl	80006c0 <BNO_SoftReset>
-            CDC_Print("   Soft reset sent, re-enabling gyro\r\n");
+				CDC_Print("   Soft reset sent, re-enabling gyro\r\n");
  8000c02:	4810      	ldr	r0, [pc, #64]	@ (8000c44 <main+0x3b4>)
  8000c04:	f7ff fb5c 	bl	80002c0 <CDC_Print>
-            BNO_EnableGyro();
+				BNO_EnableGyro();
  8000c08:	f7ff fdb8 	bl	800077c <BNO_EnableGyro>
 
-            /* Reset counters */
-            readOK = 0; readFail = 0; gyroCount = 0;
+				/* Reset counters */
+				readOK = 0;
  8000c0c:	4b0e      	ldr	r3, [pc, #56]	@ (8000c48 <main+0x3b8>)
  8000c0e:	2200      	movs	r2, #0
  8000c10:	601a      	str	r2, [r3, #0]
+				readFail = 0;
  8000c12:	4b0e      	ldr	r3, [pc, #56]	@ (8000c4c <main+0x3bc>)
  8000c14:	2200      	movs	r2, #0
  8000c16:	601a      	str	r2, [r3, #0]
+				gyroCount = 0;
  8000c18:	4b0d      	ldr	r3, [pc, #52]	@ (8000c50 <main+0x3c0>)
  8000c1a:	2200      	movs	r2, #0
  8000c1c:	601a      	str	r2, [r3, #0]
-            staleCount = 0;
+				staleCount = 0;
  8000c1e:	2300      	movs	r3, #0
  8000c20:	63fb      	str	r3, [r7, #60]	@ 0x3c
-        }
-    }
+			}
+		}
 
-    HAL_Delay(5);
+		HAL_Delay(5);
  8000c22:	2005      	movs	r0, #5
  8000c24:	f000 fb3c 	bl	80012a0 <HAL_Delay>
-  {
+	while (1) {
  8000c28:	e66e      	b.n	8000908 <main+0x78>
  8000c2a:	bf00      	nop
  8000c2c:	20000708 	.word	0x20000708
@@ -1467,22 +1493,22 @@ int main(void)
  8000c50:	2000071c 	.word	0x2000071c
 
 08000c54 <SystemClock_Config>:
+
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
  8000c54:	b580      	push	{r7, lr}
  8000c56:	b094      	sub	sp, #80	@ 0x50
  8000c58:	af00      	add	r7, sp, #0
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
  8000c5a:	f107 0318 	add.w	r3, r7, #24
  8000c5e:	2238      	movs	r2, #56	@ 0x38
  8000c60:	2100      	movs	r1, #0
  8000c62:	4618      	mov	r0, r3
  8000c64:	f009 f806 	bl	8009c74 <memset>
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
  8000c68:	1d3b      	adds	r3, r7, #4
  8000c6a:	2200      	movs	r2, #0
  8000c6c:	601a      	str	r2, [r3, #0]
@@ -1491,77 +1517,76 @@ void SystemClock_Config(void)
  8000c72:	60da      	str	r2, [r3, #12]
  8000c74:	611a      	str	r2, [r3, #16]
 
-  /** Configure the main internal regulator output voltage
-  */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+	/** Configure the main internal regulator output voltage
+	 */
+	HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
  8000c76:	f44f 7000 	mov.w	r0, #512	@ 0x200
  8000c7a:	f003 ffa9 	bl	8004bd0 <HAL_PWREx_ControlVoltageScaling>
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+	/** Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
  8000c7e:	2302      	movs	r3, #2
  8000c80:	61bb      	str	r3, [r7, #24]
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON;
  8000c82:	f44f 7380 	mov.w	r3, #256	@ 0x100
  8000c86:	627b      	str	r3, [r7, #36]	@ 0x24
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
  8000c88:	2340      	movs	r3, #64	@ 0x40
  8000c8a:	62bb      	str	r3, [r7, #40]	@ 0x28
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
  8000c8c:	2302      	movs	r3, #2
  8000c8e:	637b      	str	r3, [r7, #52]	@ 0x34
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
  8000c90:	2302      	movs	r3, #2
  8000c92:	63bb      	str	r3, [r7, #56]	@ 0x38
-  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+	RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
  8000c94:	2301      	movs	r3, #1
  8000c96:	63fb      	str	r3, [r7, #60]	@ 0x3c
-  RCC_OscInitStruct.PLL.PLLN = 12;
+	RCC_OscInitStruct.PLL.PLLN = 12;
  8000c98:	230c      	movs	r3, #12
  8000c9a:	643b      	str	r3, [r7, #64]	@ 0x40
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
  8000c9c:	2302      	movs	r3, #2
  8000c9e:	647b      	str	r3, [r7, #68]	@ 0x44
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
+	RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV4;
  8000ca0:	2304      	movs	r3, #4
  8000ca2:	64bb      	str	r3, [r7, #72]	@ 0x48
-  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+	RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
  8000ca4:	2302      	movs	r3, #2
  8000ca6:	64fb      	str	r3, [r7, #76]	@ 0x4c
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
  8000ca8:	f107 0318 	add.w	r3, r7, #24
  8000cac:	4618      	mov	r0, r3
  8000cae:	f004 f843 	bl	8004d38 <HAL_RCC_OscConfig>
  8000cb2:	4603      	mov	r3, r0
  8000cb4:	2b00      	cmp	r3, #0
  8000cb6:	d001      	beq.n	8000cbc <SystemClock_Config+0x68>
-  {
-    Error_Handler();
+		Error_Handler();
  8000cb8:	f000 f8c2 	bl	8000e40 <Error_Handler>
-  }
+	}
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+	/** Initializes the CPU, AHB and APB buses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
  8000cbc:	230f      	movs	r3, #15
  8000cbe:	607b      	str	r3, [r7, #4]
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
  8000cc0:	2301      	movs	r3, #1
  8000cc2:	60bb      	str	r3, [r7, #8]
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
  8000cc4:	2300      	movs	r3, #0
  8000cc6:	60fb      	str	r3, [r7, #12]
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
  8000cc8:	2300      	movs	r3, #0
  8000cca:	613b      	str	r3, [r7, #16]
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
  8000ccc:	2300      	movs	r3, #0
  8000cce:	617b      	str	r3, [r7, #20]
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
  8000cd0:	1d3b      	adds	r3, r7, #4
  8000cd2:	2100      	movs	r1, #0
  8000cd4:	4618      	mov	r0, r3
@@ -1569,10 +1594,9 @@ void SystemClock_Config(void)
  8000cda:	4603      	mov	r3, r0
  8000cdc:	2b00      	cmp	r3, #0
  8000cde:	d001      	beq.n	8000ce4 <SystemClock_Config+0x90>
-  {
-    Error_Handler();
+		Error_Handler();
  8000ce0:	f000 f8ae 	bl	8000e40 <Error_Handler>
-  }
+	}
 }
  8000ce4:	bf00      	nop
  8000ce6:	3750      	adds	r7, #80	@ 0x50
@@ -1580,104 +1604,103 @@ void SystemClock_Config(void)
  8000cea:	bd80      	pop	{r7, pc}
 
 08000cec <MX_FDCAN2_Init>:
-  * @brief FDCAN2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_FDCAN2_Init(void)
-{
+/**
+ * @brief FDCAN2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_FDCAN2_Init(void) {
  8000cec:	b580      	push	{r7, lr}
  8000cee:	af00      	add	r7, sp, #0
-  /* USER CODE END FDCAN2_Init 0 */
+	/* USER CODE END FDCAN2_Init 0 */
 
-  /* USER CODE BEGIN FDCAN2_Init 1 */
+	/* USER CODE BEGIN FDCAN2_Init 1 */
 
-  /* USER CODE END FDCAN2_Init 1 */
-  hfdcan2.Instance = FDCAN2;
+	/* USER CODE END FDCAN2_Init 1 */
+	hfdcan2.Instance = FDCAN2;
  8000cf0:	4b1f      	ldr	r3, [pc, #124]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000cf2:	4a20      	ldr	r2, [pc, #128]	@ (8000d74 <MX_FDCAN2_Init+0x88>)
  8000cf4:	601a      	str	r2, [r3, #0]
-  hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+	hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
  8000cf6:	4b1e      	ldr	r3, [pc, #120]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000cf8:	2200      	movs	r2, #0
  8000cfa:	605a      	str	r2, [r3, #4]
-  hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
  8000cfc:	4b1c      	ldr	r3, [pc, #112]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000cfe:	2200      	movs	r2, #0
  8000d00:	609a      	str	r2, [r3, #8]
-  hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
+	hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
  8000d02:	4b1b      	ldr	r3, [pc, #108]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d04:	2200      	movs	r2, #0
  8000d06:	60da      	str	r2, [r3, #12]
-  hfdcan2.Init.AutoRetransmission = DISABLE;
+	hfdcan2.Init.AutoRetransmission = DISABLE;
  8000d08:	4b19      	ldr	r3, [pc, #100]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d0a:	2200      	movs	r2, #0
  8000d0c:	741a      	strb	r2, [r3, #16]
-  hfdcan2.Init.TransmitPause = DISABLE;
+	hfdcan2.Init.TransmitPause = DISABLE;
  8000d0e:	4b18      	ldr	r3, [pc, #96]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d10:	2200      	movs	r2, #0
  8000d12:	745a      	strb	r2, [r3, #17]
-  hfdcan2.Init.ProtocolException = DISABLE;
+	hfdcan2.Init.ProtocolException = DISABLE;
  8000d14:	4b16      	ldr	r3, [pc, #88]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d16:	2200      	movs	r2, #0
  8000d18:	749a      	strb	r2, [r3, #18]
-  hfdcan2.Init.NominalPrescaler = 2;
+	hfdcan2.Init.NominalPrescaler = 4;
  8000d1a:	4b15      	ldr	r3, [pc, #84]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
- 8000d1c:	2202      	movs	r2, #2
+ 8000d1c:	2204      	movs	r2, #4
  8000d1e:	615a      	str	r2, [r3, #20]
-  hfdcan2.Init.NominalSyncJumpWidth = 1;
+	hfdcan2.Init.NominalSyncJumpWidth = 1;
  8000d20:	4b13      	ldr	r3, [pc, #76]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d22:	2201      	movs	r2, #1
  8000d24:	619a      	str	r2, [r3, #24]
-  hfdcan2.Init.NominalTimeSeg1 = 13;
+	hfdcan2.Init.NominalTimeSeg1 = 13;
  8000d26:	4b12      	ldr	r3, [pc, #72]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d28:	220d      	movs	r2, #13
  8000d2a:	61da      	str	r2, [r3, #28]
-  hfdcan2.Init.NominalTimeSeg2 = 2;
+	hfdcan2.Init.NominalTimeSeg2 = 2;
  8000d2c:	4b10      	ldr	r3, [pc, #64]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d2e:	2202      	movs	r2, #2
  8000d30:	621a      	str	r2, [r3, #32]
-  hfdcan2.Init.DataPrescaler = 1;
+	hfdcan2.Init.DataPrescaler = 1;
  8000d32:	4b0f      	ldr	r3, [pc, #60]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d34:	2201      	movs	r2, #1
  8000d36:	625a      	str	r2, [r3, #36]	@ 0x24
-  hfdcan2.Init.DataSyncJumpWidth = 1;
+	hfdcan2.Init.DataSyncJumpWidth = 1;
  8000d38:	4b0d      	ldr	r3, [pc, #52]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d3a:	2201      	movs	r2, #1
  8000d3c:	629a      	str	r2, [r3, #40]	@ 0x28
-  hfdcan2.Init.DataTimeSeg1 = 1;
+	hfdcan2.Init.DataTimeSeg1 = 1;
  8000d3e:	4b0c      	ldr	r3, [pc, #48]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d40:	2201      	movs	r2, #1
  8000d42:	62da      	str	r2, [r3, #44]	@ 0x2c
-  hfdcan2.Init.DataTimeSeg2 = 1;
+	hfdcan2.Init.DataTimeSeg2 = 1;
  8000d44:	4b0a      	ldr	r3, [pc, #40]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d46:	2201      	movs	r2, #1
  8000d48:	631a      	str	r2, [r3, #48]	@ 0x30
-  hfdcan2.Init.StdFiltersNbr = 0;
+	hfdcan2.Init.StdFiltersNbr = 0;
  8000d4a:	4b09      	ldr	r3, [pc, #36]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d4c:	2200      	movs	r2, #0
  8000d4e:	635a      	str	r2, [r3, #52]	@ 0x34
-  hfdcan2.Init.ExtFiltersNbr = 0;
+	hfdcan2.Init.ExtFiltersNbr = 0;
  8000d50:	4b07      	ldr	r3, [pc, #28]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d52:	2200      	movs	r2, #0
  8000d54:	639a      	str	r2, [r3, #56]	@ 0x38
-  hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+	hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
  8000d56:	4b06      	ldr	r3, [pc, #24]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d58:	2200      	movs	r2, #0
  8000d5a:	63da      	str	r2, [r3, #60]	@ 0x3c
-  if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
+	if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK) {
  8000d5c:	4804      	ldr	r0, [pc, #16]	@ (8000d70 <MX_FDCAN2_Init+0x84>)
  8000d5e:	f000 fbd1 	bl	8001504 <HAL_FDCAN_Init>
  8000d62:	4603      	mov	r3, r0
  8000d64:	2b00      	cmp	r3, #0
  8000d66:	d001      	beq.n	8000d6c <MX_FDCAN2_Init+0x80>
-  {
-    Error_Handler();
+		Error_Handler();
  8000d68:	f000 f86a 	bl	8000e40 <Error_Handler>
-  }
-  /* USER CODE BEGIN FDCAN2_Init 2 */
+	}
+	/* USER CODE BEGIN FDCAN2_Init 2 */
 
-  /* USER CODE END FDCAN2_Init 2 */
+	/* USER CODE END FDCAN2_Init 2 */
 
 }
  8000d6c:	bf00      	nop
@@ -1686,96 +1709,94 @@ static void MX_FDCAN2_Init(void)
  8000d74:	40006800 	.word	0x40006800
 
 08000d78 <MX_I2C2_Init>:
-  * @brief I2C2 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C2_Init(void)
-{
+/**
+ * @brief I2C2 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_I2C2_Init(void) {
  8000d78:	b580      	push	{r7, lr}
  8000d7a:	af00      	add	r7, sp, #0
-  /* USER CODE END I2C2_Init 0 */
+	/* USER CODE END I2C2_Init 0 */
 
-  /* USER CODE BEGIN I2C2_Init 1 */
+	/* USER CODE BEGIN I2C2_Init 1 */
 
-  /* USER CODE END I2C2_Init 1 */
-  hi2c2.Instance = I2C2;
+	/* USER CODE END I2C2_Init 1 */
+	hi2c2.Instance = I2C2;
  8000d7c:	4b1b      	ldr	r3, [pc, #108]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d7e:	4a1c      	ldr	r2, [pc, #112]	@ (8000df0 <MX_I2C2_Init+0x78>)
  8000d80:	601a      	str	r2, [r3, #0]
-  hi2c2.Init.Timing = 0x00503D58;
+	hi2c2.Init.Timing = 0x00503D58;
  8000d82:	4b1a      	ldr	r3, [pc, #104]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d84:	4a1b      	ldr	r2, [pc, #108]	@ (8000df4 <MX_I2C2_Init+0x7c>)
  8000d86:	605a      	str	r2, [r3, #4]
-  hi2c2.Init.OwnAddress1 = 0;
+	hi2c2.Init.OwnAddress1 = 0;
  8000d88:	4b18      	ldr	r3, [pc, #96]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d8a:	2200      	movs	r2, #0
  8000d8c:	609a      	str	r2, [r3, #8]
-  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+	hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
  8000d8e:	4b17      	ldr	r3, [pc, #92]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d90:	2201      	movs	r2, #1
  8000d92:	60da      	str	r2, [r3, #12]
-  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+	hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
  8000d94:	4b15      	ldr	r3, [pc, #84]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d96:	2200      	movs	r2, #0
  8000d98:	611a      	str	r2, [r3, #16]
-  hi2c2.Init.OwnAddress2 = 0;
+	hi2c2.Init.OwnAddress2 = 0;
  8000d9a:	4b14      	ldr	r3, [pc, #80]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000d9c:	2200      	movs	r2, #0
  8000d9e:	615a      	str	r2, [r3, #20]
-  hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+	hi2c2.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
  8000da0:	4b12      	ldr	r3, [pc, #72]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000da2:	2200      	movs	r2, #0
  8000da4:	619a      	str	r2, [r3, #24]
-  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+	hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
  8000da6:	4b11      	ldr	r3, [pc, #68]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000da8:	2200      	movs	r2, #0
  8000daa:	61da      	str	r2, [r3, #28]
-  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+	hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
  8000dac:	4b0f      	ldr	r3, [pc, #60]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000dae:	2200      	movs	r2, #0
  8000db0:	621a      	str	r2, [r3, #32]
-  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+	if (HAL_I2C_Init(&hi2c2) != HAL_OK) {
  8000db2:	480e      	ldr	r0, [pc, #56]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000db4:	f001 faba 	bl	800232c <HAL_I2C_Init>
  8000db8:	4603      	mov	r3, r0
  8000dba:	2b00      	cmp	r3, #0
  8000dbc:	d001      	beq.n	8000dc2 <MX_I2C2_Init+0x4a>
-  {
-    Error_Handler();
+		Error_Handler();
  8000dbe:	f000 f83f 	bl	8000e40 <Error_Handler>
-  }
+	}
 
-  /** Configure Analogue filter
-  */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+	/** Configure Analogue filter
+	 */
+	if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE)
  8000dc2:	2100      	movs	r1, #0
  8000dc4:	4809      	ldr	r0, [pc, #36]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000dc6:	f002 f923 	bl	8003010 <HAL_I2CEx_ConfigAnalogFilter>
  8000dca:	4603      	mov	r3, r0
  8000dcc:	2b00      	cmp	r3, #0
  8000dce:	d001      	beq.n	8000dd4 <MX_I2C2_Init+0x5c>
-  {
-    Error_Handler();
+			!= HAL_OK) {
+		Error_Handler();
  8000dd0:	f000 f836 	bl	8000e40 <Error_Handler>
-  }
+	}
 
-  /** Configure Digital filter
-  */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
+	/** Configure Digital filter
+	 */
+	if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK) {
  8000dd4:	2100      	movs	r1, #0
  8000dd6:	4805      	ldr	r0, [pc, #20]	@ (8000dec <MX_I2C2_Init+0x74>)
  8000dd8:	f002 f965 	bl	80030a6 <HAL_I2CEx_ConfigDigitalFilter>
  8000ddc:	4603      	mov	r3, r0
  8000dde:	2b00      	cmp	r3, #0
  8000de0:	d001      	beq.n	8000de6 <MX_I2C2_Init+0x6e>
-  {
-    Error_Handler();
+		Error_Handler();
  8000de2:	f000 f82d 	bl	8000e40 <Error_Handler>
-  }
-  /* USER CODE BEGIN I2C2_Init 2 */
+	}
+	/* USER CODE BEGIN I2C2_Init 2 */
 
-  /* USER CODE END I2C2_Init 2 */
+	/* USER CODE END I2C2_Init 2 */
 
 }
  8000de6:	bf00      	nop
@@ -1786,21 +1807,21 @@ static void MX_I2C2_Init(void)
  8000df4:	00503d58 	.word	0x00503d58
 
 08000df8 <MX_GPIO_Init>:
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
+/**
+ * @brief GPIO Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_GPIO_Init(void) {
  8000df8:	b480      	push	{r7}
  8000dfa:	b083      	sub	sp, #12
  8000dfc:	af00      	add	r7, sp, #0
-  /* USER CODE BEGIN MX_GPIO_Init_1 */
+	/* USER CODE BEGIN MX_GPIO_Init_1 */
 
-  /* USER CODE END MX_GPIO_Init_1 */
+	/* USER CODE END MX_GPIO_Init_1 */
 
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+	/* GPIO Ports Clock Enable */
+	__HAL_RCC_GPIOB_CLK_ENABLE();
  8000dfe:	4b0f      	ldr	r3, [pc, #60]	@ (8000e3c <MX_GPIO_Init+0x44>)
  8000e00:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
  8000e02:	4a0e      	ldr	r2, [pc, #56]	@ (8000e3c <MX_GPIO_Init+0x44>)
@@ -1811,7 +1832,7 @@ static void MX_GPIO_Init(void)
  8000e0e:	f003 0302 	and.w	r3, r3, #2
  8000e12:	607b      	str	r3, [r7, #4]
  8000e14:	687b      	ldr	r3, [r7, #4]
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOA_CLK_ENABLE();
  8000e16:	4b09      	ldr	r3, [pc, #36]	@ (8000e3c <MX_GPIO_Init+0x44>)
  8000e18:	6cdb      	ldr	r3, [r3, #76]	@ 0x4c
  8000e1a:	4a08      	ldr	r2, [pc, #32]	@ (8000e3c <MX_GPIO_Init+0x44>)
@@ -1823,9 +1844,9 @@ static void MX_GPIO_Init(void)
  8000e2a:	603b      	str	r3, [r7, #0]
  8000e2c:	683b      	ldr	r3, [r7, #0]
 
-  /* USER CODE BEGIN MX_GPIO_Init_2 */
+	/* USER CODE BEGIN MX_GPIO_Init_2 */
 
-  /* USER CODE END MX_GPIO_Init_2 */
+	/* USER CODE END MX_GPIO_Init_2 */
 }
  8000e2e:	bf00      	nop
  8000e30:	370c      	adds	r7, #12
@@ -1836,12 +1857,12 @@ static void MX_GPIO_Init(void)
  8000e3c:	40021000 	.word	0x40021000
 
 08000e40 <Error_Handler>:
+
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
  8000e40:	b480      	push	{r7}
  8000e42:	af00      	add	r7, sp, #0
   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
@@ -1853,10 +1874,10 @@ __STATIC_FORCEINLINE void __disable_irq(void)
  8000e44:	b672      	cpsid	i
 }
  8000e46:	bf00      	nop
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
  8000e48:	bf00      	nop
  8000e4a:	e7fd      	b.n	8000e48 <Error_Handler+0x8>
 
