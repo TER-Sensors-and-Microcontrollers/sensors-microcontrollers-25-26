@@ -4,6 +4,7 @@ while ! hostname -I > /dev/null 2>&1; do
     echo "Waiting for network..."
     sleep 1
 done
+export PYTHONPATH=/home/racing/.local/lib/python3.11/site-packages:$PYTHONPATH
 echo "My wlan0 ip address is: "
 ip addr show wlan0 | awk '/inet / {print $2}' | cut -d/ -f1
 echo "Starting processes..."
