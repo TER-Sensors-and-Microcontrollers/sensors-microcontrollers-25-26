@@ -43,7 +43,9 @@
 ADC_HandleTypeDef hadc1;
 
 /* USER CODE BEGIN PV */
-#define ADC_THRESHOLD 2048 // anything between 0-4095
+//#define ADC_THRESHOLD 2048 // anything between 0-4095
+#define ADC_HIGH 2500
+#define ADC_LOW  1500
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -56,7 +58,20 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile bool no_play = false;
+uint32_t read_adc_avg(void)
+{
+    uint32_t sum = 0;
+
+    for(int i = 0; i < 8; i++)
+    {
+        HAL_ADC_Start(&hadc1);
+        HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+        sum += HAL_ADC_GetValue(&hadc1);
+        HAL_ADC_Stop(&hadc1);
+    }
+
+    return sum / 8;
+}
 /* USER CODE END 0 */
 
 /**
@@ -90,36 +105,29 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-
+  volatile bool buzzer_triggered = false;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  uint32_t adc_val = HAL_ADC_GetValue(&hadc1);
+  while (1) {
+      uint32_t adc_val = read_adc_avg();
 
-//	  if (adc_val > ADC_THRESHOLD)
-//	  {
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET); // BUZZER ON
-//	  }
-//	  else
-//	  {
-//		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET); // BUZZER OFF
-//	  }
+      if(adc_val > ADC_HIGH && !buzzer_triggered)
+      {
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
+          HAL_Delay(2000);
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
 
-	  if (adc_val > ADC_THRESHOLD && !no_play) {
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-		  HAL_Delay(2000);
-		  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-		  no_play = true;
-	  } else if (adc_val < ADC_THRESHOLD && no_play) {
-		  no_play = false;
-	  }
+          buzzer_triggered = true;
+      }
 
-	  HAL_ADC_Stop(&hadc1);
+      if(adc_val < ADC_LOW)
+      {
+          buzzer_triggered = false;
+      }
+
+      HAL_Delay(50);
 
 //	  HAL_Delay(1000);
     /* USER CODE END WHILE */
