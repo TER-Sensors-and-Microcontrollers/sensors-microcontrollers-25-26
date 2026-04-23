@@ -64,8 +64,8 @@ all: main-build
 main-build: radio_stm.elf secondary-outputs
 
 # Tool invocations
-radio_stm.elf radio_stm.map: $(OBJS) $(USER_OBJS) /Users/ozalp/seanprojects/sensors-microcontrollers-25-26/stm/radio_stm/STM32G474CEUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "radio_stm.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/ozalp/seanprojects/sensors-microcontrollers-25-26/stm/radio_stm/STM32G474CEUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="radio_stm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+radio_stm.elf radio_stm.map: $(OBJS) $(USER_OBJS) /Users/andrechabra/Desktop/Jumbo\ Motorsports/sensors-microcontrollers-25-26/stm/radio_stm/STM32G474CEUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "radio_stm.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/andrechabra/Desktop/Jumbo Motorsports/sensors-microcontrollers-25-26/stm/radio_stm/STM32G474CEUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="radio_stm.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

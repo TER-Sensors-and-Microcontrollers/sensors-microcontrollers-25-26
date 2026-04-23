@@ -1,5 +1,4 @@
 ../Core/Src/main.c:137:13:CAN_GlobalAcceptAll	24	static
-../Core/Src/main.c:149:13:usb_print	16	static
 ../Core/Src/main.c:157:16:crc8_atm	32	static
 ../Core/Src/main.c:169:13:u32_to_le	16	static
 ../Core/Src/main.c:177:17:le_to_u32	16	static
@@ -9,9 +8,9 @@
 ../Core/Src/main.c:303:13:parser_feed	56	static
 ../Core/Src/main.c:379:13:CAN_FilterAcceptAll	40	static
 ../Core/Src/main.c:409:13:CAN_StartAndEnableRxIRQ	16	static
-../Core/Src/main.c:422:6:HAL_FDCAN_RxFifo0Callback	296	static
+../Core/Src/main.c:422:6:HAL_FDCAN_RxFifo0Callback	80	static
 ../Core/Src/main.c:470:6:HAL_UART_RxCpltCallback	16	static
-../Core/Src/main.c:484:5:main	184	static
+../Core/Src/main.c:484:5:main	24	static
 ../Core/Src/main.c:560:6:SystemClock_Config	88	static
 ../Core/Src/main.c:607:13:MX_FDCAN2_Init	8	static
 ../Core/Src/main.c:650:13:MX_FDCAN3_Init	8	static

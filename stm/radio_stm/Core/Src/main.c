@@ -146,11 +146,11 @@ static void CAN_GlobalAcceptAll(FDCAN_HandleTypeDef *hfdcan)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static void usb_print(const char *s)
-{
-  if (s == NULL) return;
-  (void)CDC_Transmit_FS((uint8_t*)s, (uint16_t)strlen(s));
-}
+//static void usb_print(const char *s)
+//{
+//  if (s == NULL) return;
+//  (void)CDC_Transmit_FS((uint8_t*)s, (uint16_t)strlen(s));
+//}
 /* -------------------------------------------------------------------------
  * CRC-8/ATM  (poly 0x07, init 0x00, no reflect)
  * ------------------------------------------------------------------------- */
@@ -443,22 +443,22 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
   }
 
   uint32_t id = rxHeader.Identifier;
-  if (!ext) id &= 0x7FFu;
-  {
-      char msg[128];
-      int len = snprintf(msg, sizeof(msg),
-                         "RX id=0x%08lX ext=%u rtr=%u dlc=%u data=%02X %02X %02X %02X %02X %02X %02X %02X\r\n",
-                         id,
-                         (unsigned)ext,
-                         (unsigned)rtr,
-                         (unsigned)dlc,
-                         rxData[0], rxData[1], rxData[2], rxData[3],
-                         rxData[4], rxData[5], rxData[6], rxData[7]);
-
-      if (len > 0) {
-        (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
-      }
-    }
+//  if (!ext) id &= 0x7FFu;
+//  {
+//      char msg[128];
+//      int len = snprintf(msg, sizeof(msg),
+//                         "RX id=0x%08lX ext=%u rtr=%u dlc=%u data=%02X %02X %02X %02X %02X %02X %02X %02X\r\n",
+//                         id,
+//                         (unsigned)ext,
+//                         (unsigned)rtr,
+//                         (unsigned)dlc,
+//                         rxData[0], rxData[1], rxData[2], rxData[3],
+//                         rxData[4], rxData[5], rxData[6], rxData[7]);
+//
+//      if (len > 0) {
+//        (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
+//      }
+//    }
 
   enqueue_can_over_uart(id, ext, rtr, dlc, rxData);
 }
@@ -530,21 +530,21 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t last_print = 0;
+//  uint32_t last_print = 0;
   while (1)
   {
 	  drain_uart_tx();
 
-	  if (HAL_GetTick() - last_print >= 1000) {
-	        last_print = HAL_GetTick();
-
-	        char msg[128];
-	        int len = snprintf(msg, sizeof(msg),
-	                           "CAN irq=%lu  getmsg_fail=%lu  uart_tx_pkts=%lu  ring_drops=%lu\r\n",
-	                           can_rx_irq_count, can_getmsg_fail, uart_tx_pkts, ring_drops);
-	        if (len > 0) {
-	          (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
-	        }}
+//	  if (HAL_GetTick() - last_print >= 1000) {
+//	        last_print = HAL_GetTick();
+//
+//	        char msg[128];
+//	        int len = snprintf(msg, sizeof(msg),
+//	                           "CAN irq=%lu  getmsg_fail=%lu  uart_tx_pkts=%lu  ring_drops=%lu\r\n",
+//	                           can_rx_irq_count, can_getmsg_fail, uart_tx_pkts, ring_drops);
+//	        if (len > 0) {
+//	          (void)CDC_Transmit_FS((uint8_t*)msg, (uint16_t)len);
+//	        }}
 	  HAL_Delay(1);
     /* USER CODE END WHILE */
 
