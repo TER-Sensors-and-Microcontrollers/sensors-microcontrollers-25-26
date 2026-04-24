@@ -1,0 +1,6 @@
+../Core/Src/main.c:61:10:read_adc_avg	16	static
+../Core/Src/main.c:81:5:main	16	static
+../Core/Src/main.c:144:6:SystemClock_Config	88	static
+../Core/Src/main.c:185:13:MX_ADC1_Init	56	static
+../Core/Src/main.c:253:13:MX_GPIO_Init	32	static
+../Core/Src/main.c:286:6:Error_Handler	4	static,ignoring_inline_asm

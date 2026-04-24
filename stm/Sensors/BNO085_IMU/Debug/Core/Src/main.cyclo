@@ -1,0 +1,16 @@
+../Core/Src/main.c:99:13:CDC_Print	4
+../Core/Src/main.c:113:20:HalStr	5
+../Core/Src/main.c:130:13:CAN_Init	1
+../Core/Src/main.c:147:13:CAN_SendHeartbeat	3
+../Core/Src/main.c:195:26:SHTP_Read	6
+../Core/Src/main.c:218:26:SHTP_Write	2
+../Core/Src/main.c:230:13:BNO_SoftReset	3
+../Core/Src/main.c:256:13:BNO_Boot	3
+../Core/Src/main.c:268:13:BNO_EnableGyro	2
+../Core/Src/main.c:285:13:PrintVal	2
+../Core/Src/main.c:298:5:main	18
+../Core/Src/main.c:457:6:SystemClock_Config	3
+../Core/Src/main.c:501:13:MX_FDCAN2_Init	2
+../Core/Src/main.c:542:13:MX_I2C2_Init	4
+../Core/Src/main.c:587:13:MX_GPIO_Init	1
+../Core/Src/main.c:609:6:Error_Handler	1
